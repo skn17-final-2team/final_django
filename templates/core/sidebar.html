@@ -12,9 +12,9 @@
     <ul style="list-style:none; padding:0;">
         <li><a href="/">홈</a></li>
 
-        {# 예: 로그인했을 때만 보이게 #}
+        {% comment %} {# 예: 로그인했을 때만 보이게 #}
         {% if user.is_authenticated %}
             <li><a href="{% url 'dashboard' %}">대시보드</a></li>
-        {% endif %}
+        {% endif %} {% endcomment %}
     </ul>
 </div>

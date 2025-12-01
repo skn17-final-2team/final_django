@@ -1,5 +1,3 @@
-# apps/accounts/admin.py
-
 from django.contrib import admin
 from .models import Dept, User
 
