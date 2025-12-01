@@ -22,6 +22,3 @@ DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 # MEDIA 설정 (로컬)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
-# WhiteNoise는 개발에서도 써도 되고, 안 써도 되지만
-# 이미 base에 middleware와 STATIC_ROOT가 있으니 그대로 둬도 됩니다.

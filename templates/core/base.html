@@ -1,0 +1,22 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}회의 서비스{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+</head>
+<body>
+
+    {% include "core/sidebar.html" %}
+
+    <main style="margin-left: 220px; padding: 20px;">
+        {% block content %}
+        기본 콘텐츠 영역입니다.
+        {% endblock %}
+    </main>
+
+</body>
+</html>
