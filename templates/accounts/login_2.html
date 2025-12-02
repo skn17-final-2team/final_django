@@ -1,0 +1,88 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>말하는대로 - 로그인</title>
+  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+  <div class="page-wrapper">
+    <!-- 로고 영역 -->
+    <header class="logo-area">
+      <img src="{% static 'img/logo.png' %}" alt="말하는대로 로고" class="logo-image">
+    </header>
+
+    <!-- 비밀번호 변경 안내 모달 -->
+    <div id="findpw-modal" class="modal-overlay hidden">
+        
+    <div class="modal-box">
+        <p class="modal-message">
+        비밀번호 변경을 원하시면<br>
+        관리자에게 문의하세요.
+        </p>
+        <div class="modal-buttons">
+        <button type="button" id="modal-cancel" class="btn-modal btn-cancel">
+            취소
+        </button>
+        <button type="button" id="modal-confirm" class="btn-modal btn-confirm">
+            확인
+        </button>
+        </div>
+    </div>
+    </div>
+    
+    <!-- 로그인 카드 -->
+    <main class="card">
+      <form method="POST" class="login-form" novalidate>
+        {% csrf_token %}
+
+        {# Django messages 출력 (로그인 실패 메시지 등) #}
+        {% if messages %}
+          <ul class="message-list">
+            {% for message in messages %}
+              <li class="message {{ message.tags }}">{{ message }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+
+        <div class="form-group">
+          <label for="id_id" class="form-label">ID</label>
+          <input
+            type="text"
+            id="id_id"
+            name="id"
+            class="form-input"
+            placeholder="Value"
+            autocomplete="username"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="id_password" class="form-label">Password</label>
+          <input
+            type="password"
+            id="id_password"
+            name="password"
+            class="form-input"
+            placeholder="Value"
+            autocomplete="current-password"
+          >
+        </div>
+
+        <button type="submit" class="btn-primary">
+          Sign In
+        </button>
+
+        <div class="links">
+          <a href="#" id="open-findpw-modal" class="forgot-link">
+            Forgot password?
+          </a>
+        </div>
+      </form>
+    </main>
+  </div>
+
+  <script src="{% static 'js/login.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+/* 페이지 전체 레이아웃 */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  background-color: #f5f5f5;
+  color: #111827;
+}
+
+.page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 60px 16px;
+}
+
+/* 로고 영역 */
+.logo-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.logo-image {
+    width: 150px;  /* 원하는 크기 */
+    height: auto;   /* 비율 유지 */
+}
+
+.logo-text {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* 카드(폼 박스) */
+.card {
+  width: 100%;
+  max-width: 420px;
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 32px 32px 24px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+/* 폼 요소 */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 14px;
+  color: #374151;
+}
+
+.form-input {
+  height: 44px;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  box-sizing: border-box;
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #111827;
+  background-color: #ffffff;
+}
+
+/* 버튼 */
+.btn-primary {
+  margin-top: 8px;
+  height: 44px;
+  border-radius: 8px;
+  border: none;
+  background-color: #111827;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background-color: #030712;
+}
+
+/* 하단 링크 */
+.links {
+  margin-top: 12px;
+}
+
+.forgot-link {
+  font-size: 13px;
+  color: #111827;
+  text-decoration: underline;
+}
+
+.forgot-link:hover {
+  text-decoration: none;
+}
+
+/* 에러 메시지 */
+.message-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 8px;
+}
+
+.message {
+  font-size: 13px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+.message.success {
+  background-color: #ecfdf3;
+  color: #166534;
+}
+
+/* 모달 */
+
+/* 모달 오버레이 (회색 배경) */
+.modal-overlay {
+  position: fixed;
+  inset: 0; /* top:0; right:0; bottom:0; left:0; */
+  background-color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* 처음에는 안 보이도록 */
+.hidden {
+  display: none;
+}
+
+/* 모달 박스 */
+.modal-box {
+  background-color: #fff7f7;
+  border-radius: 16px;
+  padding: 24px 32px;
+  min-width: 320px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* 모달 텍스트 */
+.modal-message {
+  margin: 0 0 24px;
+  font-size: 18px;
+  line-height: 1.5;
+  color: #222;
+}
+
+/* 버튼 영역 */
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* 공통 버튼 스타일 */
+.btn-modal {
+  min-width: 90px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* 취소 버튼 (보라색) */
+.btn-cancel {
+  background-color: #9ba8ff;
+  color: #ffffff;
+}
+
+/* 확인 버튼 (핑크색) */
+.btn-confirm {
+  background-color: #ff9b9b;
+  color: #ffffff;
+}
+
+.btn-cancel:hover {
+  background-color: #8894ff;
+}
+
+.btn-confirm:hover {
+  background-color: #ff8a8a;
+}
+
