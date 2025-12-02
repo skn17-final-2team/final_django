@@ -5,6 +5,7 @@ from django.contrib.auth.hashers import check_password
 from django.views.decorators.http import require_POST
 from .models import User
 from .forms import LoginForm
+from django.contrib.auth import logout as django_logout
 
 def login_view(request):
     if request.method == "POST":
@@ -84,3 +85,8 @@ def login_api(request):
 
     next_url = request.POST.get("next") or "/"
     return JsonResponse({"ok": True, "redirect_url": next_url})
+
+def logout_view(request):
+    # Django auth + 직접 넣은 세션 모두 정리
+    request.session.flush()
+    return redirect("accounts:login")

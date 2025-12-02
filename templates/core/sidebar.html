@@ -15,8 +15,9 @@
   <!-- 상단 메뉴 (홈 / 새 회의) -->
   <div class="sidebar-section">
     <ul class="sidebar-menu">
-      <li class="sidebar-item">
-        <a href="#" class="sidebar-link">
+      <!-- 홈 -->
+      <li class="sidebar-item {% if request.resolver_match.app_name == 'core' and request.resolver_match.url_name == 'home' %}sidebar-item-active{% endif %}">
+        <a href="{% url 'core:home' %}" class="sidebar-link">
           <img
             src="{% static 'img/icon-home.png' %}"
             alt=""
@@ -25,13 +26,15 @@
           <span class="sidebar-link-text">홈</span>
         </a>
       </li>
-      <li class="sidebar-item">
-        <a href="#" class="sidebar-link">
-          <img
+
+      <!-- 새 회의 -->
+      <li class="sidebar-item {% if request.resolver_match.namespace == 'meetings' and request.resolver_match.url_name == 'create' %}sidebar-item-active{% endif %}">
+        <a href="{% url 'meetings:create' %}" class="sidebar-link">
+            <img
             src="{% static 'img/icon-new-meeting.png' %}"
             alt=""
             class="sidebar-icon"
-          />
+            />
           <span class="sidebar-link-text">새 회의</span>
         </a>
       </li>
@@ -49,22 +52,24 @@
         />
         <span class="sidebar-section-title">회의 목록</span>
       </div>
-      <span class="sidebar-collapse-icon">▾</span>
+      <span class="sidebar-collapse-icon">▼</span>
     </button>
 
     <ul class="sidebar-menu sidebar-menu-nested">
-      <li class="sidebar-item">
-        <a href="#" class="sidebar-link">
+      <li class="sidebar-item {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'list_all' %}sidebar-item-active{% endif %}">
+        <a href="{% url 'meetings:list_all' %}" class="sidebar-link">
           <span class="sidebar-link-text">전체 회의 목록</span>
         </a>
       </li>
-      <li class="sidebar-item sidebar-item-active">
-        <a href="#" class="sidebar-link">
+
+      <li class="sidebar-item {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'list_mine' %}sidebar-item-active{% endif %}">
+        <a href="{% url 'meetings:list_mine' %}" class="sidebar-link">
           <span class="sidebar-link-text">내가 참여한 회의</span>
         </a>
       </li>
-      <li class="sidebar-item">
-        <a href="#" class="sidebar-link">
+
+      <li class="sidebar-item {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'list_open' %}sidebar-item-active{% endif %}">
+        <a href="{% url 'meetings:list_open' %}" class="sidebar-link">
           <span class="sidebar-link-text">열람 가능한 회의</span>
         </a>
       </li>
@@ -110,7 +115,7 @@
     </div>
   </div>
 
-  <!-- 하단 링크 (오른쪽 정렬) -->
+  <!-- 하단 링크 -->
   <div class="sidebar-footer">
     <ul class="sidebar-menu">
       <li class="sidebar-item">
@@ -119,7 +124,7 @@
         </a>
       </li>
       <li class="sidebar-item">
-        <a href="#" class="sidebar-link sidebar-link-footer">
+        <a href="{% url 'accounts:logout' %}" class="sidebar-link sidebar-link-footer">
           <span class="sidebar-link-text">로그아웃</span>
         </a>
       </li>
@@ -138,7 +143,6 @@
     const nested = document.querySelector(".sidebar-menu-nested");
 
     if (collapse && nested) {
-      // 처음에는 펼쳐진 상태 (is-collapsed 없으면 보임)
       collapse.addEventListener("click", function () {
         nested.classList.toggle("is-collapsed");
         collapse.classList.toggle("collapsed");

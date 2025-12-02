@@ -3,8 +3,7 @@
 .app-root {
   display: flex;
   width: 100%;
-  min-width: 1916px;
-  min-height: 1104px;
+  min-height: 100vh;
   background-color: #ffffff;
 }
 
@@ -26,6 +25,7 @@
 
 .sidebar {
   width: 260px;
+  flex: 0 0 260px;  /* ← 이 줄 추가: flex-basis + shrink 방지 */
   background-color: var(--color-sidebar-bg);
   border-right: 1px solid var(--color-sidebar-border);
   color: var(--color-text);

@@ -1,0 +1,94 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}홈{% endblock %}
+{% block page_title %}홈{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/home.css' %}">
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+  <!-- 왼쪽 메인 영역 -->
+  <section class="dashboard-main">
+    <header class="dashboard-header">
+      <div class="dashboard-header-left">
+        <span class="icon">📅</span>
+        <span id="home-current-date">2025년 12월 18일 목</span>
+      </div>
+      <button type="button" class="btn-add-schedule">+ 일정 추가</button>
+    </header>
+
+    <div class="calendar-card">
+      <div class="calendar-wrapper">
+        <!-- 여기 div에 FullCalendar가 렌더링됩니다 -->
+        <div id="home-calendar"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 오른쪽 일정 영역 -->
+  <aside class="dashboard-side">
+    <section class="schedule-card">
+      <h2 class="schedule-card-title">오늘의 일정</h2>
+      <div class="schedule-empty">오늘 일정이 없습니다.</div>
+    </section>
+
+    <section class="schedule-card">
+      <h2 class="schedule-card-title">이번 달 일정</h2>
+      <ul class="schedule-list">
+        <li class="schedule-item">
+          <span class="schedule-date">18(금)</span>
+          <span class="schedule-text">
+            실시간/배치 파이프라인 분리 및 인증 로그 처리 방안 검토
+          </span>
+        </li>
+      </ul>
+    </section>
+  </aside>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+  <!-- FullCalendar JS -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
+
+  <!-- 홈 화면용 캘린더 초기화 스크립트 (우선 inline으로) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var calendarEl = document.getElementById("home-calendar");
+      if (!calendarEl) {
+        console.error("home-calendar 요소를 찾을 수 없습니다.");
+        return;
+      }
+
+      var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth",
+        locale: "ko",            // 한국어
+        height: "auto",
+        contentHeight: 550,
+        headerToolbar: {
+          left: "prev,next today",
+          center: "title",
+          right: ""
+        },
+        events: [
+          {
+            title: "실시간/배치 파이프라인 분리 및 인증 로그 처리 방안 검토",
+            start: "2025-12-18",
+            allDay: true
+          },
+          {
+            title: "연말 운영 계획 및 예산 조정 회의",
+            start: "2025-12-18T09:00:00"
+          }
+        ]
+      });
+
+      calendar.render();
+    });
+  </script>
+{% endblock %}
+
