@@ -2,21 +2,34 @@
 
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="utf-8">
-    <title>{% block title %}회의 서비스{% endblock %}</title>
+  <head>
+    <meta charset="utf-8" />
+    <title>{% block title %}서비스 대시보드{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <link rel="stylesheet" href="{% static 'css/base.css' %}">
-</head>
-<body>
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/layout.css">
 
-    {% include "core/sidebar.html" %}
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body class="bg-body">
+    <div class="app-root">
+      {# 좌측 사이드바 #}
+      {% include "core/sidebar.html" %}
 
-    <main style="margin-left: 220px; padding: 20px;">
-        {% block content %}
-        기본 콘텐츠 영역입니다.
-        {% endblock %}
-    </main>
+      <div class="app-main">
+        {# 상단 헤더 #}
+        {% include "core/header.html" %}
 
-</body>
+        {# 메인 콘텐츠 영역 #}
+        <main class="app-content">
+          {% block content %}
+          <!-- 각 페이지 템플릿에서 재정의되는 영역 -->
+          {% endblock %}
+        </main>
+      </div>
+    </div>
+
+    {% block extra_script %}{% endblock %}
+  </body>
 </html>

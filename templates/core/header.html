@@ -1,0 +1,32 @@
+<header class="header animate-fade-in">
+  <div class="header-left">
+    <h1 class="header-title">
+      {% block page_title %}대시보드{% endblock %}
+    </h1>
+
+    <p class="header-subtitle">
+      {% block page_subtitle %}서비스 현황을 한눈에 확인할 수 있습니다.{% endblock %}
+    </p>
+  </div>
+
+  <div class="header-right">
+    <div class="header-actions">
+      <button type="button" class="btn btn-outline">
+        새로고침
+      </button>
+      <button type="button" class="btn btn-primary">
+        새로 만들기
+      </button>
+    </div>
+
+    <div class="header-user">
+      <div class="header-user-info">
+        <span class="user-name">관리자</span>
+        <span class="user-role">Admin</span>
+      </div>
+      <div class="header-user-avatar">
+        <span class="avatar-text">A</span>
+      </div>
+    </div>
+  </div>
+</header>
