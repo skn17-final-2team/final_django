@@ -13,7 +13,7 @@
             <img src="{% static 'img/logo.png' %}" alt="말하는대로 로고" class="logo-image">
         </header>
         <main class="card">
-            <form method="post" class="login-form" novalidate>
+            <form method="post" id="login-form" class="login-form" novalidate>
                 {% csrf_token %}
                 <!-- 아이디 -->
                 <label for="id_id" class="form-label">ID</label>
@@ -29,11 +29,14 @@
                     <p class="error">{{ e }}</p>
                 {% endfor %}
                 
-                {% if messages %}
-                    {% for msg in messages %}
-                        <p style="color:red;">{{ msg }}</p>
-                    {% endfor %}
-                {% endif %}
+                <div id="messages-area">
+                    {% if messages %}
+                        {% for msg in messages %}
+                            <p class="server-msg" style="color:red;">{{ msg }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
                 <button type="submit" class="btn-primary">Sign In</button>
                 <div class="links">
                     <a href="#" id="open-findpw-modal" class="forgot-link">
