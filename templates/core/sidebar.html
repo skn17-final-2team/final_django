@@ -1,46 +1,148 @@
+{% load static %}
+
 <nav class="sidebar">
+  <!-- 로고 영역 -->
   <div class="sidebar-header">
     <div class="sidebar-logo">
-      <span class="logo-mark">S</span>
-      <span class="logo-text">Service</span>
+      <img
+        src="{% static 'img/logo.png' %}"
+        alt="말하는대로"
+        class="sidebar-logo-image"
+      />
     </div>
   </div>
 
+  <!-- 상단 메뉴 (홈 / 새 회의) -->
   <div class="sidebar-section">
-    <p class="sidebar-section-title">메인</p>
     <ul class="sidebar-menu">
-      <li class="sidebar-item sidebar-item-active">
+      <li class="sidebar-item">
         <a href="#" class="sidebar-link">
-          <span class="sidebar-link-text">대시보드</span>
+          <img
+            src="{% static 'img/icon-home.png' %}"
+            alt=""
+            class="sidebar-icon"
+          />
+          <span class="sidebar-link-text">홈</span>
         </a>
       </li>
       <li class="sidebar-item">
         <a href="#" class="sidebar-link">
-          <span class="sidebar-link-text">통계</span>
+          <img
+            src="{% static 'img/icon-new-meeting.png' %}"
+            alt=""
+            class="sidebar-icon"
+          />
+          <span class="sidebar-link-text">새 회의</span>
         </a>
       </li>
     </ul>
   </div>
 
+  <!-- 회의 목록 (접힘/펼침) -->
   <div class="sidebar-section">
-    <p class="sidebar-section-title">관리</p>
+    <button type="button" class="sidebar-collapse">
+      <div class="sidebar-collapse-left">
+        <img
+          src="{% static 'img/icon-meeting-list.png' %}"
+          alt=""
+          class="sidebar-icon"
+        />
+        <span class="sidebar-section-title">회의 목록</span>
+      </div>
+      <span class="sidebar-collapse-icon">▾</span>
+    </button>
+
+    <ul class="sidebar-menu sidebar-menu-nested">
+      <li class="sidebar-item">
+        <a href="#" class="sidebar-link">
+          <span class="sidebar-link-text">전체 회의 목록</span>
+        </a>
+      </li>
+      <li class="sidebar-item sidebar-item-active">
+        <a href="#" class="sidebar-link">
+          <span class="sidebar-link-text">내가 참여한 회의</span>
+        </a>
+      </li>
+      <li class="sidebar-item">
+        <a href="#" class="sidebar-link">
+          <span class="sidebar-link-text">열람 가능한 회의</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- 오늘의 회의 -->
+  <div class="sidebar-section">
+    <p class="sidebar-section-title">오늘의 회의</p>
+
+    <div class="sidebar-meeting-list">
+      <a href="#" class="meeting-card">
+        <div class="meeting-card-icon">
+          <img
+            src="{% static 'img/icon-mic.png' %}"
+            alt=""
+            class="meeting-icon-image"
+          />
+        </div>
+        <div class="meeting-card-body">
+          <p class="meeting-card-title">
+            데이터 처리와 아키텍처 재설계 회의
+          </p>
+          <p class="meeting-card-meta">2025.12.18 13:00</p>
+        </div>
+      </a>
+
+      <a href="#" class="meeting-card">
+        <div class="meeting-card-icon">
+          <img
+            src="{% static 'img/icon-mic.png' %}"
+            alt=""
+            class="meeting-icon-image"
+          />
+        </div>
+        <div class="meeting-card-body">
+          <p class="meeting-card-title">
+            연말 운영 계획 및 예산 조정 회의
+          </p>
+          <p class="meeting-card-meta">2025.12.18 09:00</p>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- 하단 링크 (오른쪽 정렬) -->
+  <div class="sidebar-footer">
     <ul class="sidebar-menu">
       <li class="sidebar-item">
-        <a href="#" class="sidebar-link">
-          <span class="sidebar-link-text">사용자 관리</span>
+        <a href="#" class="sidebar-link sidebar-link-footer">
+          <span class="sidebar-link-text">관리자 홈</span>
         </a>
       </li>
       <li class="sidebar-item">
-        <a href="#" class="sidebar-link">
-          <span class="sidebar-link-text">권한 설정</span>
+        <a href="#" class="sidebar-link sidebar-link-footer">
+          <span class="sidebar-link-text">로그아웃</span>
         </a>
       </li>
       <li class="sidebar-item">
-        <a href="#" class="sidebar-link">
-          <span class="sidebar-link-text">시스템 로그</span>
+        <a href="#" class="sidebar-link sidebar-link-footer">
+          <span class="sidebar-link-text">비밀번호 변경</span>
         </a>
       </li>
     </ul>
   </div>
 </nav>
 
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const collapse = document.querySelector(".sidebar-collapse");
+    const nested = document.querySelector(".sidebar-menu-nested");
+
+    if (collapse && nested) {
+      // 처음에는 펼쳐진 상태 (is-collapsed 없으면 보임)
+      collapse.addEventListener("click", function () {
+        nested.classList.toggle("is-collapsed");
+        collapse.classList.toggle("collapsed");
+      });
+    }
+  });
+</script>

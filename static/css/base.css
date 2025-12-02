@@ -1,20 +1,26 @@
 /* ========= 공통 기본 스타일 ========= */
 
 :root {
-  /* 색상 */
-  --color-bg: #ffffff;
-  --color-bg-alt: #f3f4f6;
-  --color-sidebar-bg: #F9FAFB;
-  --color-sidebar-border: #F9FAFB;
-  --color-header-bg: #F9FAFB;
-  --color-header-border: #e5e7eb;
-  --color-text: #111827;
-  --color-text-muted: #6b7280;
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-border-subtle: #e5e7eb;
+  /* 라이트 테마 사이드바/헤더/배경 */
+  --color-bg: #e0e0e0;                 /* 전체 배경 */
+  --color-bg-alt: #ffffff;             /* 콘텐츠 영역 연회색 */
+  --color-sidebar-bg: #F9FAFB;         /* 아주 밝은 회색 사이드바 */
+  --color-sidebar-border: #e0e0e0;     /* 연한 보더 */
+  --color-header-bg: #F9FAFB;          /* 헤더 흰색 */
+  --color-header-border: #e0e0e0;      /* 얇은 연회색 보더 */
 
-  /* 애니메이션 변수 (tailwind.css 참고) */
+  /* 텍스트 */
+  --color-text: #212121;               /* 본문 텍스트 (짙은 회색) */
+  --color-text-muted: #757575;         /* 설명용 텍스트 */
+
+  /* 포커스/강조(구글 머티리얼 블루) */
+  --color-primary: #2962ff;            /* Material Blue */
+  --color-primary-hover: #0039cb;
+
+  /* 버튼/보더 */
+  --color-border-subtle: #e0e0e0;
+
+  /* 애니메이션 변수 */
   --animate-spin: spin 1s linear infinite;
   --shimmer-width: 160px;
   --gap: 2rem;
