@@ -127,6 +127,6 @@
 
 /* 홈 화면에서만 세로 스크롤 제거 */
 .app-content {
-    overflow: hidden !important;
+    overflow-x: hidden !important;
     padding-bottom: 0 !important;
 }
