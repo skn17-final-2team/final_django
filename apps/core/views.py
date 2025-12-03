@@ -13,4 +13,3 @@ class LoginRequiredSessionMixin:
 class HomeView(LoginRequiredSessionMixin, TemplateView):
     template_name = "core/home.html"
 
-
