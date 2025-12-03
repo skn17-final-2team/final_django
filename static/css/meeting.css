@@ -1,0 +1,16 @@
+.dropzone {
+    border: 2px dashed #7d8aff;
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    color: #444;
+    transition: background 0.2s, border-color 0.2s;
+}
+.dropzone.highlight {
+    background: #f4f6ff;
+    border-color: #4953ff;
+}
+.preview {
+    margin-top: 12px;
+    font-size: 14px; 
+}

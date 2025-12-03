@@ -10,6 +10,17 @@ document.addEventListener("DOMContentLoaded", function () {
   const newPw2Err = document.getElementById("new_pw2_error");   // 3번 칸
   const commonErr = document.getElementById("pw_common_error"); // 버튼 아래
 
+  const collapse = document.querySelector(".sidebar-collapse");
+  const nested = document.querySelector(".sidebar-menu-nested");
+
+  // 회의 목록 접기 & 펼치기
+  if (collapse && nested) {
+    collapse.addEventListener("click", function () {
+        nested.classList.toggle("is-collapsed");
+        collapse.classList.toggle("collapsed");
+    });
+  }
+
   function openModal(modal) {
     if (modal) modal.classList.remove("hidden");
   }
@@ -157,9 +168,6 @@ document.addEventListener("DOMContentLoaded", function () {
         newPwErr.textContent = "올바르지 않은 형식입니다.";
         newPwErr.classList.add("visible");
       }
-
-        
-
     });
   }
 
@@ -195,9 +203,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
   
-
-
-
   // =========================
   // 아래에는 기존 submit 검증 로직 그대로…
   // =========================
@@ -293,15 +298,10 @@ document.addEventListener("DOMContentLoaded", function () {
       } catch (err) {
         console.error("비밀번호 변경 중 오류:", err);
         if (commonErr) {
-          commonErr.textContent =
-            "비밀번호 변경 중 오류가 발생했습니다. 다시 시도해 주세요.";
+          commonErr.textContent = "비밀번호 변경 중 오류가 발생했습니다. 다시 시도해 주세요.";
           commonErr.classList.add("visible");
         }
       }
     });
   }
-
-
 });
-
-
