@@ -1,6 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
   const calendarEl = document.getElementById("home-calendar");
-  if (!calendarEl) return;
+  if (!calendarEl) {
+    console.error("home-calendar 요소를 찾을 수 없습니다.");
+    return;
+  }
 
   // 오늘 날짜 기준으로 상단 텍스트 업데이트용
   const currentDateEl = document.getElementById("home-current-date");

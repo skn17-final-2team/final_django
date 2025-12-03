@@ -14,7 +14,7 @@
         <img src="{% static 'img/icon-user.png' %}" alt="user" class="user-icon">
       </div>
       <div class="header-user-info">
-        <span class="user-name">김대로님</span>
+        <span class="user-name">{{ request.session.login_user_name }}님</span>
       </div>
     </div>
 
