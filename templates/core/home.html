@@ -6,7 +6,6 @@
 
 {% block extra_head %}
   <link rel="stylesheet" href="{% static 'css/home.css' %}">
-  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
@@ -16,7 +15,7 @@
     <header class="dashboard-header">
       <div class="dashboard-header-left">
         <span class="icon">📅</span>
-        <span id="home-current-date">2025년 12월 18일 목</span>
+        <span id="home-current-date"></span>
       </div>
       <button type="button" class="btn-add-schedule">+ 일정 추가</button>
     </header>
@@ -53,42 +52,10 @@
 
 {% block extra_script %}
   <!-- FullCalendar JS -->
-  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
+  <script src="{% static 'js/fullcalendar_6.1.19.js' %}"></script>
 
-  <!-- 홈 화면용 캘린더 초기화 스크립트 (우선 inline으로) -->
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      var calendarEl = document.getElementById("home-calendar");
-      if (!calendarEl) {
-        console.error("home-calendar 요소를 찾을 수 없습니다.");
-        return;
-      }
+  <!-- 홈 화면용 캘린더 초기화 스크립트 -->
+  <script src="{% static 'js/home_calendar.js' %}"></script>
 
-      var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: "dayGridMonth",
-        locale: "ko",            // 한국어
-        height: "auto",
-        contentHeight: 360,
-        headerToolbar: {
-          left: "prev,next today",
-          center: "title",
-          right: ""
-        },
-        events: [
-          {
-            title: "실시간/배치 파이프라인 분리 및 인증 로그 처리 방안 검토",
-            start: "2025-12-18",
-            allDay: true
-          },
-          {
-            title: "연말 운영 계획 및 예산 조정 회의",
-            start: "2025-12-18T09:00:00"
-          }
-        ]
-      });
-
-      calendar.render();
-    });
-  </script>
 {% endblock %}
 
