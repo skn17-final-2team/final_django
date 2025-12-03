@@ -8,7 +8,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
     locale: "ko", // 한국어 요일/월 표기
-    height: "auto", // 카드 높이에 맞추기
+    height: "100%", // 카드 높이에 맞추기
+    contentHeight: "auto",
+    expandRows: true,
     headerToolbar: {
       left: "prev,next today",
       center: "title",

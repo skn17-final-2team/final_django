@@ -1,15 +1,17 @@
 /* 대시보드 전체 레이아웃 */
 .dashboard {
+  height: calc(100vh - 70px);
+  overflow: hidden;
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(260px, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: 1fr 320px;
+  gap: 1.2rem;
 }
 
 /* 왼쪽 메인 영역 */
 .dashboard-main {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  min-height: 0;
 }
 
 /* 상단 제목/버튼 영역 */
@@ -21,6 +23,7 @@
   background-color: #ffffff;
   border-radius: 12px;
   border: 1px solid #e5e7eb;
+  flex: 0 0 auto;
 }
 
 .dashboard-header-left {
@@ -50,6 +53,10 @@
 
 /* 달력 카드 */
 .calendar-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   background-color: #ffffff;
   border-radius: 18px;
   border: 1px solid #e5e7eb;
@@ -58,18 +65,23 @@
 
 /* 오른쪽 사이드 영역 */
 .dashboard-side {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 /* 일정 카드 공통 */
 .schedule-card {
-  background-color: #ffffff;
-  border-radius: 18px;
-  border: 1px solid #e5e7eb;
-  padding: 0.9rem 1rem;
-  min-height: 150px;
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    background-color: #ffffff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    padding: 0.9rem 1rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .schedule-card-title {
@@ -109,6 +121,12 @@
 }
 
 #home-calendar {
-  width: 100%;
-  min-height: 400px;   /* 해상도 보고 필요하면 500~650 사이로 조절 */
+  flex: 1 1 auto;
+  min-height: 0 !important;
+}
+
+/* 홈 화면에서만 세로 스크롤 제거 */
+.app-content {
+    overflow: hidden !important;
+    padding-bottom: 0 !important;
 }
