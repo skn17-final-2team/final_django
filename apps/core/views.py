@@ -14,17 +14,3 @@ class HomeView(LoginRequiredSessionMixin, TemplateView):
     template_name = "core/home.html"
 
 
-class MeetingListAllView(LoginRequiredSessionMixin, TemplateView):
-    template_name = "meetings/meeting_list_all.html"
-
-
-class MeetingListMineView(LoginRequiredSessionMixin, TemplateView):
-    template_name = "meetings/meeting_list_mine.html"
-
-
-class MeetingListOpenView(LoginRequiredSessionMixin, TemplateView):
-    template_name = "meetings/meeting_list_open.html"
-
-
-class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
-    template_name = "meetings/meeting_create.html"
