@@ -26,7 +26,7 @@ class Meeting(models.Model):
         db_column="record_url",
     )
     domain_upload = models.BooleanField(default=False)
-
+    private_yn = models.BooleanField(default=False)
     class Meta:
         db_table = "meeting_tbl"
 
@@ -88,7 +88,7 @@ class Domain(models.Model):
     domain_name = models.CharField(max_length=16)
 
     class Meta:
-        db_table = "domain"
+        db_table = "domain_tbl"
         unique_together = ("meeting", "domain_name")
 
     def __str__(self):
