@@ -1,248 +1,315 @@
-/* meeting_create 페이지 전용 스타일 */
-
+/* ===== 페이지 전체 컨테이너 ===== */
 .meeting-create-page {
-  padding: 24px 32px;
+  padding: 32px 40px;
+  background-color: #f9fafb;
+  box-sizing: border-box;
 }
 
-.meeting-layout {
-  max-width: 1280px;
+/* 메인 폼 */
+.meeting-form {
+  max-width: 1300px;
   margin: 0 auto;
 }
 
-.meeting-main-card {
-  background-color: var(--color-bg-alt);
-  border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-  padding: 32px 32px 28px;
-  border: 1px solid var(--color-border-subtle);
+/* 좌우 2컬럼 */
+.meeting-columns {
+  display: grid;
+  grid-template-columns: 1.05fr 1.05fr;
+  column-gap: 40px;
 }
 
-.meeting-main-header {
-  margin-bottom: 24px;
-  border-bottom: 1px solid var(--color-border-subtle);
-  padding-bottom: 16px;
-}
-
-.meeting-page-title {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-/* 공통 섹션 */
-
-.meeting-form {
+/* 각 컬럼 */
+.meeting-left,
+.meeting-right {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
-.meeting-section {
+/* ========== 공통 필드 ========== */
+.field-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
-.meeting-section-split {
+.field-row-2 {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr);
-  gap: 24px;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 16px;
 }
 
-/* 필드 */
-
-.meeting-field-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 16px;
-}
-
-.meeting-field-group {
+.field-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
 .field-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-text);
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #5a5a5a;
 }
 
 .field-input {
-  height: 44px;
-  padding: 0 12px;
-  border-radius: 12px;
-  border: 1px solid var(--color-border-subtle);
-  background-color: #fafafa;
-  font-size: 14px;
+  height: 48px;
+  border-radius: 10px;
+  border: 1px solid #d9d9d9;
+  background-color: #ffffff;
+  box-shadow: 0 4px 4px #00000020;
+  padding: 0 14px;
+  font-size: 15px;
+  color: #5a5a5a;
   outline: none;
 }
 
-.field-input:focus {
-  border-color: var(--color-primary);
-  background-color: #ffffff;
+.field-input::placeholder {
+  color: #b3b3b3;
 }
 
-/* 섹션 타이틀 */
+.field-input:focus {
+  border-color: #6750a4;
+}
 
-.section-title-row {
+/* ========== 도메인 영역 ========== */
+.domain-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.domain-header {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.section-title {
+.domain-title {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
+  color: #5a5a5a;
 }
 
-.section-subtext {
+.domain-sub {
   margin: 0;
-  font-size: 13px;
-  color: var(--color-text-muted);
+  font-size: 14px;
+  color: #767676;
 }
 
-/* 특화 도메인 */
-
-.domain-panel {
-  background-color: #f9fafb;
-  border-radius: 20px;
-  padding: 16px 18px 18px;
-  border: 1px solid #e5e7eb;
+.domain-body {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
+/* 업로드 카드 */
 .domain-upload-card {
+  width: 320px;
+  height: 150px;
   border-radius: 18px;
-  border: 1px dashed #d1d5db;
   background-color: #ffffff;
-  cursor: pointer;
-  padding: 14px 12px;
-  display: inline-flex;
+  box-shadow: 0 4px 4px #00000040;
+  border: 1px solid #e5e7eb;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
+  cursor: pointer;
 }
 
 .domain-upload-input {
   display: none;
 }
 
-.domain-upload-inner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .domain-upload-icon {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #d1d5db;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 22px;
-  color: var(--color-primary);
+  color: #5a5a5a;
 }
 
-.domain-upload-text {
+.domain-upload-texts {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .domain-upload-title {
   font-size: 14px;
   font-weight: 600;
+  color: #5a5a5a;
 }
 
-.domain-upload-subtext {
+.domain-upload-sub {
   font-size: 12px;
-  color: var(--color-text-muted);
+  color: #b3b3b3;
 }
 
-.domain-checkbox-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* 도메인 토글 + 모달 */
+.domain-toggle-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-top: 4px;
 }
 
-.domain-help-text {
-  margin: 0;
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
-
-.domain-checkbox-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.domain-checkbox-item {
+.domain-toggle {
+  border: none;
+  background: transparent;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 14px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  font-size: 13px;
+  gap: 8px;
+  padding: 0;
   cursor: pointer;
 }
 
-.domain-checkbox-item input {
-  accent-color: var(--color-primary);
+.domain-toggle-icon {
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background-color: #e5e5e5;
+  border: 1px solid #b3b3b3;
+  position: relative;
 }
 
-/* 참석자 패널 */
+.domain-toggle-icon::before {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #5a5a5a;
+  top: 1px;
+  left: 2px;
+  transition: transform 0.15s ease;
+}
 
-.attendee-panel {
-  background-color: #f9fafb;
-  border-radius: 20px;
-  padding: 16px 18px 18px;
+/* 토글 ON (모달 열렸을 때) */
+.domain-toggle-wrapper.is-open .domain-toggle-icon {
+  background-color: #d4d4d4;
+}
+
+.domain-toggle-wrapper.is-open .domain-toggle-icon::before {
+  transform: translateX(14px);
+}
+
+.domain-toggle-text {
+  font-size: 14px;
+  color: #5a5a5a;
+}
+
+/* 모달 카드 */
+.domain-modal {
+  position: absolute;
+  top: 28px;
+  left: 0;
+  width: 180px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background-color: #ffffff;
   border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 4px #00000040;
+  display: none;
+  z-index: 10;
+}
+
+.domain-modal.is-open {
+  display: block;
+}
+
+.domain-modal-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #5a5a5a;
+  margin-bottom: 6px;
+}
+
+.domain-modal-item:last-child {
+  margin-bottom: 0;
+}
+
+.domain-modal-item input {
+  width: 16px;
+  height: 16px;
+}
+
+/* ========== 참석자 영역 ========== */
+.attendee-section {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 4px #00000040;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
-.attendee-columns {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) 80px minmax(0, 1.2fr);
-  gap: 16px;
+.attendee-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-.attendee-tree {
-  overflow: auto;
-  max-height: 280px;
-  padding-right: 4px;
-}
-
-.tree-list,
-.tree-list ul {
-  list-style: none;
+.attendee-title {
   margin: 0;
-  padding-left: 14px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #5a5a5a;
 }
 
-.tree-node-label {
+.attendee-sub {
+  margin: 0;
+  font-size: 14px;
+  color: #767676;
+}
+
+.attendee-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 0.4fr 1.2fr;
+  column-gap: 12px;
+  align-items: stretch;
+}
+
+/* 조직도 */
+.attendee-tree {
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  padding: 8px 10px;
   font-size: 13px;
-  font-weight: 600;
+  color: #5a5a5a;
+}
+
+/* 간단 트리 스타일 */
+.tree-root,
+.tree-root ul {
+  list-style: none;
+  padding-left: 12px;
+  margin: 0;
+}
+
+.tree-label {
   display: inline-block;
-  margin: 4px 0;
+  margin: 3px 0;
+}
+
+.root-label {
+  font-weight: 600;
 }
 
 .tree-user {
-  font-size: 13px;
-  margin: 4px 0;
-  padding: 4px 6px;
-  border-radius: 8px;
+  margin: 2px 0;
+  padding: 3px 4px;
+  border-radius: 6px;
   cursor: pointer;
 }
 
@@ -250,21 +317,32 @@
   background-color: #e5e7eb;
 }
 
-.attendee-arrow-column {
+/* 가운데 버튼 */
+.attendee-middle {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  align-items: stretch;
 }
 
-.attendee-selected {
+.btn-reset-attendee {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #d4d4d4;
   background-color: #ffffff;
-  border-radius: 16px;
+  font-size: 12px;
+  color: #5a5a5a;
+  cursor: pointer;
+}
+
+/* 선택된 참석자 */
+.attendee-selected {
+  border-radius: 12px;
   border: 1px solid #e5e7eb;
-  padding: 10px 10px 8px;
+  background-color: #f9fafb;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .attendee-selected-header {
@@ -273,121 +351,113 @@
   align-items: center;
 }
 
-.attendee-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 36px;
+.attendee-selected-title {
+  font-size: 13px;
+  color: #5a5a5a;
+}
+
+.attendee-count-badge {
+  min-width: 40px;
   height: 20px;
   border-radius: 999px;
   background-color: #eef2ff;
   color: #3730a3;
   font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.selected-attendee-list {
+.attendee-list {
   list-style: none;
   margin: 4px 0 0;
   padding: 0;
-  max-height: 230px;
-  overflow: auto;
 }
 
-.selected-attendee-item {
+.attendee-list-item {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 6px;
-  padding: 6px 8px;
-  border-radius: 10px;
+  align-items: center;
+  padding: 4px 6px;
+  border-radius: 6px;
   font-size: 13px;
 }
 
-.selected-attendee-item:nth-child(odd) {
-  background-color: #f3f4f6;
+.attendee-list-item:nth-child(odd) {
+  background-color: #e5e7eb;
 }
 
 .attendee-remove-btn {
   border: none;
   background: transparent;
   cursor: pointer;
-  font-size: 16px;
-  line-height: 1;
-  padding: 0 2px;
+  font-size: 14px;
   color: #9ca3af;
 }
 
-.attendee-remove-btn:hover {
-  color: #4b5563;
-}
-
-/* 하단 */
-
-.meeting-footer {
-  margin-top: 8px;
-  padding-top: 12px;
-  border-top: 1px solid var(--color-border-subtle);
+/* ========== 오른쪽 하단: 비공개 + 버튼 ========== */
+.meeting-right-bottom {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
+  margin-top: 10px;
+  gap: 16px;
 }
 
-.private-toggle {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--color-text);
-}
-
-.private-toggle input {
-  margin-top: 3px;
+.private-block {
+  max-width: 380px;
 }
 
 .private-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  color: #5a5a5a;
+  cursor: pointer;
+  position: relative;
+}
+
+.private-icon-wrapper {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background-color: #5a5a5a;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: center;
 }
 
-.private-help {
-  font-size: 12px;
-  color: var(--color-text-muted);
+.private-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background-color: #ffffff;
 }
 
-.meeting-submit-btn {
-  min-width: 140px;
-  height: 44px;
-  border-radius: 999px;
+.private-checkbox {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
 }
 
-/* 반응형 */
-
-@media (max-width: 1024px) {
-  .meeting-section-split {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .attendee-columns {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .attendee-arrow-column {
-    display: none;
-  }
+.private-desc {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #5a5a5a;
 }
 
-@media (max-width: 768px) {
-  .meeting-create-page {
-    padding: 16px;
-  }
-
-  .meeting-main-card {
-    padding: 20px 16px;
-    border-radius: 18px;
-  }
-
-  .meeting-field-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.btn-start-meeting {
+  width: 200px;
+  height: 46px;
+  border-radius: 10px;
+  background-color: #c1c1c1;
+  border: none;
+  font-size: 18px;
+  font-weight: 500;
+  color: #5a5a5a;
+  cursor: pointer;
 }
+
+
