@@ -1,0 +1,393 @@
+/* meeting_create 페이지 전용 스타일 */
+
+.meeting-create-page {
+  padding: 24px 32px;
+}
+
+.meeting-layout {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.meeting-main-card {
+  background-color: var(--color-bg-alt);
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  padding: 32px 32px 28px;
+  border: 1px solid var(--color-border-subtle);
+}
+
+.meeting-main-header {
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--color-border-subtle);
+  padding-bottom: 16px;
+}
+
+.meeting-page-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+/* 공통 섹션 */
+
+.meeting-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.meeting-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.meeting-section-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr);
+  gap: 24px;
+}
+
+/* 필드 */
+
+.meeting-field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.meeting-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.field-input {
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-border-subtle);
+  background-color: #fafafa;
+  font-size: 14px;
+  outline: none;
+}
+
+.field-input:focus {
+  border-color: var(--color-primary);
+  background-color: #ffffff;
+}
+
+/* 섹션 타이틀 */
+
+.section-title-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.section-subtext {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+/* 특화 도메인 */
+
+.domain-panel {
+  background-color: #f9fafb;
+  border-radius: 20px;
+  padding: 16px 18px 18px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.domain-upload-card {
+  border-radius: 18px;
+  border: 1px dashed #d1d5db;
+  background-color: #ffffff;
+  cursor: pointer;
+  padding: 14px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.domain-upload-input {
+  display: none;
+}
+
+.domain-upload-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.domain-upload-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: var(--color-primary);
+}
+
+.domain-upload-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.domain-upload-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.domain-upload-subtext {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.domain-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.domain-help-text {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.domain-checkbox-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.domain-checkbox-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 14px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.domain-checkbox-item input {
+  accent-color: var(--color-primary);
+}
+
+/* 참석자 패널 */
+
+.attendee-panel {
+  background-color: #f9fafb;
+  border-radius: 20px;
+  padding: 16px 18px 18px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attendee-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) 80px minmax(0, 1.2fr);
+  gap: 16px;
+}
+
+.attendee-tree {
+  overflow: auto;
+  max-height: 280px;
+  padding-right: 4px;
+}
+
+.tree-list,
+.tree-list ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 14px;
+}
+
+.tree-node-label {
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-block;
+  margin: 4px 0;
+}
+
+.tree-user {
+  font-size: 13px;
+  margin: 4px 0;
+  padding: 4px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tree-user:hover {
+  background-color: #e5e7eb;
+}
+
+.attendee-arrow-column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.attendee-selected {
+  background-color: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 10px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attendee-selected-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.attendee-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background-color: #eef2ff;
+  color: #3730a3;
+  font-size: 11px;
+}
+
+.selected-attendee-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  max-height: 230px;
+  overflow: auto;
+}
+
+.selected-attendee-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+.selected-attendee-item:nth-child(odd) {
+  background-color: #f3f4f6;
+}
+
+.attendee-remove-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  color: #9ca3af;
+}
+
+.attendee-remove-btn:hover {
+  color: #4b5563;
+}
+
+/* 하단 */
+
+.meeting-footer {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.private-toggle {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.private-toggle input {
+  margin-top: 3px;
+}
+
+.private-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.private-help {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.meeting-submit-btn {
+  min-width: 140px;
+  height: 44px;
+  border-radius: 999px;
+}
+
+/* 반응형 */
+
+@media (max-width: 1024px) {
+  .meeting-section-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendee-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .attendee-arrow-column {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .meeting-create-page {
+    padding: 16px;
+  }
+
+  .meeting-main-card {
+    padding: 20px 16px;
+    border-radius: 18px;
+  }
+
+  .meeting-field-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
