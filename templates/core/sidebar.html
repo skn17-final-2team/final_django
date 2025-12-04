@@ -29,7 +29,7 @@
 
       <!-- 새 회의 -->
       <li class="sidebar-item {% if request.resolver_match.namespace == 'meetings' and request.resolver_match.url_name == 'create' %}sidebar-item-active{% endif %}">
-        <a href="{% url 'meetings:create' %}" class="sidebar-link">
+        <a href="{% url 'meetings:meeting_create' %}" class="sidebar-link">
             <img
             src="{% static 'img/icon-new-meeting.png' %}"
             alt=""
