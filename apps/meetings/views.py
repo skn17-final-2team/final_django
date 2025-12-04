@@ -3,8 +3,11 @@ from django.views.generic import TemplateView
 from apps.core.views import LoginRequiredSessionMixin
 from apps.accounts.models import Dept, User
 from django.db.models import Prefetch
-from .models import Meeting, Attendee
 from django.contrib import messages
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+
+from .models import Meeting, Attendee
 
 from apps.meetings.utils.s3_upload import upload_raw_file_bytes
 from apps.meetings.models import S3File
@@ -103,7 +106,49 @@ class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
 class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_detail.html"
 
-# TODO 이거 수정 해야댐 ㄹㅇ
 def meeting_record_upload(request, meeting_id):
-    print()
-    return 
+    # 1) 메소드 체크
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid method"}, status=405)
+
+    # 2) 회의 조회
+    meeting = get_object_or_404(Meeting, pk=meeting_id)
+
+    # 3) 파일 추출
+    uploaded_file = request.FILES.get("file")
+    if not uploaded_file:
+        return JsonResponse({"error": "file is required"}, status=400)
+
+    # 4) 확장자 검증 (png / wav)
+    filename = uploaded_file.name
+    ext = filename.split(".")[-1].lower()
+    if ext not in ["png", "wav"]:
+        return JsonResponse(
+            {"error": "PNG/WAV 파일만 업로드 가능합니다."},
+            status=400,
+        )
+
+    # 5) 유틸 호출
+    file_bytes = uploaded_file.read()
+    try:
+        s3_key, presigned_url = upload_raw_file_bytes(
+            file_bytes=file_bytes,
+            original_filename=filename,
+            delete_after_seconds=3600,
+        )
+    except Exception as e:
+        # 유틸 호출 중 에러가 나도 반드시 응답을 반환
+        return JsonResponse(
+            {"error": f"S3 업로드 중 오류: {str(e)}"},
+            status=500,
+        )
+
+    # 6) Meeting FK 연결 (record_url 이 ForeignKey(S3File, db_column="record_url") 일 때)
+    meeting.record_url_id = s3_key
+    meeting.save(update_fields=["record_url"])
+
+    return JsonResponse({
+        "ok": True,
+        "s3_key": s3_key,
+        "url": presigned_url,
+    })

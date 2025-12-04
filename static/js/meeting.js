@@ -81,7 +81,7 @@ uploadBtn.addEventListener('click', async (event) => {
     const meetingId = pathParts[2];
     
     const formData = new FormData();
-    // 한 개만 업로드하므로 첫 번째만 사용, 백엔드에서 name="file" 로 받도록
+
     formData.append('file', selectedFiles[0]);
     try {
         const res = await fetch(`/meetings/${meetingId}/upload/`, {

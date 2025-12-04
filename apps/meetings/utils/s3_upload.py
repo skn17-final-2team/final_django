@@ -64,4 +64,4 @@ def upload_raw_file_bytes(file_bytes: bytes, original_filename: str, delete_afte
         delete_at=delete_at,
     )
     # 다운로드 URL 반환
-    return presigned_url
+    return s3_key, presigned_url
