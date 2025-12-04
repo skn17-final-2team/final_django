@@ -395,6 +395,22 @@
   color: #9ca3af;
 }
 
+.attendee-validator-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  border: none;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none; /* 클릭 안 되도록 */
+}
+.field-error {
+    color: #d93025; /* 구글 폼 에러 색상 */
+    font-size: 14px;
+    margin-top: 4px;
+    display: block;
+}
+
 /* ========== 오른쪽 하단: 비공개 + 버튼 ========== */
 .meeting-right-bottom {
   display: flex;
@@ -409,19 +425,16 @@
 }
 
 .private-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  color: #5a5a5a;
-  cursor: pointer;
-  position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
 }
 
 .private-icon-wrapper {
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   background-color: #5a5a5a;
   display: flex;
   align-items: center;
@@ -436,16 +449,22 @@
 }
 
 .private-checkbox {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* 체크 상태 표시 */
+.private-checkbox:checked ~ .private-icon-wrapper .private-icon {
+    background-color: #777;
 }
 
 .private-desc {
   margin: 4px 0 0;
-  font-size: 13px;
+  font-size: 12px;
   color: #5a5a5a;
+  white-space: nowrap;
 }
 
 .btn-start-meeting {

@@ -138,4 +138,43 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   refreshCount();
+
+  // === 폼 제출 시 참석자 최소 1명 검사 ===
+  const form = document.querySelector(".meeting-form");
+  const attendeeError = document.getElementById("attendee-error");
+  const attendeeSelectedBox = document.querySelector(".attendee-selected");
+
+  if (form && selectedList) {
+    form.addEventListener("submit", function (e) {
+      const count = selectedList.querySelectorAll(
+        ".selected-attendee-item"
+      ).length;
+
+      if (count === 0) {
+        // 참석자 0명이면 제출 막고 에러 표시
+        e.preventDefault();
+
+        if (attendeeError) {
+          attendeeError.style.display = "block";
+        }
+        if (attendeeSelectedBox) {
+          attendeeSelectedBox.classList.add("attendee-error-border");
+          // 화면 중앙 정도로 스크롤
+          attendeeSelectedBox.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+        }
+      } else {
+        // 최소 1명 이상이면 에러 숨기고 그대로 제출
+        if (attendeeError) {
+          attendeeError.style.display = "none";
+        }
+        if (attendeeSelectedBox) {
+          attendeeSelectedBox.classList.remove("attendee-error-border");
+        }
+        // e.preventDefault() 호출하지 않음 → 브라우저 기본 검증 + 제출 진행
+      }
+    });
+  }
 });
