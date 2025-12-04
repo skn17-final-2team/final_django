@@ -130,3 +130,275 @@
     overflow-x: hidden !important;
     padding-bottom: 0 !important;
 }
+
+/* =========================
+   일정 추가 모달 스타일
+   ========================= */
+
+.schedule-modal {
+  position: fixed;
+  inset: 0; /* top, right, bottom, left */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  font-family: inherit;
+}
+
+.schedule-modal.hidden {
+  display: none;
+}
+
+/* 반투명 배경 */
+.schedule-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* 모달 본문 */
+.schedule-modal-dialog {
+  position: relative;
+  z-index: 1001;
+  width: 430px;
+  max-width: 92%;
+  padding: 28px 32px 24px;
+  border-radius: 18px;
+  background: #f6f6f8;             /* 아주 연한 회색 배경 */
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+}
+
+/* 제목 "일정 추가" */
+.schedule-modal-title {
+  margin: 0 0 24px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #333333;
+}
+
+/* 필드 그룹 */
+.schedule-field {
+  margin-bottom: 16px;
+}
+
+.schedule-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555555;
+}
+
+/* 텍스트/날짜 입력 공통 */
+.schedule-input {
+  width: 100%;
+  height: 44px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid #dedee3;
+  background-color: #ffffff;
+  font-size: 14px;
+  color: #333333;
+}
+
+.schedule-input::placeholder {
+  color: #b3b3c0;
+}
+
+/* 포커스 스타일 */
+.schedule-input:focus,
+.schedule-textarea:focus {
+  outline: none;
+  border-color: #a39fd4;
+  box-shadow: 0 0 0 1px rgba(163, 159, 212, 0.3);
+}
+
+/* 시작/종료 일시 두 개 나란히 */
+.schedule-datetime-row {
+  display: flex;
+  gap: 8px;
+}
+
+.schedule-datetime-row .schedule-input {
+  flex: 1;
+}
+
+/* 종일 체크 영역 */
+.schedule-all-day-row {
+  display: flex;
+  align-items: center;
+}
+
+.schedule-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #4d4457;
+}
+
+.schedule-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+/* 설명 박스 */
+.schedule-textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  border: 1px solid #dedee3;
+  background-color: #ffffff;
+  font-size: 14px;
+  resize: vertical;
+  color: #333333;
+}
+
+/* 버튼 영역 */
+.schedule-actions {
+  margin-top: 22px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* 버튼 공통 */
+.schedule-btn {
+  min-width: 120px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+/* 왼쪽 회색 "추가" 버튼 */
+.schedule-btn-primary {
+  background-color: #b5b2c0;   /* 흐린 회색+보라 느낌 */
+  color: #ffffff;
+  border-color: #b5b2c0;
+}
+
+/* 오른쪽 흰색 "취소" 버튼 */
+.schedule-btn-secondary {
+  background-color: #ffffff;
+  color: #555555;
+  border-color: #d1d1da;
+}
+
+/* hover 살짝만 */
+.schedule-btn-primary:hover {
+  background-color: #a5a2b3;
+}
+
+.schedule-btn-secondary:hover {
+  background-color: #f2f2f5;
+}
+
+/* =========================
+   일정 상세 모달
+   ========================= */
+
+.event-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  font-family: inherit;
+}
+
+.event-modal.hidden {
+  display: none;
+}
+
+.event-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.event-modal-dialog {
+  position: relative;
+  z-index: 1101;
+  width: 360px;
+  max-width: 90%;
+  padding: 24px 24px 18px;
+  border-radius: 12px;
+  background: #d9d9d9; /* 스샷처럼 회색 카드 */
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
+}
+
+.event-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.event-modal-icon {
+  font-size: 22px;
+}
+
+.event-modal-date {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111111;
+}
+
+.event-modal-body {
+  margin-top: 4px;
+}
+
+.event-modal-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #111111;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.event-modal-dot {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.event-modal-desc {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: #222222;
+  white-space: pre-wrap;
+}
+
+.event-modal-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.event-modal-close-btn {
+  min-width: 72px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 16px;
+  border: 1px solid #b3b3b3;
+  background: #ffffff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.event-modal-close-btn:hover {
+  background: #f2f2f2;
+}

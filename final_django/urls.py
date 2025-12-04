@@ -23,4 +23,6 @@ urlpatterns = [
     path("", include("apps.core.urls")),
     path("accounts/", include("apps.accounts.urls")),
     path("meetings/", include("apps.meetings.urls")),
+
+    path("", include("apps.google_calendar.urls")),    
 ]

@@ -1,0 +1,10 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path("google/login/", views.google_login, name="google_login"),
+    path("oauth2callback/", views.oauth2callback, name="oauth2callback"),
+    path("api/google-events/", views.google_events),
+    path("api/google-events/create/", views.create_google_event),
+    path("api/google-auth-status/", views.google_auth_status),
+]

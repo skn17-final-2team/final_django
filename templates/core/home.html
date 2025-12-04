@@ -17,7 +17,10 @@
         <span class="icon">📅</span>
         <span id="home-current-date"></span>
       </div>
-      <button type="button" class="btn-add-schedule">+ 일정 추가</button>
+
+      <div class="dashboard-header-right">
+        <button type="button" class="btn-add-schedule">+ 일정 추가</button>
+      </div>
     </header>
 
     <div class="calendar-card">
@@ -47,6 +50,97 @@
       </ul>
     </section>
   </aside>
+
+  <!-- 일정 추가 모달 -->
+  <div id="schedule-modal" class="schedule-modal hidden">
+    <div class="schedule-modal-backdrop"></div>
+
+    <div class="schedule-modal-dialog">
+      <h2 class="schedule-modal-title">일정 추가</h2>
+
+      <div class="schedule-field">
+        <label for="schedule-title">일정 제목</label>
+        <input
+          type="text"
+          id="schedule-title"
+          class="schedule-input"
+          placeholder="예: 팀 미팅"
+        />
+      </div>
+
+      <div class="schedule-field">
+        <label>일시</label>
+        <div class="schedule-datetime-row">
+          <input
+            type="datetime-local"
+            id="schedule-start"
+            class="schedule-input"
+          />
+          <input
+            type="datetime-local"
+            id="schedule-end"
+            class="schedule-input"
+          />
+        </div>
+      </div>
+
+      <div class="schedule-field schedule-all-day-row">
+        <label class="schedule-checkbox-label">
+          <input type="checkbox" id="schedule-all-day" />
+          <span>종일</span>
+        </label>
+      </div>
+
+      <div class="schedule-field">
+        <label for="schedule-description">설명</label>
+        <textarea
+          id="schedule-description"
+          class="schedule-textarea"
+          rows="4"
+          placeholder="일정에 대한 설명을 입력하세요."
+        ></textarea>
+      </div>
+
+      <div class="schedule-actions">
+        <button id="schedule-submit" class="schedule-btn schedule-btn-primary">
+          추가
+        </button>
+        <button
+          id="schedule-cancel"
+          class="schedule-btn schedule-btn-secondary"
+          type="button"
+        >
+          취소
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 일정 상세 모달 -->
+  <div id="event-detail-modal" class="event-modal hidden">
+    <div class="event-modal-backdrop"></div>
+
+    <div class="event-modal-dialog">
+      <div class="event-modal-header">
+        <span class="event-modal-icon">📅</span>
+        <span id="event-detail-date" class="event-modal-date"></span>
+      </div>
+
+      <div class="event-modal-body">
+        <p class="event-modal-title">
+          <span class="event-modal-dot">●</span>
+          <span id="event-detail-title"></span>
+        </p>
+        <p id="event-detail-description" class="event-modal-desc"></p>
+      </div>
+
+      <div class="event-modal-actions">
+        <button id="event-detail-close" class="event-modal-close-btn">
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
