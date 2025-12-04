@@ -29,6 +29,26 @@ document.addEventListener("DOMContentLoaded", function () {
   const submitBtn = document.getElementById("schedule-submit");
   const cancelBtn = document.getElementById("schedule-cancel");
 
+    // CSRF 토큰 쿠키에서 가져오기
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        // Cookie가 name= 으로 시작하는지 확인
+        if (cookie.substring(0, name.length + 1) === name + "=") {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  const csrftoken = getCookie("csrftoken");
+
+
   function openModal(defaultDate) {
     if (!modal) return;
 
@@ -241,6 +261,7 @@ document.addEventListener("DOMContentLoaded", function () {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
           },
           body: JSON.stringify(payload),
         });
