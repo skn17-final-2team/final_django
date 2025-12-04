@@ -1,7 +1,46 @@
+
+
 document.addEventListener("DOMContentLoaded", function () {
   /* ===== 특화 도메인: 최대 3개 제한 ===== */
   const domainCheckboxes = document.querySelectorAll("[data-domain-checkbox]");
   const maxDomains = 3;
+  const toggleWrapper = document.getElementById("domain-toggle-wrapper");
+  const toggleBtn = document.getElementById("btn-domain-toggle");
+  const modal = document.getElementById("domain-modal");
+  if (toggleWrapper && toggleBtn && modal) {
+    // 토글 클릭 시 열고 닫기
+    toggleBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      modal.classList.toggle("is-open");
+      toggleWrapper.classList.toggle("is-open");
+    });
+
+    // 모달 밖 클릭하면 닫기
+    document.addEventListener("click", function (e) {
+      if (
+        !toggleWrapper.contains(e.target) &&
+        modal.classList.contains("is-open")
+      ) {
+        modal.classList.remove("is-open");
+        toggleWrapper.classList.remove("is-open");
+      }
+    });
+  }
+
+  // ===== 도메인 최대 3개 제한 =====
+  function syncDomainLimit() {
+    const checked = Array.from(domainCheckboxes).filter((c) => c.checked);
+    const isFull = checked.length >= 3;
+    domainCheckboxes.forEach((c) => {
+      if (!c.checked) {
+        c.disabled = isFull;
+      }
+    });
+  }
+  domainCheckboxes.forEach((c) => {
+    c.addEventListener("change", syncDomainLimit);
+  });
+  syncDomainLimit();
 
   function updateDomainSelection(evt) {
     const checked = Array.from(domainCheckboxes).filter((cb) => cb.checked);
