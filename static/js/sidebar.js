@@ -74,7 +74,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const newPwOk = document.getElementById("new_pw_ok");
   let curCheckTimer = null;
 
-  let value = ""
   if (curInput && curOk) {
     curInput.addEventListener("input", function () {
       // 입력이 바뀔 때마다 타이머 초기화 (디바운스)
@@ -82,7 +81,7 @@ document.addEventListener("DOMContentLoaded", function () {
         clearTimeout(curCheckTimer);
       }
 
-      value = curInput.value;
+      const value = curInput.value;
 
       // 입력이 비어 있으면 모든 메세지 숨김
       if (!value) {
@@ -121,10 +120,7 @@ document.addEventListener("DOMContentLoaded", function () {
           } else {
             // 불일치 → 파란 메세지 숨기고 (여기서는 에러는 띄우지 않음)
             curOk.classList.remove("visible");
-            if (curErr) {
-            curErr.textContent = "비밀번호를 확인해주세요.";
-            curErr.classList.add("visible");
-            }
+            if (curErr) curErr.classList.add("visible");
           }
         } catch (err) {
           console.error("기존 비밀번호 확인 중 오류:", err);
@@ -150,11 +146,6 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!n1) {
         return;
       }
-      if (n1 == value) {
-        newPwErr.textContent = "기존 비밀번호와 같습니다.";
-        newPwErr.classList.add("visible");
-        return;
-      } 
 
       // 비밀번호 정책 (8~15자, 영문 + 숫자)
       const pwPattern = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,15}$/;
