@@ -1,8 +1,10 @@
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.views.generic import TemplateView
 from apps.core.views import LoginRequiredSessionMixin
-from apps.accounts.models import User
-from .models import Meeting
+from apps.accounts.models import Dept, User
+from django.db.models import Prefetch
+from .models import Meeting, Attendee
+from django.contrib import messages
 
 class MeetingListAllView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_list_all.html"
@@ -16,7 +18,28 @@ class MeetingListOpenView(LoginRequiredSessionMixin, TemplateView):
 class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_create.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # DB에서 실제 부서 + 유저들을 가져오는 부분
+        dept_qs = Dept.objects.prefetch_related(
+            Prefetch("users", queryset=User.objects.order_by("name"))
+        ).order_by("dept_name")
+
+        context["departments"] = dept_qs   # 템플릿으로 넘김
+        return context
+
     def post(self, request, *args, **kwargs):
+
+        attendee_ids = request.POST.getlist("attendees")
+        if not attendee_ids:
+            messages.error(request, "참석자를 최소 1명 이상 선택해 주세요.")
+            context = self.get_context_data()
+            context["form_title"] = request.POST.get("title", "")
+            context["form_meet_date_time"] = request.POST.get("meet_date_time", "")
+            context["form_place"] = request.POST.get("place", "")
+            return render(request, self.template_name, context)
+        
         # 1. 폼 데이터
         title = request.POST.get("title")
         meet_date_time = request.POST.get("meet_date_time")

@@ -48,6 +48,7 @@
               type="text"
               class="field-input"
               placeholder="회의실을 입력하세요"
+              required
             />
           </div>
         </section>
@@ -152,6 +153,13 @@
             <p class="attendee-sub">
               조직도에서 참석자를 선택하여 오른쪽으로 이동시킬 수 있습니다.
             </p>
+
+            <input
+                id="attendee-validator"
+                type="text"
+                class="attendee-validator-input"
+                aria-hidden="true"
+            />
           </div>
 
           <div class="attendee-layout">
@@ -161,59 +169,30 @@
                 <li>
                   <span class="tree-label root-label">주식회사 말하는대로</span>
                   <ul>
-                    <li><span class="tree-label">임원</span></li>
-                    <li><span class="tree-label">HR 본부</span></li>
-                    <li><span class="tree-label">마케팅 본부</span></li>
-                    <li>
-                      <span class="tree-label">IT 본부</span>
-                      <ul>
+                    {# departments : view에서 넘긴 부서 리스트 #}
+                    {% for dept in departments %}
                         <li>
-                          <span class="tree-label">개발 부서</span>
-                          <ul>
-                            <li
-                              class="tree-user"
-                              data-user-id="kimdaero"
-                              data-user-name="김대로 (IT - 개발)"
-                            >
-                              김대로 (IT - 개발)
-                            </li>
-                            <li
-                              class="tree-user"
-                              data-user-id="kimyoonki"
-                              data-user-name="김윤기 (IT - 개발)"
-                            >
-                              김윤기 (IT - 개발)
-                            </li>
-                            <li
-                              class="tree-user"
-                              data-user-id="parkjihyun"
-                              data-user-name="박지현 (IT - 개발)"
-                            >
-                              박지현 (IT - 개발)
-                            </li>
-                            <li
-                              class="tree-user"
-                              data-user-id="imyoorim"
-                              data-user-name="임유림 (IT - 개발)"
-                            >
-                              임유림 (IT - 개발)
-                            </li>
-                            <li
-                              class="tree-user"
-                              data-user-id="yoonseohoo"
-                              data-user-name="윤서후 (IT - 개발)"
-                            >
-                              윤서후 (IT - 개발)
-                            </li>
-                          </ul>
+                            <span class="tree-label">{{ dept.dept_name }}</span>
+                            <ul>
+                            {# 각 부서의 유저들 #}
+                            {% for user in dept.users.all %}
+                                <li
+                                class="tree-user"
+                                data-user-id="{{ user.user_id }}"
+                                data-user-name="{{ user.name }} ({{ dept.dept_name}})"
+                                >
+                                {{ user.name }}
+                                </li>
+                            {% empty %}
+                                <li class="tree-user-empty">소속 유저 없음</li>
+                            {% endfor %}
+                            </ul>
                         </li>
-                      </ul>
+                        {% endfor %}
+                    </ul>
                     </li>
-                  </ul>
-                </li>
-              </ul>
+                </ul>
             </div>
-
             <!-- 가운데: 선택 초기화 -->
             <div class="attendee-middle">
               <button
@@ -235,6 +214,9 @@
                 <!-- JS에서 li 추가 -->
               </ul>
             </div>
+            <div id="attendee-error" class="field-error" style="display:none;">
+            참석자를 선택해주세요.
+            </div>
           </div>
         </section>
 
@@ -242,17 +224,17 @@
         <section class="right-bottom">
           <div class="private-block">
             <label class="private-label">
-              <span class="private-icon-wrapper">
+               <input
+                    type="checkbox"
+                    name="is_private"
+                    id="id_is_private"
+                    class="private-checkbox"
+               />
+               <span class="private-icon-wrapper">
                 <!-- 단색 아이콘 대신 사각형 사용 -->
                 <span class="private-icon"></span>
               </span>
               <span class="private-text-main">비공개 회의</span>
-              <input
-                type="checkbox"
-                name="is_private"
-                id="id_is_private"
-                class="private-checkbox"
-              />
             </label>
             <p class="private-desc">
               체크하지 않으면, 회의 참석자와 회의 참석자의 부서원 전체에게 회의가
