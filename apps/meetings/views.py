@@ -6,6 +6,9 @@ from django.db.models import Prefetch
 from .models import Meeting, Attendee
 from django.contrib import messages
 
+from apps.meetings.utils.s3_upload import upload_raw_file_bytes
+from apps.meetings.models import S3File
+
 class MeetingListAllView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_list_all.html"
 
@@ -99,3 +102,8 @@ class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
 
 class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_detail.html"
+
+# TODO 이거 수정 해야댐 ㄹㅇ
+def meeting_record_upload(request, meeting_id):
+    print()
+    return 
