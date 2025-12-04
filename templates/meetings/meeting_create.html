@@ -1,109 +1,293 @@
 {% extends "core/base.html" %}
+{% load static %}
 
-{% block title %}새 회의{% endblock %}
-{% block page_title %}새 회의{% endblock %}
+{% block title %}새 회의 만들기{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/meeting_create.css' %}">
+{% endblock %}
 
 {% block content %}
-  <h2>새 회의 생성 화면</h2>
-  <!-- 피그마의 새 회의 폼을 여기서 구현 -->
+<div class="meeting-create-page">
+  <div class="meeting-layout">
+    <!-- 메인 콘텐츠 카드 -->
+    <div class="meeting-main-card">
+      <div class="meeting-main-header">
+        <h1 class="meeting-page-title">새 회의</h1>
+      </div>
 
-<style>
-  .dropzone {
-    border: 2px dashed #7d8aff;
-    border-radius: 8px;
-    padding: 24px;
-    text-align: center;
-    color: #444;
-    transition: background 0.2s, border-color 0.2s;
-  }
-  .dropzone.highlight {
-    background: #f4f6ff;
-    border-color: #4953ff;
-  }
-  .preview { margin-top: 12px; font-size: 14px; }
-</style>
+      <form
+        method="post"
+        enctype="multipart/form-data"
+        class="meeting-form"
+      >
+        {% csrf_token %}
 
-<div id="dropzone" class="dropzone">
-  여기로 파일을 드래그하거나 클릭해서 선택하세요
-  <input id="hidden-file" type="file" hidden />
-  <div id="preview" class="preview"></div>
+        <!-- 상단: 제목 / 일시 / 장소 -->
+        <section class="meeting-section">
+          <div class="meeting-field-group">
+            <label for="id_title" class="field-label">제목</label>
+            <input
+              id="id_title"
+              name="title"
+              type="text"
+              class="field-input"
+              placeholder="회의 제목을 입력하세요"
+              required
+            />
+          </div>
+
+          <div class="meeting-field-row">
+            <div class="meeting-field-group">
+              <label for="id_meet_date_time" class="field-label">일시</label>
+              <input
+                id="id_meet_date_time"
+                name="meet_date_time"
+                type="datetime-local"
+                class="field-input"
+                required
+              />
+            </div>
+
+            <div class="meeting-field-group">
+              <label for="id_place" class="field-label">장소</label>
+              <input
+                id="id_place"
+                name="place"
+                type="text"
+                class="field-input"
+                placeholder="회의실을 입력하세요"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- 중단: 특화 도메인 + 파일 업로드 -->
+        <section class="meeting-section meeting-section-split">
+          <!-- 특화 도메인 -->
+          <div class="domain-panel">
+            <div class="section-title-row">
+              <h2 class="section-title">특화 도메인 선택</h2>
+              <p class="section-subtext">
+                팀에서 자주 쓰는 용어가 있으신가요? 직접 용어를 업로드하거나 선택해주세요.
+              </p>
+            </div>
+
+            <label class="domain-upload-card">
+              <input
+                id="id_domain_file"
+                name="domain_file"
+                type="file"
+                accept=".txt,.csv,.xlsx"
+                class="all-[unset] domain-upload-input"
+              />
+              <div class="domain-upload-inner">
+                <div class="domain-upload-icon">＋</div>
+                <div class="domain-upload-text">
+                  <span class="domain-upload-title">Upload File</span>
+                  <span
+                    id="domain-file-name"
+                    class="domain-upload-subtext"
+                  >지원 형식: TXT / CSV / XLSX</span>
+                </div>
+              </div>
+            </label>
+
+            <div class="domain-checkbox-group">
+              <p class="domain-help-text">
+                특화 도메인 선택하기 (최대 3개 선택 가능)
+              </p>
+              <div class="domain-checkbox-list">
+                <!-- name="domains" 로 여러 값 전달 -->
+                <label class="domain-checkbox-item">
+                  <input
+                    type="checkbox"
+                    name="domains"
+                    value="IT"
+                    data-domain-checkbox
+                  />
+                  <span>IT</span>
+                </label>
+                <label class="domain-checkbox-item">
+                  <input
+                    type="checkbox"
+                    name="domains"
+                    value="마케팅"
+                    data-domain-checkbox
+                  />
+                  <span>마케팅</span>
+                </label>
+                <label class="domain-checkbox-item">
+                  <input
+                    type="checkbox"
+                    name="domains"
+                    value="디자인"
+                    data-domain-checkbox
+                  />
+                  <span>디자인</span>
+                </label>
+                <label class="domain-checkbox-item">
+                  <input
+                    type="checkbox"
+                    name="domains"
+                    value="경영"
+                    data-domain-checkbox
+                  />
+                  <span>경영</span>
+                </label>
+                <label class="domain-checkbox-item">
+                  <input
+                    type="checkbox"
+                    name="domains"
+                    value="회계"
+                    data-domain-checkbox
+                  />
+                  <span>회계</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 참석자 선택 -->
+          <div class="attendee-panel">
+            <h2 class="section-title">참석자</h2>
+
+            <div class="attendee-columns">
+              <!-- 좌측: 조직 트리 -->
+              <div class="attendee-tree">
+                <p class="section-subtext">
+                  조직도에서 참석자를 선택하여 오른쪽으로 이동시킬 수 있습니다.
+                </p>
+
+                <ul class="tree-list">
+                  <li class="tree-node">
+                    <span class="tree-node-label">주식회사 말하는대로</span>
+                    <ul>
+                      <li class="tree-node">
+                        <span class="tree-node-label">임원</span>
+                      </li>
+                      <li class="tree-node">
+                        <span class="tree-node-label">HR 본부</span>
+                      </li>
+                      <li class="tree-node">
+                        <span class="tree-node-label">마케팅 본부</span>
+                      </li>
+                      <li class="tree-node">
+                        <span class="tree-node-label">IT 본부</span>
+                        <ul>
+                          <li class="tree-node">
+                            <span class="tree-node-label">개발 부서</span>
+                            <ul>
+                              <!-- 실제 구현 시 data- 속성에 user_id를 넣어 주면 됨 -->
+                              <li
+                                class="tree-user"
+                                data-user-id="kimdaero"
+                                data-user-name="김대료 (IT - 개발)"
+                              >
+                                김대료 (IT - 개발)
+                              </li>
+                              <li
+                                class="tree-user"
+                                data-user-id="kimyuri"
+                                data-user-name="김윤리 (IT - 개발)"
+                              >
+                                김윤리 (IT - 개발)
+                              </li>
+                              <li
+                                class="tree-user"
+                                data-user-id="parkjieon"
+                                data-user-name="박지언 (IT - 개발)"
+                              >
+                                박지언 (IT - 개발)
+                              </li>
+                              <li
+                                class="tree-user"
+                                data-user-id="limyunwon"
+                                data-user-name="임윤원 (IT - 개발)"
+                              >
+                                임윤원 (IT - 개발)
+                              </li>
+                              <li
+                                class="tree-user"
+                                data-user-id="yoonseokju"
+                                data-user-name="윤석주 (IT - 개발)"
+                              >
+                                윤석주 (IT - 개발)
+                              </li>
+                            </ul>
+                          </li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- 가운데: 화살표 / 설명 -->
+              <div class="attendee-arrow-column">
+                <button
+                  type="button"
+                  class="btn btn-outline attendee-remove-all"
+                  id="btn-clear-attendees"
+                >
+                  선택 초기화
+                </button>
+              </div>
+
+              <!-- 우측: 선택된 참석자 -->
+              <div class="attendee-selected">
+                <div class="attendee-selected-header">
+                  <span class="section-subtext">선택된 참석자</span>
+                  <span
+                    id="attendee-count"
+                    class="attendee-badge"
+                  >0명</span>
+                </div>
+
+                <ul
+                  id="selected-attendee-list"
+                  class="selected-attendee-list"
+                >
+                  <!-- JS로 항목이 채워짐 -->
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 하단: 비공개 회의 + 버튼 -->
+        <section class="meeting-section meeting-footer">
+          <label class="private-toggle">
+            <input
+              type="checkbox"
+              name="is_private"
+              id="id_is_private"
+            />
+            <span class="private-label">
+              비공개 회의
+              <span class="private-help">
+                체크하지 않으면, 회의 참석자와 회의 참석자의 부서원 전체에게 회의가 공개됩니다.
+              </span>
+            </span>
+          </label>
+
+          <button
+            type="submit"
+            class="btn btn-primary meeting-submit-btn"
+          >
+            회의 시작
+          </button>
+        </section>
+      </form>
+    </div>
+
+    <!-- 우측 패널: 오늘의 회의 / 서브 정보가 base.html에 이미 있다면 제거 가능 -->
+    <!-- 필요 없으면 이 블록은 삭제하셔도 됩니다. -->
+  </div>
 </div>
+{% endblock %}
 
-<!-- 업로드 버튼을 별도로 분리 -->
-<button id="upload-btn">업로드 실행</button>
-
-<script>
-  const dropzone = document.getElementById('dropzone');
-  const hiddenInput = document.getElementById('hidden-file');
-  const preview = document.getElementById('preview');
-  const uploadBtn = document.getElementById('upload-btn');
-
-  let selectedFiles = []; // 드래그/선택된 파일을 저장해두는 배열
-
-  // 클릭으로 파일 선택
-  dropzone.addEventListener('click', () => hiddenInput.click());
-
-  // 드래그 기본 동작 막기
-  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    dropzone.addEventListener(eventName, (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    });
-  });
-
-  // 강조 스타일
-  ['dragenter', 'dragover'].forEach(name => {
-    dropzone.addEventListener(name, () => dropzone.classList.add('highlight'));
-  });
-  ['dragleave', 'drop'].forEach(name => {
-    dropzone.addEventListener(name, () => dropzone.classList.remove('highlight'));
-  });
-
-  // 드롭, input 선택 처리
-  ['drop', 'change'].forEach(eventType => {
-    const target = eventType === 'drop' ? dropzone : hiddenInput;
-    target.addEventListener(eventType, (e) => {
-      const files = eventType === 'drop' ? e.dataTransfer.files : e.target.files;
-      handleFiles(files);
-    });
-  });
-
-
-  function handleFiles(fileList) {
-    const selectedFiles = fileList[0];
-    if (!selectedFiles) return;
-
-    const ok = confirm(`${selectedFiles.name} (${Math.round(selectedFiles.size/1024)} KB)를 업로드하시겠습니까?`);
-    if (!ok) {
-      // 취소하면 아무 것도 안 함
-      selectedFiles = [];
-      preview.innerHTML = '';
-      return;
-    }
-    preview.innerHTML = '';
-
-    const item = document.createElement('div');
-    item.textContent = `${selectedFiles.name} (${Math.round(selectedFiles.size/1024)} KB)`;
-    preview.appendChild(item);
-  }
-
-  // 업로드 버튼 클릭 시 실행
-  uploadBtn.addEventListener('click', async () => {
-    if (!selectedFiles) {
-      alert('업로드할 파일이 없습니다');
-      return;
-    }
-
-    const formData = new FormData();
-    selectedFiles.forEach(f => formData.append('files', f));
-
-    const res = await fetch('meetings/upload', { method: 'POST', body: formData });
-    if (res.ok) {
-      alert('업로드 성공!');
-    } else {
-      alert('업로드 실패!');
-    }
-  });
-</script>
+{% block extra_js %}
+<script src="{% static 'js/meeting_create.js' %}"></script>
 {% endblock %}
 
