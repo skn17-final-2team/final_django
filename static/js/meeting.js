@@ -2,8 +2,9 @@ const dropzone = document.getElementById('dropzone');
 const hiddenInput = document.getElementById('hidden-file');
 const preview = document.getElementById('preview');
 const uploadBtn = document.getElementById('upload-btn');
+const csrftoken = document.querySelector("input[name='csrfmiddlewaretoken']")?.value;
 
-let selectedFiles = []; // 드래그/선택된 파일을 저장해두는 배열
+let selectedFiles = []; // 드래그/선택된 파일을 저장해두는 배열 (전역)
 
 // 클릭으로 파일 선택
 dropzone.addEventListener('click', () => hiddenInput.click());
@@ -33,41 +34,76 @@ dropzone.addEventListener('click', () => hiddenInput.click());
     });
 });
 
-// TODO 업로드 확인창 후에 바로 S3 넘어가게 views 및 urls 수정 해야함
+// 파일 처리
 function handleFiles(fileList) {
-    const selectedFiles = fileList[0];
-    if (!selectedFiles) return;
+    if (!fileList || fileList.length === 0) return;
 
-    const ok = confirm(`${selectedFiles.name} (${Math.round(selectedFiles.size/1024)} KB)를 업로드하시겠습니까?`);
-    if (!ok) {
-        // 취소하면 아무 것도 안 함
+    const file = fileList[0];      // 한 개만 사용
+    const allowed = ["png", "wav"];
+
+    // 확장자 체크
+    const ext = file.name.split(".").pop().toLowerCase();
+    if (!allowed.includes(ext)) {
+        alert("png 또는 wav 파일만 업로드할 수 있습니다.");
+        // 선택 초기화
         selectedFiles = [];
         preview.innerHTML = '';
+        if (hiddenInput) hiddenInput.value = "";
         return;
     }
-    preview.innerHTML = '';
 
+    // 업로드 확인
+    const ok = confirm(`${file.name} (${Math.round(file.size / 1024)} KB)를 업로드하시겠습니까?`);
+    if (!ok) {
+        // 취소하면 선택/미리보기 초기화
+        selectedFiles = [];
+        preview.innerHTML = '';
+        if (hiddenInput) hiddenInput.value = "";
+        return;
+    }
+    selectedFiles = [file];
+
+    // 미리보기 렌더
+    preview.innerHTML = '';
     const item = document.createElement('div');
-    item.textContent = `${selectedFiles.name} (${Math.round(selectedFiles.size/1024)} KB)`;
+    item.textContent = `${file.name} (${Math.round(file.size / 1024)} KB)`;
     preview.appendChild(item);
 }
 
 // 업로드 버튼 클릭 시 실행
-uploadBtn.addEventListener('click', async () => {
-    if (!selectedFiles) {
+uploadBtn.addEventListener('click', async (event) => {
+    event.preventDefault();
+    if (!selectedFiles || selectedFiles.length === 0) {
         alert('업로드할 파일이 없습니다');
         return;
     }
-
+    const pathParts = window.location.pathname.split('/');
+    const meetingId = pathParts[2];
+    
     const formData = new FormData();
-    selectedFiles.forEach(f => formData.append('files', f));
-    // TODO >>> meetings/upload
-    const res = await fetch('meetings/upload', { 
-        method: 'POST', body: formData 
-    });
-    if (res.ok) {
-        alert('업로드 성공!');
-    } else {
-        alert('업로드 실패!');
+    // 한 개만 업로드하므로 첫 번째만 사용, 백엔드에서 name="file" 로 받도록
+    formData.append('file', selectedFiles[0]);
+    try {
+        const res = await fetch(`/meetings/${meetingId}/upload/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+            },
+            body: formData,
+        });
+
+        if (res.ok) {
+            alert('업로드 성공!');
+            // 필요하면 selectedFiles/preview 초기화
+            selectedFiles = [];
+            preview.innerHTML = '';
+            if (hiddenInput) hiddenInput.value = "";
+        } else {
+            const data = await res.json().catch(() => ({}));
+            alert(`업로드 실패: ${data.error ?? '알 수 없는 오류'}`);
+        }
+    } catch (err) {
+        console.error(err);
+        alert('업로드 중 오류가 발생했습니다.');
     }
 });
