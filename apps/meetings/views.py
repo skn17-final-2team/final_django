@@ -5,6 +5,7 @@ from apps.accounts.models import Dept, User
 from django.db.models import Prefetch
 from .models import Meeting, Attendee
 from django.contrib import messages
+from django.db import transaction
 
 from apps.meetings.utils.s3_upload import upload_raw_file_bytes
 from apps.meetings.models import S3File
@@ -57,14 +58,23 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
         # 3. host로 쓸 User 객체 조회
         host_user = User.objects.get(user_id=login_user_id)
 
+
         # 4. meeting_tbl에 새 레코드 생성
-        meeting = Meeting.objects.create(
-            title=title,
-            meet_date_time=meet_date_time,
-            place=place,
-            host=host_user,      # ← host_id가 아니라 host(FK)에 User 인스턴스
-            transcript="",       # NOT NULL 필드라 임시로 빈 문자열
-        )
+        with transaction.atomic():
+            # meeting_tbl insert
+            meeting = Meeting.objects.create(
+                title=title,
+                meet_date_time=meet_date_time,
+                place=place,
+                host=host_user,   # FK: User 인스턴스
+                transcript="",    # NOT NULL 필드라면 임시값
+            )
+
+        users = User.objects.filter(user_id__in=attendee_ids)
+        attendee_objs = [
+                Attendee(meeting=meeting, user=u) for u in users
+        ]
+        Attendee.objects.bulk_create(attendee_objs)
 
         # 5. 생성된 meeting_id를 가지고 녹음 화면으로 이동
         return redirect("meetings:meeting_record", meeting_id=meeting.meeting_id)
@@ -77,6 +87,12 @@ class MeetingRecordView(LoginRequiredSessionMixin, TemplateView):
         meeting_id = self.kwargs.get("meeting_id")
 
         meeting = Meeting.objects.get(pk=meeting_id)
+
+        context["attendees"] = (
+            meeting.attendees
+                   .select_related("user")  # Attendee.user
+                   .all()
+        )
 
         context["meeting"] = meeting
         context["meeting_id"] = meeting_id
