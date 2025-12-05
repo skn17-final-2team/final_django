@@ -235,3 +235,34 @@ def create_google_event(request):
 def google_auth_status(request):
     creds = get_google_credentials(request)
     return JsonResponse({"authenticated": bool(creds)})
+
+@csrf_exempt  # 개발 단계에서 일단 CSRF 무시. 나중에 필요하면 제거 후 정상 CSRF 처리.
+@require_POST
+@csrf_exempt  # 개발 단계에서는 편하게 사용, 나중에 CSRF 정상 처리로 바꾸셔도 됩니다.
+@require_POST
+def google_events_delete(request, event_id):
+    """
+    /api/google-events/<event_id>/delete/ 로 들어오는 삭제 요청 처리
+    """
+    # 1) 구글 인증 정보 가져오기
+    creds = get_google_credentials(request)
+    if not creds:
+        return JsonResponse({"error": "not_authenticated"}, status=401)
+
+    # 2) 구글 캘린더 서비스 생성
+    service = build("calendar", "v3", credentials=creds)
+
+    try:
+        # 3) 구글 캘린더에서 이벤트 삭제
+        service.events().delete(
+            calendarId="primary",
+            eventId=event_id,
+        ).execute()
+    except Exception as e:
+        # 구글 API 에러
+        return JsonResponse(
+            {"error": "google_api_error", "detail": str(e)}, status=500
+        )
+
+    # 4) 성공 응답
+    return JsonResponse({"success": True})
