@@ -312,7 +312,7 @@ document.addEventListener("DOMContentLoaded", function () {
         sortTitleIcon.classList.add("sort-icon-down");
       }
 
-      applyFiltersAndSort(ftrue);
+      applyFiltersAndSort(true);
     });
   }
 
