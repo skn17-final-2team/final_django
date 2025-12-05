@@ -457,7 +457,7 @@
 
 /* 체크 상태 표시 */
 .private-checkbox:checked ~ .private-icon-wrapper .private-icon {
-    background-color: #777;
+    background-color: #d93025;
 }
 
 .private-desc {
