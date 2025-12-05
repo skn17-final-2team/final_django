@@ -49,11 +49,6 @@ def upload_raw_file_bytes(file_bytes: bytes, original_filename: str, delete_afte
         ExtraArgs={"ContentType": content_type},
     )
 
-    presigned_url = s3.generate_presigned_url(
-        ClientMethod="get_object",
-        Params={"Bucket": BUCKET_NAME, "Key": s3_key},
-        ExpiresIn=600,  # 만료 시간 (600초)
-    )
     # 2) delete_at 계산
     delete_at = timezone.now() + timedelta(seconds=delete_after_seconds)
 
@@ -64,4 +59,13 @@ def upload_raw_file_bytes(file_bytes: bytes, original_filename: str, delete_afte
         delete_at=delete_at,
     )
     # 다운로드 URL 반환
-    return s3_key, presigned_url
+    return s3_key
+
+def get_presigned_url(s3_key):
+    s3 = get_s3_client()
+    presigned_url = s3.generate_presigned_url(
+        ClientMethod="get_object",
+        Params={"Bucket": BUCKET_NAME, "Key": s3_key},
+        ExpiresIn=600,  # 만료 시간 (600초)
+    )
+    return presigned_url

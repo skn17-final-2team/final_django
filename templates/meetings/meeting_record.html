@@ -55,11 +55,11 @@
     {% csrf_token %}
     <div id="dropzone" class="dropzone">
       여기로 파일을 드래그하거나 클릭해서 선택하세요
-      <input id="hidden-file" type="file" hidden accept=".png, .wav"/>
+      <input id="hidden-file" name="file" type="file" hidden accept=".png, .wav"/>
       <div id="preview" class="preview"></div>
     </div>
     <!-- 업로드 버튼을 별도로 분리 -->
-    <button id="upload-btn">업로드 실행</button>
+    <button id="upload-btn" type="button">업로드 실행</button>
   </form>
 {% endblock %}
 {% block extra_script %}

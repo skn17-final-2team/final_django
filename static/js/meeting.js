@@ -71,8 +71,8 @@ function handleFiles(fileList) {
 }
 
 // 업로드 버튼 클릭 시 실행
-uploadBtn.addEventListener('click', async (event) => {
-    event.preventDefault();
+uploadBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
     if (!selectedFiles || selectedFiles.length === 0) {
         alert('업로드할 파일이 없습니다');
         return;
@@ -98,6 +98,7 @@ uploadBtn.addEventListener('click', async (event) => {
             selectedFiles = [];
             preview.innerHTML = '';
             if (hiddenInput) hiddenInput.value = "";
+            window.location.href = `/meetings/${meetingId}/transcript/`;
         } else {
             const data = await res.json().catch(() => ({}));
             alert(`업로드 실패: ${data.error ?? '알 수 없는 오류'}`);

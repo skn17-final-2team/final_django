@@ -87,7 +87,7 @@ LANGUAGE_CODE = 'ko-kr'
 TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
-USE_TZ = True
+USE_TZ = False  # 시간대
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -121,3 +121,5 @@ AWS_LOCATION = 'media'
 AWS_QUERYSTRING_AUTH = False
 
 MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
+
+POD_ID = os.getenv("POD_ID")

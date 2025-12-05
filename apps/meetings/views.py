@@ -12,7 +12,9 @@ from django.contrib import messages
 from django.db import transaction
 
 
-from apps.meetings.utils.s3_upload import upload_raw_file_bytes
+from apps.meetings.utils.s3_upload import upload_raw_file_bytes, get_presigned_url
+from apps.meetings.utils.runpod import get_stt, runpod_health
+
 from apps.meetings.models import S3File
 
 class MeetingListAllView(LoginRequiredSessionMixin, TemplateView):
@@ -129,6 +131,17 @@ class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
 
         transcript_html = meeting.transcript or ""
 
+        if not transcript_html:
+            print('전사 진행 중')
+            res = get_stt(get_presigned_url(str(meeting.record_url)))
+            if res['status_code'] != 200 or not res['success']:
+                transcript_html = res
+            else:
+                transcript_html = res['data']['full_text'].replace("\n", "<br>")
+                meeting.transcript = transcript_html
+                meeting.save()
+        
+
         # 이미 전사된 텍스트가 meeting_tbl.transcript
         context.update(
             {
@@ -174,7 +187,7 @@ def meeting_record_upload(request, meeting_id):
     # 5) 유틸 호출
     file_bytes = uploaded_file.read()
     try:
-        s3_key, presigned_url = upload_raw_file_bytes(
+        s3_key = upload_raw_file_bytes(
             file_bytes=file_bytes,
             original_filename=filename,
             delete_after_seconds=3600,
@@ -192,6 +205,4 @@ def meeting_record_upload(request, meeting_id):
 
     return JsonResponse({
         "ok": True,
-        "s3_key": s3_key,
-        "url": presigned_url,
     })
