@@ -35,19 +35,22 @@
   <aside class="dashboard-side">
     <section class="schedule-card">
       <h2 class="schedule-card-title">오늘의 일정</h2>
-      <div class="schedule-empty">오늘 일정이 없습니다.</div>
+      <!-- 일정이 없을 때 메시지 -->
+      <div id="today-schedule-empty" class="schedule-empty">
+        오늘 일정이 없습니다.
+      </div>
+      <!-- 오늘 일정 목록 -->
+      <ul id="today-schedule-list" class="schedule-list"></ul>
     </section>
 
     <section class="schedule-card">
       <h2 class="schedule-card-title">이번 달 일정</h2>
-      <ul class="schedule-list">
-        <li class="schedule-item">
-          <span class="schedule-date">18(금)</span>
-          <span class="schedule-text">
-            실시간/배치 파이프라인 분리 및 인증 로그 처리 방안 검토
-          </span>
-        </li>
-      </ul>
+      <!-- 일정이 없을 때 메시지 -->
+      <div id="month-schedule-empty" class="schedule-empty">
+        이번 달 일정이 없습니다.
+      </div>
+      <!-- 이번 달 일정 목록 -->
+      <ul id="month-schedule-list" class="schedule-list"></ul>
     </section>
   </aside>
 
