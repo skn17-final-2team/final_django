@@ -160,6 +160,15 @@
                 class="attendee-validator-input"
                 aria-hidden="true"
             />
+            {# 로그인 유저 정보 – JS에서 읽어 사용 #}
+            {% if login_user %}
+                <input type="hidden" id="login-user-id" value="{{ login_user.user_id }}">
+                <input
+                type="hidden"
+                id="login-user-name"
+                value="{{ login_user.name }} ({{ login_user.dept.dept_name }})"
+                >
+            {% endif %}
           </div>
 
           <div class="attendee-layout">
