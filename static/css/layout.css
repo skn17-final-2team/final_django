@@ -283,3 +283,92 @@
   font-weight: 500;
   color: #111827;
 }
+
+.admin-dept-tree {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.75rem 0 0;
+}
+
+.admin-dept-node {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.2rem 0;
+}
+
+.admin-dept-toggle {
+  width: 14px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.admin-dept-label {
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.25rem 0.85rem;
+  border-radius: 999px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.admin-dept-label:hover {
+  background-color: #f3f4f6;
+}
+
+.admin-dept-label-selected {
+  background-color: #e5e7eb;
+  font-weight: 600;
+}
+
+/* ===== 관리자 사이드바 조직 트리 ===== */
+
+.tree-root,
+.tree-root ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+}
+
+/* 루트(회사)와 하위 부서 들여쓰기 */
+.tree-root > li {
+  margin-top: 0.5rem;
+}
+
+.tree-root > li > .root-label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+}
+
+.tree-root > li > ul > li {
+  margin: 0.15rem 0;
+  padding-left: 1.5rem;  /* "말하는대로" 같은 2단계 들여쓰기 */
+}
+
+/* 공통 라벨 스타일 */
+.tree-label {
+  display: inline-block;
+  font-size: 0.9rem;
+  color: var(--color-text);
+}
+
+/* 부서 라벨을 pill처럼 보이게 */
+.tree-dept {
+  cursor: pointer;
+  padding: 0.35rem 1.0rem;
+  border-radius: 999px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.tree-dept:hover {
+  background-color: #f3f4f6;
+}
+
+/* 선택된 부서 */
+.tree-dept.selected {
+  background-color: #e5e7eb;
+  font-weight: 600;
+}
