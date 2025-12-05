@@ -131,9 +131,7 @@
     padding-bottom: 0 !important;
 }
 
-/* =========================
-   일정 추가 모달 스타일
-   ========================= */
+/* 일정 추가 모달 스타일 */
 
 .schedule-modal {
   position: fixed;
@@ -281,7 +279,7 @@
 
 /* 왼쪽 회색 "추가" 버튼 */
 .schedule-btn-primary {
-  background-color: #b5b2c0;   /* 흐린 회색+보라 느낌 */
+  background-color: #b5b2c0;
   color: #ffffff;
   border-color: #b5b2c0;
 }
@@ -302,9 +300,7 @@
   background-color: #f2f2f5;
 }
 
-/* =========================
-   일정 상세 모달
-   ========================= */
+/* 여기서부터 일정 상세 모달 */
 
 .event-modal {
   position: fixed;
@@ -333,7 +329,7 @@
   max-width: 90%;
   padding: 24px 24px 18px;
   border-radius: 12px;
-  background: #d9d9d9; /* 스샷처럼 회색 카드 */
+  background: #d9d9d9;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
   box-sizing: border-box;
 }

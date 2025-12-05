@@ -118,25 +118,34 @@
 
   <!-- 일정 상세 모달 -->
   <div id="event-detail-modal" class="event-modal hidden">
+    <!-- 어두운 배경 -->
     <div class="event-modal-backdrop"></div>
 
+    <!-- 카드 영역 -->
     <div class="event-modal-dialog">
+      <!-- 상단 날짜 영역 -->
       <div class="event-modal-header">
-        <span class="event-modal-icon">📅</span>
-        <span id="event-detail-date" class="event-modal-date"></span>
+        <div class="event-modal-date-wrap">
+          <span class="event-modal-icon"></span>
+          <span id="event-detail-date" class="event-modal-date"></span>
+        </div>
       </div>
 
+      <!-- 본문 -->
       <div class="event-modal-body">
-        <p class="event-modal-title">
-          <span class="event-modal-dot">●</span>
-          <span id="event-detail-title"></span>
-        </p>
+        <div class="event-modal-title-wrap">
+          <span class="event-modal-dot"></span>
+          <p class="event-modal-title" id="event-detail-title"></p>
+        </div>
+        <!-- 설명을 쓰지 않으면 비워두면 됩니다 -->
         <p id="event-detail-description" class="event-modal-desc"></p>
       </div>
 
+      <!-- 하단 삭제 버튼 -->
       <div class="event-modal-actions">
-        <button id="event-detail-close" class="event-modal-close-btn">
-          닫기
+        <button id="event-detail-delete" class="event-modal-delete-btn" type="button">
+          <span class="event-modal-trash-icon"></span>
+          <span>삭제</span>
         </button>
       </div>
     </div>

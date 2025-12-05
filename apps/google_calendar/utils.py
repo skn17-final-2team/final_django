@@ -24,7 +24,7 @@ def get_google_credentials(request):
     except GoogleCalendarToken.DoesNotExist:
         return None
 
-    # DB 토큰을 세션에 넣어두기 (다음 API 호출 빠르게)
+    # DB 토큰을 세션에 넣어두기
     request.session["google_credentials"] = token_obj.token_json
 
     info = json.loads(token_obj.token_json)

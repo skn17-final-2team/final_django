@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
     currentDateEl.textContent = formatter.format(now);
   }
 
-  // ───── 일정 추가 모달 관련 요소 ─────
+  // 일정 추가 모달 관련 요소
   const modal = document.getElementById("schedule-modal");
   const titleInput = document.getElementById("schedule-title");
   const startInput = document.getElementById("schedule-start");
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const submitBtn = document.getElementById("schedule-submit");
   const cancelBtn = document.getElementById("schedule-cancel");
 
-    // CSRF 토큰 쿠키에서 가져오기
+  // CSRF 토큰 쿠키에서 가져오기
   function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== "") {
@@ -48,6 +48,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const csrftoken = getCookie("csrftoken");
 
+  let selectedEvent = null;
 
   function openModal(defaultDate) {
     if (!modal) return;
@@ -63,7 +64,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const mi = pad(base.getMinutes());
 
     const startValue = `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
-    const endDate = new Date(base.getTime() + 60 * 60 * 1000); // +1시간
+    const endDate = new Date(base.getTime() + 60 * 60 * 1000);
     const ehh = pad(endDate.getHours());
     const emi = pad(endDate.getMinutes());
     const endValue = `${yyyy}-${mm}-${dd}T${ehh}:${emi}`;
@@ -81,18 +82,23 @@ document.addEventListener("DOMContentLoaded", function () {
     if (modal) modal.classList.add("hidden");
   }
 
-  // ───── 일정 상세 모달 관련 요소 ─────
-  const eventModal = document.getElementById("event-detail-modal");
+  // 일정 상세 모달 관련 요소
+    const eventModal = document.getElementById("event-detail-modal");
   const eventDateEl = document.getElementById("event-detail-date");
   const eventTitleEl = document.getElementById("event-detail-title");
   const eventDescEl = document.getElementById("event-detail-description");
-  const eventCloseBtn = document.getElementById("event-detail-close");
+  const eventDeleteBtn = document.getElementById("event-detail-delete");
+  const eventBackdrop = eventModal
+    ? eventModal.querySelector(".event-modal-backdrop")
+    : null;
 
-  function openEventModal(fcEvent) {
+    function openEventModal(fcEvent) {
     if (!eventModal) return;
 
     const start = fcEvent.start;
     if (!start) return;
+
+    selectedEvent = fcEvent;  // 현재 열린 이벤트를 저장
 
     const pad = (n) => String(n).padStart(2, "0");
     const yyyy = start.getFullYear();
@@ -112,25 +118,69 @@ document.addEventListener("DOMContentLoaded", function () {
     eventModal.classList.remove("hidden");
   }
 
+
   function closeEventModal() {
     if (eventModal) eventModal.classList.add("hidden");
   }
 
-  if (eventCloseBtn) {
-    eventCloseBtn.addEventListener("click", function () {
+    // 배경 클릭 시 닫기
+  if (eventBackdrop) {
+    eventBackdrop.addEventListener("click", function () {
       closeEventModal();
     });
   }
-  if (eventModal) {
-    // 바깥(배경) 클릭 시 닫히게
-    eventModal.addEventListener("click", function (e) {
-      if (e.target === eventModal) {
+
+  if (eventDeleteBtn) {
+    eventDeleteBtn.addEventListener("click", async function () {
+      if (!selectedEvent) {
         closeEventModal();
+        return;
+      }
+
+      const eventId = selectedEvent.id;
+
+      // 정말 삭제할지 확인 (원하지 않으면 이 confirm 부분은 제거해도 됩니다)
+      if (!confirm("이 일정을 삭제하시겠습니까?")) {
+        return;
+      }
+
+      try {
+        // 1) 서버에 삭제 요청 (URL은 프로젝트 구현에 맞게 수정 필요)
+        // 예시: /api/google-events/<id>/delete/ 형태라고 가정
+        const res = await fetch(`/api/google-events/${eventId}/delete/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": csrftoken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id: eventId }),
+        });
+
+        if (!res.ok) {
+          throw new Error("서버 응답이 올바르지 않습니다.");
+        }
+
+        const data = await res.json();
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        // 2) 화면에서 이벤트 제거
+        const calEvent = calendar.getEventById(eventId);
+        if (calEvent) {
+          calEvent.remove();
+        }
+
+        alert("일정이 삭제되었습니다.");
+        closeEventModal();
+      } catch (err) {
+        console.error("일정 삭제 실패:", err);
+        alert("일정 삭제 중 오류가 발생했습니다.");
       }
     });
   }
 
-  // ───── FullCalendar 생성 ─────
+  // FullCalendar 생성
   const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
     locale: "ko",
@@ -151,7 +201,6 @@ document.addEventListener("DOMContentLoaded", function () {
             console.warn("Google Calendar not authenticated");
             successCallback([]);
           } else {
-            // data: [{ id, title, start, end, description? }, ...]
             successCallback(data);
           }
         })
@@ -166,16 +215,11 @@ document.addEventListener("DOMContentLoaded", function () {
       info.jsEvent.preventDefault(); // 링크 이동 방지
       openEventModal(info.event);
     },
-
-    // 날짜 클릭 시 선택 날짜를 기본값으로 모달 열고 싶으면 주석 해제
-    // dateClick: function (info) {
-    //   openModal(info.dateStr);
-    // },
   });
 
   calendar.render();
 
-  // ───── “+ 일정 추가” 버튼 ─────
+  // 일정 추가 버튼
   const btnAddSchedule = document.querySelector(".btn-add-schedule");
   if (btnAddSchedule) {
     btnAddSchedule.addEventListener("click", async function () {
@@ -197,7 +241,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // ───── 일정 추가 모달 버튼 동작 ─────
+  // 일정 추가 모달 버튼 동작
   if (cancelBtn) {
     cancelBtn.addEventListener("click", function (e) {
       e.preventDefault();

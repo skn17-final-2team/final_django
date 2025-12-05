@@ -8,7 +8,7 @@ class GoogleCalendarToken(models.Model):
         on_delete=models.CASCADE,
         related_name="google_calendar_token",
     )
-    token_json = models.TextField()  # 전체 OAuth 토큰 JSON
+    token_json = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
