@@ -15,7 +15,9 @@
   <body class="bg-body">
     <div class="app-root">
       {# 좌측 사이드바 #}
-      {% include "core/sidebar.html" %}
+      {% block sidebar %}
+        {% include "core/sidebar.html" %}
+      {% endblock %}
 
       <div class="app-main">
         {# 상단 헤더 #}
