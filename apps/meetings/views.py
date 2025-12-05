@@ -3,7 +3,7 @@ from django.views.generic import TemplateView
 from apps.core.views import LoginRequiredSessionMixin
 from apps.accounts.models import Dept, User
 from django.db.models import Prefetch
-from .models import Meeting, Attendee
+from .models import Meeting, Attendee, Domain
 from django.contrib import messages
 from django.db import transaction
 
@@ -36,6 +36,7 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
     def post(self, request, *args, **kwargs):
 
         attendee_ids = request.POST.getlist("attendees")
+        domain_names = request.POST.getlist("domains")
         if not attendee_ids:
             messages.error(request, "참석자를 최소 1명 이상 선택해 주세요.")
             context = self.get_context_data()
@@ -68,6 +69,7 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
                 place=place,
                 host=host_user,   # FK: User 인스턴스
                 transcript="",    # NOT NULL 필드라면 임시값
+                domain_upload=bool(domain_names),
             )
 
         users = User.objects.filter(user_id__in=attendee_ids)
@@ -75,6 +77,14 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
                 Attendee(meeting=meeting, user=u) for u in users
         ]
         Attendee.objects.bulk_create(attendee_objs)
+
+        # domain_tbl insert (특화 도메인)
+        if domain_names:
+            domain_objs = [
+                Domain(meeting=meeting, domain_name=name)
+                for name in domain_names
+            ]
+            Domain.objects.bulk_create(domain_objs)
 
         # 5. 생성된 meeting_id를 가지고 녹음 화면으로 이동
         return redirect("meetings:meeting_record", meeting_id=meeting.meeting_id)
@@ -119,7 +129,7 @@ class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
 class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_detail.html"
 
-# TODO 이거 수정 해야댐 ㄹㅇ
+# TODO 이거 수정 해야댐 ㄹㅇ << 길진이가 수정하자
 def meeting_record_upload(request, meeting_id):
     print()
     return 
