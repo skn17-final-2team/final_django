@@ -121,15 +121,30 @@ class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
         meeting_id = self.kwargs.get("meeting_id")
         meeting = Meeting.objects.get(pk=meeting_id)
 
-        # 이미 전사된 텍스트가 meeting_tbl.transcript에 저장되어 있다고 가정
-        # 또는 별도 전사 테이블/파일에서 불러와도 됨
-        context["meeting"] = meeting
-        context["meeting_id"] = meeting_id
+        attendees_qs = (
+            meeting.attendees
+                   .select_related("user", "user__dept")
+                   .all()
+        )
+
+        transcript_html = meeting.transcript or ""
+
+        # 이미 전사된 텍스트가 meeting_tbl.transcript
+        context.update(
+            {
+                "meeting": meeting,
+                "meeting_id": meeting_id,
+                "attendees": attendees_qs,
+                "transcript_html": transcript_html,
+            }
+        )
 
         # attendee_tbl, task_tbl 등도 필요하면 함께 조회
         # context["attendees"] = Attendee.objects.filter(meeting_id=meeting_id)
 
         return context
+    
+
 
 class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_detail.html"
