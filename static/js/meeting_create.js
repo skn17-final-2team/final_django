@@ -73,6 +73,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const treeUsers = document.querySelectorAll(".tree-user");
   const selectedList = document.getElementById("selected-attendee-list");
   const attendeeCount = document.getElementById("attendee-count");
+  const loginUserId = document.getElementById("login-user-id")?.value;
+  const loginUserName = document.getElementById("login-user-name")?.value;
   const clearBtn = document.getElementById("btn-clear-attendees");
 
   function refreshCount() {
@@ -94,6 +96,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const userId = el.dataset.userId;
     const userName = el.dataset.userName || el.textContent.trim();
 
+    if (userId === loginUserId) {
+    return;
+    }
+
     if (!selectedList) return;
     // 이미 선택되었는지 확인
     const exists = selectedList.querySelector(
@@ -114,6 +120,14 @@ document.addEventListener("DOMContentLoaded", function () {
     removeBtn.innerHTML = "×";
 
     removeBtn.addEventListener("click", function () {
+      const loginUserId = document.getElementById("login-user-id")?.value;
+
+      // 로그인 유저 삭제 금지
+      if (userId === loginUserId) {
+        alert("회의 생성자는 참석자 목록에서 제거할 수 없습니다.");
+        return;
+      }
+
       li.remove();
       refreshCount();
     });
@@ -127,8 +141,54 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   treeUsers.forEach((userEl) => {
+  if (userEl.dataset.userId === loginUserId) {
+    userEl.classList.add("tree-user-disabled");   // CSS로 비활성화 스타일 가능
+  } else {
     userEl.addEventListener("click", handleUserClick);
-  });
+  }
+ });
+
+  /* ===== 로그인 유저를 기본 참석자로 자동 추가 ===== */
+  const loginUserIdInput = document.getElementById("login-user-id");
+  const loginUserNameInput = document.getElementById("login-user-name");
+
+  if (loginUserIdInput && loginUserNameInput && selectedList) {
+    const loginUserId = loginUserIdInput.value;
+    const loginUserName = loginUserNameInput.value;
+
+    // 이미 선택되어 있지 않은 경우에만 추가
+    const exists = selectedList.querySelector(
+      `.selected-attendee-item[data-user-id="${loginUserId}"]`
+    );
+    if (!exists) {
+      const li = document.createElement("li");
+      li.className = "selected-attendee-item";
+      li.dataset.userId = loginUserId;
+
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = loginUserName;
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "attendee-remove-btn";
+      removeBtn.innerHTML = "×";
+
+      removeBtn.addEventListener("click", function () {
+        if (loginUserId === loginUserIdInput.value) {
+            alert("회의 생성자는 참석자 목록에서 제거할 수 없습니다.");
+            return;
+        }
+        li.remove();
+        refreshCount();
+      });
+
+      li.appendChild(nameSpan);
+      li.appendChild(removeBtn);
+      selectedList.appendChild(li);
+
+      refreshCount();
+    }
+  }
 
   if (clearBtn && selectedList) {
     clearBtn.addEventListener("click", function () {

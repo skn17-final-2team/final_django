@@ -317,6 +317,12 @@
   background-color: #e5e7eb;
 }
 
+/*로그인 유저는 참석자로 선택불가(이미 선택되어있음)*/
+.tree-user-disabled {
+  opacity: 0.5;
+  pointer-events: none;   /* 클릭 완전 불가 */
+}
+
 /* 가운데 버튼 */
 .attendee-middle {
   display: flex;

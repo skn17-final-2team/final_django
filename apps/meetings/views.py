@@ -20,6 +20,69 @@ from apps.meetings.models import S3File
 class MeetingListAllView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_list_all.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # 1) 로그인 사용자
+        login_user_id = self.request.session.get("login_user_id")
+        login_user = None
+        if login_user_id:
+            login_user = User.objects.select_related("dept").get(user_id=login_user_id)
+
+        # 2) 회의 + 참석자 미리 로딩 (일시 최신순)
+        meeting_qs = (
+            Meeting.objects
+            .select_related("host")  # meeting.host
+            .prefetch_related(
+                Prefetch(
+                    "attendees",
+                    queryset=Attendee.objects.select_related("user", "user__dept"),
+                )
+            )
+            .order_by("-meet_date_time")  # 기본 정렬: 일시 내림차순(최근 회의 먼저)
+        )
+
+        meetings_data = []
+
+        for m in meeting_qs:
+            attendees = list(m.attendees.all())
+            attendee_count = len(attendees)
+            attendee_names = ", ".join(a.user.name for a in attendees)
+
+            # 참여 여부: 주최자이거나 참석자면 True, 그 외 False
+            is_joined = False
+            if login_user_id:
+                if str(m.host_id) == str(login_user_id):
+                    is_joined = True
+                else:
+                    is_joined = any(
+                        str(a.user_id) == str(login_user_id) for a in attendees
+                    )
+
+            # 열람 여부: 실제 구현에 맞게 필드/로직 교체
+            # 예시) meeting_tbl 에 viewed_yn 같은 필드가 있다면:
+            #   is_read = m.viewed_yn
+            # 지금은 일단 False 로 둠
+            is_read = getattr(m, "viewed_yn", False)
+
+            meetings_data.append(
+                {
+                    "meeting_id": m.meeting_id,
+                    "title": m.title,
+                    "meet_date_time": m.meet_date_time,
+                    "place": m.place,
+                    "host_name": m.host.name,
+                    "attendee_count": attendee_count,
+                    "attendee_names": attendee_names,
+                    "is_joined": is_joined,
+                    "is_read": is_read,
+                }
+            )
+
+        context["login_user"] = login_user
+        context["meetings"] = meetings_data
+        return context
+
 class MeetingListMineView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_list_mine.html"
 
@@ -38,6 +101,10 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
         ).order_by("dept_name")
 
         context["departments"] = dept_qs   # 템플릿으로 넘김
+        # 로그인한 사용자 정보도 템플릿으로 내려줌
+        login_user_id = self.request.session.get("login_user_id")
+        if login_user_id:
+            context["login_user"] = User.objects.get(user_id=login_user_id)
         return context
 
     def post(self, request, *args, **kwargs):
@@ -65,6 +132,8 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
 
         # 3. host로 쓸 User 객체 조회
         host_user = User.objects.get(user_id=login_user_id)
+        
+        attendee_ids = [uid for uid in attendee_ids if str(uid) != str(login_user_id)]
 
 
         # 4. meeting_tbl에 새 레코드 생성
@@ -78,6 +147,8 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
                 transcript="",    # NOT NULL 필드라면 임시값
                 domain_upload=bool(domain_names),
             )
+
+        Attendee.objects.create(meeting=meeting, user=host_user)
 
         users = User.objects.filter(user_id__in=attendee_ids)
         attendee_objs = [
