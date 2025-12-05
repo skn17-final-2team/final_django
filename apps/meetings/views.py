@@ -3,8 +3,14 @@ from django.views.generic import TemplateView
 from apps.core.views import LoginRequiredSessionMixin
 from apps.accounts.models import Dept, User
 from django.db.models import Prefetch
-from .models import Meeting, Attendee
+
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+
+from .models import Meeting, Attendee, Domain
 from django.contrib import messages
+from django.db import transaction
+
 
 from apps.meetings.utils.s3_upload import upload_raw_file_bytes
 from apps.meetings.models import S3File
@@ -35,6 +41,7 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
     def post(self, request, *args, **kwargs):
 
         attendee_ids = request.POST.getlist("attendees")
+        domain_names = request.POST.getlist("domains")
         if not attendee_ids:
             messages.error(request, "참석자를 최소 1명 이상 선택해 주세요.")
             context = self.get_context_data()
@@ -57,14 +64,32 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
         # 3. host로 쓸 User 객체 조회
         host_user = User.objects.get(user_id=login_user_id)
 
+
         # 4. meeting_tbl에 새 레코드 생성
-        meeting = Meeting.objects.create(
-            title=title,
-            meet_date_time=meet_date_time,
-            place=place,
-            host=host_user,      # ← host_id가 아니라 host(FK)에 User 인스턴스
-            transcript="",       # NOT NULL 필드라 임시로 빈 문자열
-        )
+        with transaction.atomic():
+            # meeting_tbl insert
+            meeting = Meeting.objects.create(
+                title=title,
+                meet_date_time=meet_date_time,
+                place=place,
+                host=host_user,   # FK: User 인스턴스
+                transcript="",    # NOT NULL 필드라면 임시값
+                domain_upload=bool(domain_names),
+            )
+
+        users = User.objects.filter(user_id__in=attendee_ids)
+        attendee_objs = [
+                Attendee(meeting=meeting, user=u) for u in users
+        ]
+        Attendee.objects.bulk_create(attendee_objs)
+
+        # domain_tbl insert (특화 도메인)
+        if domain_names:
+            domain_objs = [
+                Domain(meeting=meeting, domain_name=name)
+                for name in domain_names
+            ]
+            Domain.objects.bulk_create(domain_objs)
 
         # 5. 생성된 meeting_id를 가지고 녹음 화면으로 이동
         return redirect("meetings:meeting_record", meeting_id=meeting.meeting_id)
@@ -77,6 +102,12 @@ class MeetingRecordView(LoginRequiredSessionMixin, TemplateView):
         meeting_id = self.kwargs.get("meeting_id")
 
         meeting = Meeting.objects.get(pk=meeting_id)
+
+        context["attendees"] = (
+            meeting.attendees
+                   .select_related("user")  # Attendee.user
+                   .all()
+        )
 
         context["meeting"] = meeting
         context["meeting_id"] = meeting_id
@@ -103,7 +134,49 @@ class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
 class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_detail.html"
 
-# TODO 이거 수정 해야댐 ㄹㅇ
 def meeting_record_upload(request, meeting_id):
-    print()
-    return 
+    # 1) 메소드 체크
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid method"}, status=405)
+
+    # 2) 회의 조회
+    meeting = get_object_or_404(Meeting, pk=meeting_id)
+
+    # 3) 파일 추출
+    uploaded_file = request.FILES.get("file")
+    if not uploaded_file:
+        return JsonResponse({"error": "file is required"}, status=400)
+
+    # 4) 확장자 검증 (png / wav)
+    filename = uploaded_file.name
+    ext = filename.split(".")[-1].lower()
+    if ext not in ["png", "wav"]:
+        return JsonResponse(
+            {"error": "PNG/WAV 파일만 업로드 가능합니다."},
+            status=400,
+        )
+
+    # 5) 유틸 호출
+    file_bytes = uploaded_file.read()
+    try:
+        s3_key, presigned_url = upload_raw_file_bytes(
+            file_bytes=file_bytes,
+            original_filename=filename,
+            delete_after_seconds=3600,
+        )
+    except Exception as e:
+        # 유틸 호출 중 에러가 나도 반드시 응답을 반환
+        return JsonResponse(
+            {"error": f"S3 업로드 중 오류: {str(e)}"},
+            status=500,
+        )
+
+    # 6) Meeting FK 연결 (record_url 이 ForeignKey(S3File, db_column="record_url") 일 때)
+    meeting.record_url_id = s3_key
+    meeting.save(update_fields=["record_url"])
+
+    return JsonResponse({
+        "ok": True,
+        "s3_key": s3_key,
+        "url": presigned_url,
+    })

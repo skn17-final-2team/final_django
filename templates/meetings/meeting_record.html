@@ -9,7 +9,47 @@
 {% endblock %}
 
 {% block content %}
-<h2>새 회의 생성 화면</h2>
+
+<div class="record-page">
+
+  <!-- ================= 상단: 회의 정보 영역 ================= -->
+  <header class="record-header">
+    <h2 class="record-title">{{ meeting.title }}</h2>
+
+    <div class="record-meta">
+      <!-- 일정/장소 줄 -->
+      <div class="record-meta-row">
+      <img src="{% static 'img/icon-calendar.png' %}" class="record-meta-icon-img" alt="calendar">
+        <span class="record-meta-text">
+          {{ meeting.meet_date_time|date:"Y.m.d H:i" }}
+          · {{ meeting.place }}
+        </span>
+      </div>
+      <style>
+        .record-meta-icon-img {
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            vertical-align: middle;
+            object-fit: contain;
+        }
+        </style>
+
+      <!-- 참석자 줄 -->
+      <div class="record-meta-row">
+      <img src="{% static 'img/icon-person.png' %}" class="record-meta-icon-img" alt="attendees">
+        <span class="record-meta-text">
+          {% for a in attendees %}
+            {{ a.user.name }} ({{ a.user.dept.dept_name }})
+            {% if not forloop.last %}, {% endif %}
+          {% empty %}
+            참석자가 없습니다.
+          {% endfor %}
+        </span>
+      </div>
+    </div>
+  </header>
+
 <!-- 피그마의 새 회의 폼을 여기서 구현 -->
 <form id="upload-form" method="post" enctype="multipart/form-data">
     {% csrf_token %}
@@ -25,3 +65,4 @@
 {% block extra_script %}
 <script src="{% static 'js/meeting.js' %}"></script>
 {% endblock %}
+
