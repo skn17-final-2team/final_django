@@ -1,0 +1,162 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block title %}회의 전문{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/meeting_transcript.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="meeting-transcript-page">
+  <!-- 상단 제목 + 우측 라인 -->
+  <div class="transcript-header-row">
+    <h2 class="record-title">{{ meeting.title }}</h2>
+    <div class="record-title-line"></div>
+  </div>
+
+  <!-- 좌우 2컬럼 레이아웃 -->
+  <div class="transcript-layout">
+    <!-- ========== 왼쪽 : 전문 ========== -->
+    <section class="transcript-left">
+      <div class="section-label">전문</div>
+
+      <div class="assign-transcript-box">
+        <!-- 실제 스크롤 영역 -->
+        <div class="assign-transcript-scroll" id="assign-transcript-scroll">
+          {{ transcript_html|safe }}
+        </div>
+
+        <!-- 오른쪽 스크롤바 데코 -->
+        <div class="assign-transcript-scrollbar">
+          <div class="assign-scroll-arrow assign-scroll-arrow-top"></div>
+          <div class="assign-scroll-track"></div>
+          <div class="assign-scroll-arrow assign-scroll-arrow-bottom"></div>
+        </div>
+      </div>
+
+      <div class="assign-transcript-actions">
+        {% if meeting.record_url %}
+          <button
+            type="button"
+            class="text-link-button"
+            id="btn-audio-download"
+            data-meeting-id="{{ meeting.meeting_id }}"
+          >
+            음성 파일 다운로드
+          </button>
+        {% else %}
+          <button type="button" class="text-link-button text-link-disabled" disabled>
+            음성 파일 다운로드
+          </button>
+        {% endif %}
+
+        <button
+          type="button"
+          class="text-link-button"
+          id="btn-copy-full-transcript"
+        >
+          전문 전체 복사
+        </button>
+      </div>
+    </section>
+
+    <!-- ========== 오른쪽 : 발화자 지정 + 전문 미리보기 ========== -->
+    <section class="transcript-right">
+      <!-- 발화자 지정 -->
+      <div class="speaker-assign-block">
+        <div class="section-label">발화자 지정</div>
+
+        <div class="speaker-assign-grid">
+          <div class="speaker-assign-column">
+            <div class="speaker-row">
+              <span class="speaker-label">발화자 1</span>
+              <select class="speaker-select" name="speaker1" id="speaker1">
+                {% for att in attendees %}
+                  <option value="{{ att.user.user_id }}">
+                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="speaker-row">
+              <span class="speaker-label">발화자 2</span>
+              <select class="speaker-select" name="speaker2" id="speaker2">
+                {% for att in attendees %}
+                  <option value="{{ att.user.user_id }}">
+                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="speaker-row">
+              <span class="speaker-label">발화자 3</span>
+              <select class="speaker-select" name="speaker3" id="speaker3">
+                {% for att in attendees %}
+                  <option value="{{ att.user.user_id }}">
+                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="speaker-assign-column">
+            <div class="speaker-row">
+              <span class="speaker-label">발화자 4</span>
+              <select class="speaker-select" name="speaker4" id="speaker4">
+                {% for att in attendees %}
+                  <option value="{{ att.user.user_id }}">
+                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="speaker-row">
+              <span class="speaker-label">발화자 5</span>
+              <select class="speaker-select" name="speaker5" id="speaker5">
+                {% for att in attendees %}
+                  <option value="{{ att.user.user_id }}">
+                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 오른쪽 회색 스크롤바 데코 -->
+        <div class="speaker-scroll-deco">
+            <div class="assign-scroll-arrow assign-scroll-arrow-top"></div>
+            <div class="assign-scroll-track"></div>
+            <div class="assign-scroll-arrow assign-scroll-arrow-bottom"></div>
+        </div>
+      </div>
+
+      <!-- 전문 미리보기 -->
+      <div class="preview-header-row">
+        <div class="section-label">전문 미리보기</div>
+      </div>
+
+      <div class="preview-box">
+        <div class="preview-scroll" id="preview-scroll">
+          {{ preview_html|safe }}
+        </div>
+      </div>
+
+      <div class="meeting-transcript-actions">
+        <button type="button" class="btn-transcript-save">
+          저장
+        </button>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script src="{% static 'js/meeting_transcript.js' %}"></script>
+{% endblock %}
