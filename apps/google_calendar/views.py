@@ -1,5 +1,6 @@
 import os
 import json
+
 from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import redirect
@@ -7,13 +8,16 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 
 from apps.accounts.models import User
-
-from google_auth_oauthlib.flow import Flow
-from googleapiclient.discovery import build
-from google.oauth2.credentials import Credentials
 from apps.google_calendar.models import GoogleCalendarToken
 from apps.google_calendar.utils import get_google_credentials
 
+from google_auth_oauthlib.flow import Flow
+from googleapiclient.discovery import build
+
+
+# -------------------------------------------------------------------
+# Google OAuth 로그인 / 콜백
+# -------------------------------------------------------------------
 def google_login(request):
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
@@ -32,6 +36,7 @@ def google_login(request):
     request.session["state"] = state
 
     return redirect(authorization_url)
+
 
 def oauth2callback(request):
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -59,72 +64,65 @@ def oauth2callback(request):
 
     user = User.objects.get(pk=login_user_id)
 
+    # 유저별 토큰 저장/갱신
     GoogleCalendarToken.objects.update_or_create(
         user=user,
         defaults={"token_json": token_json},
     )
 
+    # 세션에도 보관 (utils에서 어떻게 읽는지에 따라 사용)
     request.session["google_credentials"] = token_json
 
     return redirect("/")
 
-# 구글 캘린더 전체 일정을 JSON으로 반환
-def google_events_json(request):
 
-    creds_data = request.session.get("google_credentials")
-    if not creds_data:
+# -------------------------------------------------------------------
+# Google Calendar 이벤트 목록 조회
+#  - /api/google-events/
+# -------------------------------------------------------------------
+def google_events(request):
+    creds = get_google_credentials(request)
+    if not creds:
         return JsonResponse({"error": "not_authenticated"}, status=401)
 
-    creds = Credentials(**creds_data)
     service = build("calendar", "v3", credentials=creds)
 
-    time_min = "2000-01-01T00:00:00Z"
-    time_max = "2100-01-01T00:00:00Z"
+    events_result = service.events().list(
+        calendarId="primary",
+        timeMin="2020-01-01T00:00:00Z",
+        timeMax="2030-12-31T23:59:59Z",
+        singleEvents=True,
+        orderBy="startTime",
+    ).execute()
 
-    all_items = []
-    page_token = None
-
-    while True:
-        events_result = (
-            service.events()
-            .list(
-                calendarId="primary",
-                timeMin=time_min,
-                timeMax=time_max,
-                maxResults=2500,
-                singleEvents=True,
-                orderBy="startTime",
-                pageToken=page_token,
-            )
-            .execute()
+    events = []
+    for e in events_result.get("items", []):
+        events.append(
+            {
+                "id": e["id"],
+                "title": e.get("summary", ""),
+                "start": e["start"].get("dateTime") or e["start"].get("date"),
+                "end": e["end"].get("dateTime") or e["end"].get("date"),
+                # 필요하면 description도 내려줄 수 있음
+                # "description": e.get("description", ""),
+            }
         )
 
-        for e in events_result.get("items", []):
-            start = e["start"].get("dateTime", e["start"].get("date"))
-            end = e["end"].get("dateTime", e["end"].get("date"))
-
-            all_items.append(
-                {
-                    "id": e.get("id"),
-                    "title": e.get("summary", "(제목 없음)"),
-                    "start": start,
-                    "end": end,
-                }
-            )
-
-        page_token = events_result.get("nextPageToken")
-        if not page_token:
-            break
-
-    return JsonResponse(all_items, safe=False)
+    return JsonResponse(events, safe=False)
 
 
-@csrf_exempt  # 개발용. 나중에 CSRF 토큰 처리로 바꿈
+# -------------------------------------------------------------------
+# Google Calendar 이벤트 생성
+#  - /api/google-events/create/
+# -------------------------------------------------------------------
+@csrf_exempt  # CSRF 토큰 제대로 쓰실 거면 이 데코레이터는 제거해도 됩니다.
 @require_POST
-def create_google_event(request):   # 홈 화면에서 보낸 일정 데이터를 사용자의 Google Calendar에 생성
-
-    creds_data = request.session.get("google_credentials")
-    if not creds_data:
+def create_google_event(request):
+    """
+    홈 화면에서 보낸 일정 데이터를 사용자의 Google Calendar에 생성
+    """
+    creds = get_google_credentials(request)
+    if not creds:
         return JsonResponse({"error": "not_authenticated"}, status=401)
 
     try:
@@ -133,14 +131,13 @@ def create_google_event(request):   # 홈 화면에서 보낸 일정 데이터�
         return JsonResponse({"error": "invalid_json"}, status=400)
 
     title = data.get("title")
-    start = data.get("start")  
+    start = data.get("start")
     end = data.get("end")
     description = data.get("description", "")
 
     if not title or not start or not end:
         return JsonResponse({"error": "missing_fields"}, status=400)
 
-    creds = Credentials(**creds_data)
     service = build("calendar", "v3", credentials=creds)
 
     time_zone = "Asia/Seoul"
@@ -159,14 +156,14 @@ def create_google_event(request):   # 홈 화면에서 보낸 일정 데이터�
     }
 
     try:
-        created_event = (
-            service.events()
-            .insert(calendarId="primary", body=event_body)
-            .execute()
-        )
+        created_event = service.events().insert(
+            calendarId="primary",
+            body=event_body,
+        ).execute()
     except Exception as e:
         return JsonResponse(
-            {"error": "google_api_error", "detail": str(e)}, status=500
+            {"error": "google_api_error", "detail": str(e)},
+            status=500,
         )
 
     return JsonResponse(
@@ -176,93 +173,44 @@ def create_google_event(request):   # 홈 화면에서 보낸 일정 데이터�
         }
     )
 
-# 세션에 구글 인증 정보가 있는지 확인
+
+# -------------------------------------------------------------------
+# Google Calendar 인증 여부 확인
+#  - /api/google-auth-status/
+# -------------------------------------------------------------------
 def google_auth_status(request):
-    
-    is_auth = "google_credentials" in request.session
-    return JsonResponse({"authenticated": is_auth})
-
-def google_events(request):
-    creds = get_google_credentials(request)
-    if not creds:
-        return JsonResponse({"error": "not_authenticated"}, status=401)
-
-    service = build("calendar", "v3", credentials=creds)
-
-    events_result = service.events().list(
-        calendarId="primary",
-        timeMin="2020-01-01T00:00:00Z",
-        timeMax="2030-12-31T23:59:59Z",
-        singleEvents=True,
-        orderBy="startTime",
-    ).execute()
-
-    events = []
-    for e in events_result.get("items", []):
-        events.append({
-            "id": e["id"],
-            "title": e.get("summary", ""),
-            "start": e["start"].get("dateTime") or e["start"].get("date"),
-            "end": e["end"].get("dateTime") or e["end"].get("date"),
-        })
-
-    return JsonResponse(events, safe=False)
-
-def create_google_event(request):
-    creds = get_google_credentials(request)
-    if not creds:
-        return JsonResponse({"error": "not_authenticated"}, status=401)
-
-    data = json.loads(request.body)
-    title = data.get("title")
-    start = data.get("start")
-    end = data.get("end")
-    description = data.get("description")
-
-    service = build("calendar", "v3", credentials=creds)
-
-    event_body = {
-        "summary": title,
-        "description": description,
-        "start": {"dateTime": start},
-        "end": {"dateTime": end},
-    }
-
-    event = service.events().insert(calendarId="primary", body=event_body).execute()
-
-    return JsonResponse({"id": event["id"]})
-
-def google_auth_status(request):
+    """
+    현재 요청 기준으로 Google 인증이 되어 있는지 여부만 반환
+    """
     creds = get_google_credentials(request)
     return JsonResponse({"authenticated": bool(creds)})
 
-@csrf_exempt  # 개발 단계에서 일단 CSRF 무시. 나중에 필요하면 제거 후 정상 CSRF 처리.
-@require_POST
-@csrf_exempt  # 개발 단계에서는 편하게 사용, 나중에 CSRF 정상 처리로 바꾸셔도 됩니다.
+
+# -------------------------------------------------------------------
+# Google Calendar 이벤트 삭제
+#  - /api/google-events/<event_id>/delete/
+# -------------------------------------------------------------------
+@csrf_exempt  # 마찬가지로 CSRF 토큰 처리 후에는 제거 가능
 @require_POST
 def google_events_delete(request, event_id):
     """
     /api/google-events/<event_id>/delete/ 로 들어오는 삭제 요청 처리
     """
-    # 1) 구글 인증 정보 가져오기
     creds = get_google_credentials(request)
     if not creds:
         return JsonResponse({"error": "not_authenticated"}, status=401)
 
-    # 2) 구글 캘린더 서비스 생성
     service = build("calendar", "v3", credentials=creds)
 
     try:
-        # 3) 구글 캘린더에서 이벤트 삭제
         service.events().delete(
             calendarId="primary",
             eventId=event_id,
         ).execute()
     except Exception as e:
-        # 구글 API 에러
         return JsonResponse(
-            {"error": "google_api_error", "detail": str(e)}, status=500
+            {"error": "google_api_error", "detail": str(e)},
+            status=500,
         )
 
-    # 4) 성공 응답
     return JsonResponse({"success": True})
