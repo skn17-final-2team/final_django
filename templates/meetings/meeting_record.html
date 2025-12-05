@@ -25,6 +25,15 @@
           · {{ meeting.place }}
         </span>
       </div>
+      <style>
+        .record-meta-icon-img {
+            width: 16px;
+            height: 16px;
+            margin-right: 6px;
+            vertical-align: middle;
+            object-fit: contain;
+        }
+        </style>
 
       <!-- 참석자 줄 -->
       <div class="record-meta-row">
@@ -56,3 +65,4 @@
 {% block extra_script %}
 <script src="{% static 'js/meeting.js' %}"></script>
 {% endblock %}
+
