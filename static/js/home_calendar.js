@@ -48,6 +48,170 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const csrftoken = getCookie("csrftoken");
 
+  // "오늘의 일정" 카드 요소
+  const todayListEl = document.getElementById("today-schedule-list");
+  const todayEmptyEl = document.getElementById("today-schedule-empty");
+
+  // "이번 달 일정" 카드 요소
+  const monthListEl = document.getElementById("month-schedule-list");
+  const monthEmptyEl = document.getElementById("month-schedule-empty");
+
+  // 오늘의 일정 렌더링
+  function renderTodaySchedules(eventsData) {
+    if (!todayListEl || !todayEmptyEl) return;
+
+    const today = new Date();
+
+    const isSameDate = (d1, d2) =>
+      d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth() &&
+      d1.getDate() === d2.getDate();
+
+    // 오늘 시작하는 이벤트만 필터링
+    const todayEvents = eventsData.filter((e) => {
+      if (!e.start) return false;
+      const start = new Date(e.start);
+      if (isNaN(start.getTime())) return false;
+      return isSameDate(start, today);
+    });
+
+    // 기존 목록 비우기
+    todayListEl.innerHTML = "";
+
+    if (todayEvents.length === 0) {
+      // 일정이 없으면 메시지만 보이게
+      todayEmptyEl.style.display = "block";
+      return;
+    }
+
+    // 일정이 있으면 메시지 숨기기
+    todayEmptyEl.style.display = "none";
+
+    // 시작 시간 기준 정렬
+    todayEvents.sort(
+      (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
+    );
+
+    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+
+    todayEvents.forEach((e) => {
+      const li = document.createElement("li");
+      li.className = "schedule-item";
+
+      const d = new Date(e.start);
+      const day = d.getDate();
+      const weekday = weekdays[d.getDay()];
+
+      const dateSpan = document.createElement("span");
+      dateSpan.className = "schedule-date";
+      dateSpan.textContent = `${day}(${weekday})`;
+
+      const textSpan = document.createElement("span");
+      textSpan.className = "schedule-text";
+      textSpan.textContent = e.title || "(제목 없음)";
+
+      li.appendChild(dateSpan);
+      li.appendChild(textSpan);
+
+      todayListEl.appendChild(li);
+    });
+  }
+
+  // 이번 달 일정 렌더링
+  function renderMonthSchedules(eventsData) {
+    if (!monthListEl || !monthEmptyEl) return;
+
+    const today = new Date();
+
+    const isSameMonth = (d1, d2) =>
+      d1.getFullYear() === d2.getFullYear() &&
+      d1.getMonth() === d2.getMonth();
+
+    const monthEvents = eventsData.filter((e) => {
+      if (!e.start) return false;
+      const start = new Date(e.start);
+      if (isNaN(start.getTime())) return false;
+      return isSameMonth(start, today);
+    });
+
+    monthListEl.innerHTML = "";
+
+    if (monthEvents.length === 0) {
+      monthEmptyEl.style.display = "block";
+      return;
+    }
+
+    monthEmptyEl.style.display = "none";
+
+    monthEvents.sort(
+      (a, b) => new Date(a.start).getTime() - new Date(b.start).getTime()
+    );
+
+    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+
+    monthEvents.forEach((e) => {
+      const li = document.createElement("li");
+      li.className = "schedule-item";
+
+      const d = new Date(e.start);
+      const day = d.getDate();
+      const weekday = weekdays[d.getDay()];
+
+      const dateSpan = document.createElement("span");
+      dateSpan.className = "schedule-date";
+      dateSpan.textContent = `${day}(${weekday})`;
+
+      const textSpan = document.createElement("span");
+      textSpan.className = "schedule-text";
+      textSpan.textContent = e.title || "(제목 없음)";
+
+      li.appendChild(dateSpan);
+      li.appendChild(textSpan);
+
+      monthListEl.appendChild(li);
+    });
+  }
+
+  // 오늘·이번 달 일정 전체를 다시 불러와서
+  // 캘린더와 오른쪽 카드(오늘/이번 달)를 한 번에 갱신
+  async function reloadAllSchedules() {
+    try {
+      const res = await fetch("/api/google-events/");
+      const data = await res.json();
+
+      if (data.error) {
+        console.warn("google-events error:", data.error);
+        // 인증 안 됐거나 에러면 모두 비우기
+        if (typeof renderTodaySchedules === "function") {
+          renderTodaySchedules([]);
+        }
+        if (typeof renderMonthSchedules === "function") {
+          renderMonthSchedules([]);
+        }
+        if (calendar) {
+          calendar.removeAllEvents();
+        }
+        return;
+      }
+
+      // 캘린더 이벤트 전체 갈아끼우기
+      if (calendar) {
+        calendar.removeAllEvents();
+        calendar.addEventSource(data);
+      }
+
+      // 오른쪽 카드 갱신
+      if (typeof renderTodaySchedules === "function") {
+        renderTodaySchedules(data);
+      }
+      if (typeof renderMonthSchedules === "function") {
+        renderMonthSchedules(data);
+      }
+    } catch (err) {
+      console.error("일정 재로드 실패:", err);
+    }
+  }
+
   let selectedEvent = null;
 
   function openModal(defaultDate) {
@@ -173,6 +337,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         alert("일정이 삭제되었습니다.");
         closeEventModal();
+
+        reloadAllSchedules();
+        
       } catch (err) {
         console.error("일정 삭제 실패:", err);
         alert("일정 삭제 중 오류가 발생했습니다.");
@@ -200,15 +367,21 @@ document.addEventListener("DOMContentLoaded", function () {
           if (data.error === "not_authenticated") {
             console.warn("Google Calendar not authenticated");
             successCallback([]);
+            renderTodaySchedules([]);       // 인증 안 되어도 카드 상태 갱신
           } else {
             successCallback(data);
+            renderTodaySchedules(data);     // 오늘의 일정 표시
+            renderMonthSchedules(data);  // 이번 달 일정
           }
         })
         .catch((err) => {
           console.error("일정 불러오기 실패:", err);
           failureCallback(err);
+          renderTodaySchedules([]);         
+          renderMonthSchedules([]);      
         });
     },
+
 
     // 이벤트 클릭 시 상세 모달 열기
     eventClick: function (info) {
@@ -332,6 +505,8 @@ document.addEventListener("DOMContentLoaded", function () {
               description: description,
             },
           });
+
+          reloadAllSchedules();
 
           closeModal();
         }
