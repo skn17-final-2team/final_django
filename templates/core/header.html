@@ -4,7 +4,7 @@
     <h1 class="header-title">
       {% block page_title %}
         {% if request.resolver_match.url_name == "home" %}
-            홈
+            홈  
         {% elif request.resolver_match.url_name == "meeting_create" %}
             새 회의
         {% elif request.resolver_match.url_name == "meeting_record" %}
@@ -20,7 +20,7 @@
         {% elif request.resolver_match.url_name == "list_open" %}
             열람 가능한 회의
         {% else %}
-            다른 페이지 헤더
+            관리자 홈
         {% endif %}
       {% endblock %}
     </h1>

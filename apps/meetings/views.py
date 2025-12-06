@@ -189,44 +189,44 @@ class MeetingRecordView(LoginRequiredSessionMixin, TemplateView):
 class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_transcript.html"
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        meeting_id = self.kwargs.get("meeting_id")
-        meeting = Meeting.objects.get(pk=meeting_id)
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     meeting_id = self.kwargs.get("meeting_id")
+    #     meeting = Meeting.objects.get(pk=meeting_id)
 
-        attendees_qs = (
-            meeting.attendees
-                   .select_related("user", "user__dept")
-                   .all()
-        )
+    #     attendees_qs = (
+    #         meeting.attendees
+    #                .select_related("user", "user__dept")
+    #                .all()
+    #     )
 
-        transcript_html = meeting.transcript or ""
+    #     transcript_html = meeting.transcript or ""
 
-        if not transcript_html:
-            print('전사 진행 중')
-            res = get_stt(get_presigned_url(str(meeting.record_url)))
-            if res['status_code'] != 200 or not res['success']:
-                transcript_html = res
-            else:
-                transcript_html = res['data']['full_text'].replace("\n", "<br>")
-                meeting.transcript = transcript_html
-                meeting.save()
+    #     if not transcript_html:
+    #         print('전사 진행 중')
+    #         res = get_stt(get_presigned_url(str(meeting.record_url)))
+    #         if res['status_code'] != 200 or not res['success']:
+    #             transcript_html = res
+    #         else:
+    #             transcript_html = res['data']['full_text'].replace("\n", "<br>")
+    #             meeting.transcript = transcript_html
+    #             meeting.save()
         
 
-        # 이미 전사된 텍스트가 meeting_tbl.transcript
-        context.update(
-            {
-                "meeting": meeting,
-                "meeting_id": meeting_id,
-                "attendees": attendees_qs,
-                "transcript_html": transcript_html,
-            }
-        )
+    #     # 이미 전사된 텍스트가 meeting_tbl.transcript
+    #     context.update(
+    #         {
+    #             "meeting": meeting,
+    #             "meeting_id": meeting_id,
+    #             "attendees": attendees_qs,
+    #             "transcript_html": transcript_html,
+    #         }
+    #     )
 
-        # attendee_tbl, task_tbl 등도 필요하면 함께 조회
-        # context["attendees"] = Attendee.objects.filter(meeting_id=meeting_id)
+    #     # attendee_tbl, task_tbl 등도 필요하면 함께 조회
+    #     # context["attendees"] = Attendee.objects.filter(meeting_id=meeting_id)
 
-        return context
+    #     return context
     
 
 
@@ -276,4 +276,11 @@ def meeting_record_upload(request, meeting_id):
 
     return JsonResponse({
         "ok": True,
+    })
+
+def meeting_summary(request, meeting_id):
+    meeting = get_object_or_404(Meeting, pk=meeting_id)
+
+    return render(request, "meetings/meeting_summary.html", {
+        "meeting": meeting,
     })

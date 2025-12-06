@@ -10,15 +10,18 @@
 {% block content %}
 <div class="admin-layout">
 
-  {# 상단 타이틀 영역: "관리자 홈" #}
   <header class="admin-header">
     <h1 class="admin-header-title">관리자 홈</h1>
   </header>
 
   <div class="admin-body">
 
-    {# ================== 가운데: 직원 목록 테이블 ================== #}
+    {# ========== 왼쪽: 부서원 목록 ========== #}
     <section class="admin-panel admin-panel-left">
+      <header class="admin-panel-header">
+        <h2 class="admin-panel-title" id="admin-dept-title">전체 부서</h2>
+      </header>
+
       <div class="admin-table-card">
         <table class="admin-table" id="admin-member-table">
           <thead>
@@ -30,41 +33,29 @@
               <th class="col-birth">생년월일</th>
             </tr>
           </thead>
-          <tbody>
-            {% for emp in employees %}
-              <tr
-                class="admin-member-row"
-                data-dept-id="{{ emp.dept.id }}"
-              >
-                <td>{{ forloop.counter }}</td>
-                <td>{{ emp.name }}</td>
-                <td>{{ emp.user_id }}</td>
-                <td>{{ emp.dept.dept_name }}</td>
-                <td>{{ emp.birthdate|date:"Y.m.d" }}</td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="5" class="admin-table-empty">
-                  현재 표시할 데이터가 없습니다.
-                </td>
-              </tr>
-            {% endfor %}
+          <tbody id="admin-member-tbody">
+            <tr>
+              <td colspan="5" class="admin-table-empty">
+                현재 표시할 부서원이 없습니다.
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
 
-      {# 테이블 하단 "추가" 버튼 #}
       <div class="admin-table-actions">
+        {# ★ 반드시 이 id 사용 ★ #}
         <button type="button" class="btn-admin-add" id="btn-admin-add">
           추가
         </button>
       </div>
     </section>
 
-    {# ================== 오른쪽: 직원 상세 / 등록 폼 ================== #}
-    <section class="admin-panel admin-panel-right">
+    {# ========== 오른쪽: 등록/수정 폼(열고 닫는 영역) ========== #}
+    {# ★ 반드시 이 id 사용 ★ #}
+    <section class="admin-panel admin-panel-right" id="admin-panel-right">
       <form id="admin-employee-form" class="admin-form">
-        {# 아이콘 영역(왼쪽 상단 작은 사각형 아이콘) #}
+
         <div class="admin-form-icon-box">
           <span class="admin-form-icon">▢</span>
         </div>
@@ -110,8 +101,7 @@
               id="emp-dept"
               name="dept"
               class="admin-form-input"
-              placeholder="IT본부 - 개발부서"
-              readonly
+              placeholder="IT 본부 - 개발 부서"
             />
           </div>
 
@@ -127,17 +117,21 @@
           </div>
         </div>
 
-        {# 폼 버튼 영역: 등록 / 취소 #}
         <div class="admin-form-actions">
           <button type="submit" class="btn-admin-primary">
             등록
           </button>
-          <button type="button" class="btn-admin-secondary" id="btn-admin-cancel">
-            취소
+          <button
+            type="button"
+            class="btn-admin-secondary"
+            id="btn-admin-close"
+          >
+            닫기
           </button>
         </div>
       </form>
     </section>
+
   </div>
 </div>
 {% endblock %}
