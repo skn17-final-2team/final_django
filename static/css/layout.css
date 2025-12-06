@@ -263,21 +263,10 @@
   gap: 8px;
 }
 
-/* 유저 아이콘 컨테이너 */
-.header-user-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 /* 이미지 아이콘 */
 .user-icon {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
 }
 
