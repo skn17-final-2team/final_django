@@ -3,7 +3,7 @@ from .views import (
     MeetingCreateView,
     MeetingListAllView,
     MeetingListMineView,
-    MeetingListOpenView,
+    MeetingListDeptView,
     MeetingRecordView,
     MeetingTranscriptView,
     MeetingDetailView,
@@ -20,5 +20,5 @@ urlpatterns = [
     path("<int:meeting_id>/", MeetingDetailView.as_view(), name="meeting_detail"),
     path("list/all/", MeetingListAllView.as_view(), name="list_all"),
     path("list/mine/", MeetingListMineView.as_view(), name="list_mine"),
-    path("list/open/", MeetingListOpenView.as_view(), name="list_open"),
+    path("list/dept/", MeetingListDeptView.as_view(), name="list_dept"),
 ]

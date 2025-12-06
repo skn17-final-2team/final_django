@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render
 from django.views.generic import TemplateView
 from apps.core.views import LoginRequiredSessionMixin
 from apps.accounts.models import Dept, User
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
@@ -17,8 +17,112 @@ from apps.meetings.utils.runpod import get_stt, runpod_health
 
 from apps.meetings.models import S3File
 
+# 회의 목록에서 쓸 데이터 생성하는 함수
+def build_meeting_list_context(meeting_qs, login_user_id=None):
+    meetings_data = []
+
+    # 로그인 사용자 객체(필요하면)
+    login_user = None
+    if login_user_id:
+        login_user = User.objects.select_related("dept").get(user_id=login_user_id)
+
+    for m in meeting_qs:
+        attendees = list(m.attendees.all())
+        attendee_count = len(attendees)
+        attendee_names = ", ".join(a.user.name for a in attendees)
+
+        # 참여 여부 (All 페이지에서만 실제로 사용, Mine/Dept 에선 옵션)
+        is_joined = False
+        if login_user_id:
+            if str(m.host_id) == str(login_user_id):
+                is_joined = True
+            else:
+                is_joined = any(str(a.user_id) == str(login_user_id) for a in attendees)
+
+
+        meetings_data.append(
+            {
+                "meeting_id": m.meeting_id,
+                "title": m.title,
+                "meet_date_time": m.meet_date_time,
+                "place": m.place,
+                "host_name": m.host.name,
+                "attendee_count": attendee_count,
+                "attendee_names": attendee_names,
+                "is_joined": is_joined,
+            }
+        )
+
+    return meetings_data, login_user
+
 class MeetingListAllView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_list_all.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        login_user_id = self.request.session.get("login_user_id")
+
+        meeting_qs = (
+            Meeting.objects
+            .select_related("host")
+            .prefetch_related(
+                Prefetch(
+                    "attendees",
+                    queryset=Attendee.objects.select_related("user", "user__dept"),
+                )
+            )
+            .order_by("-meet_date_time")
+        )
+
+        meetings_data, login_user = build_meeting_list_context(
+            meeting_qs, login_user_id
+        )
+
+        context["login_user"] = login_user
+        context["meetings"] = meetings_data
+        return context
+
+
+class MeetingListMineView(LoginRequiredSessionMixin, TemplateView):
+    template_name = "meetings/meeting_list_mine.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        login_user_id = self.request.session.get("login_user_id")
+        if not login_user_id:
+            # 이 View는 LoginRequiredMixin 이라 실제로는 여기 안 오겠지만 방어 코드
+            context["login_user"] = None
+            context["meetings"] = []
+            return context
+
+        meeting_qs = (
+            Meeting.objects
+            .select_related("host")
+            .prefetch_related(
+                Prefetch(
+                    "attendees",
+                    queryset=Attendee.objects.select_related("user", "user__dept"),
+                )
+            )
+            .filter(
+                Q(host_id=login_user_id) | Q(attendees__user_id=login_user_id)
+            )
+            .order_by("-meet_date_time")
+            .distinct()
+        )
+
+        meetings_data, login_user = build_meeting_list_context(
+            meeting_qs, login_user_id
+        )
+
+        context["login_user"] = login_user
+        context["meetings"] = meetings_data
+        return context
+
+class MeetingListDeptView(LoginRequiredSessionMixin, TemplateView):
+    template_name = "meetings/meeting_list_dept.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -29,19 +133,25 @@ class MeetingListAllView(LoginRequiredSessionMixin, TemplateView):
         if login_user_id:
             login_user = User.objects.select_related("dept").get(user_id=login_user_id)
 
-        # 2) 회의 + 참석자 미리 로딩 (일시 최신순)
+        # 2) 열람 가능한 회의:
+        #    host도 아니고, attendee_tbl에도 없는 회의만(즉, 부서원이 참여한 회의임)
         meeting_qs = (
             Meeting.objects
-            .select_related("host")  # meeting.host
+            .select_related("host")
             .prefetch_related(
                 Prefetch(
                     "attendees",
                     queryset=Attendee.objects.select_related("user", "user__dept"),
                 )
             )
-            .order_by("-meet_date_time")  # 기본 정렬: 일시 내림차순(최근 회의 먼저)
+            .exclude(
+                Q(host_id=login_user_id) | Q(attendees__user_id=login_user_id)
+            )
+            .order_by("-meet_date_time")
+            .distinct()
         )
 
+        # 3) 템플릿용 데이터 가공 (전체/내가참여한 과 동일 구조)
         meetings_data = []
 
         for m in meeting_qs:
@@ -49,21 +159,8 @@ class MeetingListAllView(LoginRequiredSessionMixin, TemplateView):
             attendee_count = len(attendees)
             attendee_names = ", ".join(a.user.name for a in attendees)
 
-            # 참여 여부: 주최자이거나 참석자면 True, 그 외 False
+            # 이 View는 "미참여 회의"라 is_joined는 항상 False
             is_joined = False
-            if login_user_id:
-                if str(m.host_id) == str(login_user_id):
-                    is_joined = True
-                else:
-                    is_joined = any(
-                        str(a.user_id) == str(login_user_id) for a in attendees
-                    )
-
-            # 열람 여부: 실제 구현에 맞게 필드/로직 교체
-            # 예시) meeting_tbl 에 viewed_yn 같은 필드가 있다면:
-            #   is_read = m.viewed_yn
-            # 지금은 일단 False 로 둠
-            is_read = getattr(m, "viewed_yn", False)
 
             meetings_data.append(
                 {
@@ -75,19 +172,12 @@ class MeetingListAllView(LoginRequiredSessionMixin, TemplateView):
                     "attendee_count": attendee_count,
                     "attendee_names": attendee_names,
                     "is_joined": is_joined,
-                    "is_read": is_read,
                 }
             )
 
         context["login_user"] = login_user
         context["meetings"] = meetings_data
         return context
-
-class MeetingListMineView(LoginRequiredSessionMixin, TemplateView):
-    template_name = "meetings/meeting_list_mine.html"
-
-class MeetingListOpenView(LoginRequiredSessionMixin, TemplateView):
-    template_name = "meetings/meeting_list_open.html"
 
 class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_create.html"

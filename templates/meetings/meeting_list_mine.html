@@ -1,9 +1,193 @@
 {% extends "core/base.html" %}
+{% load static %}
 
 {% block title %}내가 참여한 회의{% endblock %}
-{% block page_title %}내가 참여한 회의{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/meeting_list.css' %}">
+{% endblock %}
 
 {% block content %}
-  <h2>내가 참여한 회의 화면</h2>
-  <!-- 여기서 구현 -->
+<div class="meeting-list-page">
+
+  <!-- 검색 영역 -->
+  <div class="meeting-list-toolbar">
+    <div class="meeting-search">
+      <div class="meeting-search-box">
+        <img
+          src="{% static 'img/icon-search.png' %}"
+          alt="검색"
+          class="search-icon"
+        />
+        <input
+          id="search-input"
+          type="text"
+          class="search-input"
+          placeholder="검색어를 입력해 주세요"
+          autocomplete="off"
+        />
+        <button
+          type="button"
+          id="search-filter-toggle"
+          class="search-filter-button"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          <img
+            src="{% static 'img/icon-filter.png' %}"
+            alt="검색 조건"
+            class="filter-icon"
+          />
+        </button>
+
+        <!-- 검색 조건 드롭다운 -->
+        <div
+          id="search-filter-dropdown"
+          class="search-filter-dropdown"
+          aria-label="검색 조건"
+        >
+          <button type="button" class="search-filter-option is-active" data-field="title">
+            제목
+          </button>
+          <button type="button" class="search-filter-option" data-field="host">
+            주최자
+          </button>
+          <button type="button" class="search-filter-option" data-field="title_host">
+            제목 + 주최자
+          </button>
+          <button type="button" class="search-filter-option" data-field="datetime">
+            회의 일시
+          </button>
+        </div>
+      </div>
+
+      <div class="search-current-label">
+        <span id="search-filter-label">제목</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 테이블 영역 -->
+  <div class="meeting-list-table-wrapper">
+    <table class="meeting-table">
+      <thead>
+        <tr>
+          <th class="col-no">번호</th>
+
+          <!-- 일시 정렬 -->
+          <th class="col-datetime">
+            <button
+              type="button"
+              id="sort-date-button"
+              class="sort-button"
+              data-field="datetime"
+            >
+              <span>일시</span>
+              <span
+                id="sort-date-icon"
+                class="sort-icon sort-icon-down"
+              ></span>
+            </button>
+          </th>
+
+          <!-- 제목 정렬 -->
+          <th class="col-title">
+            <button
+              type="button"
+              id="sort-title-button"
+              class="sort-button"
+              data-field="title"
+            >
+              <span>제목</span>
+              <span
+                id="sort-title-icon"
+                class="sort-icon sort-icon-none"
+                aria-hidden="true"
+              ></span>
+            </button>
+          </th>
+
+          <th class="col-place">장소</th>
+          <th class="col-host">주최자</th>
+          <th class="col-count">참여 인원</th>
+        </tr>
+      </thead>
+      <tbody id="meeting-table-body">
+        {% for meeting in meetings %}
+        <tr
+          class="meeting-row"
+          data-meeting-id="{{ meeting.meeting_id }}"
+          data-title="{{ meeting.title|escape }}"
+          data-attendees="{{ meeting.attendee_names|default:''|escape }}"
+          data-datetime="{{ meeting.meet_date_time|date:'Y-m-d H:i' }}"
+          data-datetime-display="{{ meeting.meet_date_time|date:'Y.m.d H:i' }}"
+          data-place="{{ meeting.place|default:''|escape }}"
+          data-host="{{ meeting.host_name|escape }}"
+        >
+          <!-- 번호는 화면상 index, DB PK와 무관 -->
+          <td class="col-no">
+            {{ forloop.counter }}
+          </td>
+
+          <td class="col-datetime">
+            {{ meeting.meet_date_time|date:"Y.m.d H:i" }}
+          </td>
+
+          <td class="col-title">
+            <a
+              href="{% url 'meetings:meeting_detail' meeting_id=meeting.meeting_id %}"
+              class="title-link"
+            >
+              {{ meeting.title }}
+            </a>
+          </td>
+
+          <td class="col-place">
+            {{ meeting.place }}
+          </td>
+
+          <td class="col-host">
+            {{ meeting.host_name }}
+          </td>
+
+          <td class="col-count">
+            {{ meeting.attendee_count }}명
+          </td>
+        </tr>
+        {% empty %}
+        <tr class="meeting-row-empty">
+          <td colspan="6" class="no-data-cell">
+            내가 참여한 회의가 없습니다.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- 페이지네이션 -->
+    <div class="meeting-pagination" id="meeting-pagination">
+      <button
+        type="button"
+        class="page-btn page-prev"
+        id="page-prev"
+      >
+        ◀
+      </button>
+
+      <div class="page-numbers" id="page-numbers"></div>
+
+      <button
+        type="button"
+        class="page-btn page-next"
+        id="page-next"
+      >
+        ▶
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script src="{% static 'js/meeting_list.js' %}"></script>
 {% endblock %}

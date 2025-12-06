@@ -28,7 +28,7 @@
       </li>
 
       <!-- 새 회의 -->
-      <li class="sidebar-item {% if request.resolver_match.namespace == 'meetings' and request.resolver_match.url_name == 'create' %}sidebar-item-active{% endif %}">
+      <li class="sidebar-item {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'meeting_create' %}sidebar-item-active{% endif %}">
         <a href="{% url 'meetings:meeting_create' %}" class="sidebar-link">
             <img
             src="{% static 'img/icon-new-meeting.png' %}"
@@ -56,21 +56,24 @@
     </button>
 
     <ul class="sidebar-menu sidebar-menu-nested">
+      <!-- 상위: 전체 회의 목록 -->
       <li class="sidebar-item {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'list_all' %}sidebar-item-active{% endif %}">
         <a href="{% url 'meetings:list_all' %}" class="sidebar-link">
           <span class="sidebar-link-text">전체 회의 목록</span>
         </a>
       </li>
 
-      <li class="sidebar-item {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'list_mine' %}sidebar-item-active{% endif %}">
+      <!-- 하위: 내가 참여한 회의 -->
+      <li class="sidebar-item sidebar-item-child {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'list_mine' %}sidebar-item-active{% endif %}">
         <a href="{% url 'meetings:list_mine' %}" class="sidebar-link">
           <span class="sidebar-link-text">내가 참여한 회의</span>
         </a>
       </li>
 
-      <li class="sidebar-item {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'list_open' %}sidebar-item-active{% endif %}">
-        <a href="{% url 'meetings:list_open' %}" class="sidebar-link">
-          <span class="sidebar-link-text">열람 가능한 회의</span>
+      <!-- 하위: 부서원이 참여한 회의 -->
+      <li class="sidebar-item sidebar-item-child {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'list_dept' %}sidebar-item-active{% endif %}">
+        <a href="{% url 'meetings:list_dept' %}" class="sidebar-link">
+          <span class="sidebar-link-text">부서원이 참여한 회의</span>
         </a>
       </li>
     </ul>

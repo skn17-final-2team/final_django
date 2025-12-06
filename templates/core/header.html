@@ -17,8 +17,8 @@
             전체 회의 목록
         {% elif request.resolver_match.url_name == "list_mine" %}
             내가 참여한 회의
-        {% elif request.resolver_match.url_name == "list_open" %}
-            열람 가능한 회의
+        {% elif request.resolver_match.url_name == "list_dept" %}
+            부서원이 참여한 회의
         {% else %}
             다른 페이지 헤더
         {% endif %}
