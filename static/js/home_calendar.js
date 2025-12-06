@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
       year: "numeric",
       month: "long",
       day: "numeric",
-      weekday: "short",
+      weekday: "long",
     });
     currentDateEl.textContent = formatter.format(now);
   }
