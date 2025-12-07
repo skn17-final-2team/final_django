@@ -17,8 +17,21 @@ class LoginRequiredSessionMixin:
 class HomeView(LoginRequiredSessionMixin, TemplateView):
     template_name = "core/home.html"
 
-class AdminHomeView(TemplateView):
+class AdminHomeView(LoginRequiredSessionMixin, TemplateView):
     template_name = "core/admin_home.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        # 세션단에서 검증
+        if not request.session.get("login_user_admin"):
+            return redirect("/")
+        try:
+            # DB단에서 추가 검증
+            user = User.objects.get(user_id=request.session.get("login_user_id"))
+            if not user.admin_yn:
+                return redirect("/")
+        except:
+            return redirect("/")
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -121,11 +121,13 @@
   <!-- 하단 링크 -->
   <div class="sidebar-footer">
     <ul class="sidebar-menu">
+      {% if request.session.login_user_admin %}
       <li class="sidebar-item">
         <a href="{% url 'core:admin_home' %}" class="sidebar-link sidebar-link-footer">
           <span class="sidebar-link-text">관리자 홈</span>
         </a>
       </li>
+      {% endif %}
       <li class="sidebar-item">
         <a href="{% url 'accounts:logout' %}" class="sidebar-link sidebar-link-footer">
           <span class="sidebar-link-text">로그아웃</span>
