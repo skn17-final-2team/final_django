@@ -323,6 +323,22 @@ class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
 class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_detail.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        meeting_id = self.kwargs.get("meeting_id")
+        meeting = get_object_or_404(Meeting, pk=meeting_id)
+
+        # 템플릿에서 사용할 데이터 주입
+        context["meeting"] = meeting
+        context["attendees"] = (
+            meeting.attendees
+                   .select_related("user", "user__dept")
+                   .all()
+        )
+
+        return context
+
 def meeting_record_upload(request, meeting_id):
     # 1) 메소드 체크
     if request.method != "POST":

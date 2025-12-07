@@ -1,0 +1,226 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/meeting_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="meeting-detail-page">
+  <!-- 상단 제목 + 우측 라인 -->
+  <div class="detail-header-row">
+    <h2 class="detail-page-title">{{ meeting.title }}</h2>
+    <div class="detail-page-title-line"></div>
+  </div>
+
+  <!-- 회의 제목 -->
+  <div class="detail-meeting-title-row">
+
+    <!-- 필요하다면 드롭다운 / 아이콘 영역 추가 -->
+  </div>
+
+  <!-- 좌우 2컬럼 레이아웃 -->
+  <div class="detail-layout">
+    <!-- ========== 왼쪽 : 전문 ========== -->
+    <section class="detail-left">
+      <div class="section-label">전문</div>
+
+      <div class="detail-transcript-box">
+        <div class="detail-transcript-scroll" id="detail-transcript-scroll">
+          {# transcript_html이 이미 있는 경우 우선 사용, 없으면 meeting.transcript #}
+          {% if transcript_html %}
+            {{ transcript_html|safe }}
+          {% else %}
+            {{ meeting.transcript|linebreaksbr }}
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="detail-transcript-actions">
+        {% if meeting.record_url %}
+          <button
+            type="button"
+            class="text-link-button"
+            id="btn-audio-download"
+            data-meeting-id="{{ meeting.meeting_id }}"
+          >
+            음성 파일 다운로드
+          </button>
+        {% else %}
+          <button type="button" class="text-link-button text-link-disabled" disabled>
+            음성 파일 다운로드
+          </button>
+        {% endif %}
+
+        <button
+          type="button"
+          class="text-link-button"
+          id="btn-copy-full-transcript"
+        >
+          전문 전체 복사
+        </button>
+      </div>
+    </section>
+
+    <!-- ========== 오른쪽 : 요약 / 태스크 / 회의록 탭 ========== -->
+    <section class="detail-right">
+      <!-- 탭 헤더 -->
+      <div class="detail-tabs">
+        <button
+          type="button"
+          class="detail-tab detail-tab-active"
+          data-tab-target="summary"
+        >
+          요약
+        </button>
+        <button
+          type="button"
+          class="detail-tab"
+          data-tab-target="tasks"
+        >
+          태스크
+        </button>
+        <button
+          type="button"
+          class="detail-tab"
+          data-tab-target="minutes"
+        >
+          회의록
+        </button>
+      </div>
+
+      <!-- 탭 콘텐츠 영역 -->
+      <div class="detail-tab-panels">
+        <!-- 요약 탭 -->
+        <div
+          class="detail-tab-panel detail-tab-panel-active"
+          id="tab-summary"
+          data-tab-panel="summary"
+        >
+          <div class="detail-summary-box">
+            {% if meeting.summary %}
+              {{ meeting.summary|linebreaksbr }}
+            {% else %}
+              <p class="detail-empty-text">요약 내용이 아직 등록되지 않았습니다.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- 태스크 탭 -->
+        <div
+          class="detail-tab-panel"
+          id="tab-tasks"
+          data-tab-panel="tasks"
+        >
+          <div class="detail-task-box">
+            <div class="detail-task-header">
+              <div class="detail-task-col detail-task-col-who">Who</div>
+              <div class="detail-task-col detail-task-col-what">What</div>
+              <div class="detail-task-col detail-task-col-when">When</div>
+              <div class="detail-task-col detail-task-col-add">Add</div>
+            </div>
+
+            <div class="detail-task-body">
+              {% if tasks %}
+                {% for task in tasks %}
+                  <div class="detail-task-row">
+                    <div class="detail-task-col detail-task-col-who">
+                      {% if task.assignee %}
+                        {{ task.assignee.name }}{% if task.assignee.dept %}, {{ task.assignee.dept.dept_name }}{% endif %}
+                      {% else %}
+                        -
+                      {% endif %}
+                    </div>
+                    <div class="detail-task-col detail-task-col-what">
+                      {{ task.task_content }}
+                    </div>
+                    <div class="detail-task-col detail-task-col-when">
+                      {% if task.due_date %}
+                        {{ task.due_date|date:"Y.m.d" }}
+                      {% else %}
+                        -
+                      {% endif %}
+                    </div>
+                    <div class="detail-task-col detail-task-col-add">
+                      <button type="button" class="detail-task-add-btn">
+                        추가
+                      </button>
+                    </div>
+                  </div>
+                {% endfor %}
+              {% else %}
+                <p class="detail-empty-text">등록된 태스크가 없습니다.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- 회의록 탭 -->
+        <div
+          class="detail-tab-panel"
+          id="tab-minutes"
+          data-tab-panel="minutes"
+        >
+          <div class="detail-minutes-wrapper">
+            <div class="detail-minutes-box">
+              {% if meeting.meeting_notes %}
+                {{ meeting.meeting_notes|safe }}
+              {% else %}
+                {# 기본 회의록 서식 (이미지 대신 테이블 형태로 구현) #}
+                <table class="minutes-table">
+                  <colgroup>
+                    <col style="width: 20%;">
+                    <col style="width: 80%;">
+                  </colgroup>
+                  <tbody>
+                    <tr>
+                      <th>일 시</th>
+                      <td>{{ meeting.meet_date_time|date:"Y.m.d H:i" }}</td>
+                    </tr>
+                    <tr>
+                      <th>장 소</th>
+                      <td>{{ meeting.place }}</td>
+                    </tr>
+                    <tr>
+                      <th>참석자</th>
+                      <td>
+                        {% for att in attendees %}
+                          {{ att.user.name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>회의 안건</th>
+                      <td>{{ meeting.title }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div class="minutes-section-title">회의 내용</div>
+                <div class="minutes-section-box"></div>
+
+                <div class="minutes-section-title">추가 메모</div>
+                <div class="minutes-section-box"></div>
+              {% endif %}
+            </div>
+
+            <div class="detail-minutes-actions">
+              <button type="button" class="detail-minutes-btn">
+                pdf 다운로드
+              </button>
+              <button type="button" class="detail-minutes-btn">
+                docx 다운로드
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script src="{% static 'js/meeting_detail.js' %}"></script>
+{% endblock %}

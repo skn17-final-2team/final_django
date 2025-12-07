@@ -83,37 +83,25 @@
     <p class="sidebar-section-title">오늘의 회의</p>
 
     <div class="sidebar-meeting-list">
-      <a href="#" class="meeting-card">
-        <div class="meeting-card-icon">
-          <img
-            src="{% static 'img/icon-mic.png' %}"
-            alt=""
-            class="meeting-icon-image"
-          />
-        </div>
-        <div class="meeting-card-body">
-          <p class="meeting-card-title">
-            데이터 처리와 아키텍처 재설계 회의
-          </p>
-          <p class="meeting-card-meta">2025.12.18 13:00</p>
-        </div>
-      </a>
-
-      <a href="#" class="meeting-card">
-        <div class="meeting-card-icon">
-          <img
-            src="{% static 'img/icon-mic.png' %}"
-            alt=""
-            class="meeting-icon-image"
-          />
-        </div>
-        <div class="meeting-card-body">
-          <p class="meeting-card-title">
-            연말 운영 계획 및 예산 조정 회의
-          </p>
-          <p class="meeting-card-meta">2025.12.18 09:00</p>
-        </div>
-      </a>
+      {% for m in today_meetings %}
+        <a href="{% url 'meetings:meeting_detail' m.meeting_id %}" class="meeting-card">
+          <div class="meeting-card-icon">
+            <img
+              src="{% static 'img/icon-mic.png' %}"
+              alt=""
+              class="meeting-icon-image"
+            />
+          </div>
+          <div class="meeting-card-body">
+            <p class="meeting-card-title">
+              {{ m.title }}
+            </p>
+            <p class="meeting-card-meta">
+              {{ m.meet_date_time|date:"Y.m.d H:i" }}
+            </p>
+          </div>
+        </a>
+      {% endfor %}
     </div>
   </div>
 
@@ -140,4 +128,3 @@
     </ul>
   </div>
 </nav>
-
