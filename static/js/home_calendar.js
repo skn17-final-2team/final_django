@@ -360,6 +360,8 @@ document.addEventListener("DOMContentLoaded", function () {
       right: "",
     },
 
+    eventTextColor: "#5a5a5a",
+
     events: function (info, successCallback, failureCallback) {
       fetch("/api/google-events/")
         .then((res) => res.json())
@@ -391,6 +393,70 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   calendar.render();
+
+  // === 달 선택 팝오버 로직 ===
+  const calendarIconEl = document.getElementById("home-calendar-icon");
+  const monthPopoverEl = document.getElementById("home-month-popover");
+  const yearLabelEl = document.getElementById("month-popover-year");
+  const prevYearBtn = document.getElementById("month-prev-year");
+  const nextYearBtn = document.getElementById("month-next-year");
+  const monthButtons = document.querySelectorAll(".month-btn");
+
+  let popoverYear = new Date().getFullYear();
+
+  function updatePopoverYearLabel() {
+    if (yearLabelEl) {
+      yearLabelEl.textContent = `${popoverYear}년`;
+    }
+  }
+  updatePopoverYearLabel();
+
+  if (calendarIconEl && monthPopoverEl) {
+    // 아이콘 클릭 시 팝오버 열기/닫기
+    calendarIconEl.addEventListener("click", function (e) {
+      e.stopPropagation();
+      monthPopoverEl.classList.toggle("hidden");
+    });
+
+    // 연도 변경
+    if (prevYearBtn) {
+      prevYearBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        popoverYear -= 1;
+        updatePopoverYearLabel();
+      });
+    }
+
+    if (nextYearBtn) {
+      nextYearBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        popoverYear += 1;
+        updatePopoverYearLabel();
+      });
+    }
+
+    // 월 클릭 시 해당 연/월로 풀캘린더 이동
+    monthButtons.forEach((btn) => {
+      btn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        const monthIndex = Number(btn.dataset.month); // 0~11
+        const targetDate = new Date(popoverYear, monthIndex, 1);
+        calendar.gotoDate(targetDate);
+        monthPopoverEl.classList.add("hidden");
+      });
+    });
+
+    // 팝오버 바깥 클릭 시 닫기
+    document.addEventListener("click", function (e) {
+      if (
+        !monthPopoverEl.classList.contains("hidden") &&
+        !monthPopoverEl.contains(e.target) &&
+        e.target !== calendarIconEl
+      ) {
+        monthPopoverEl.classList.add("hidden");
+      }
+    });
+  }
 
   // 일정 추가 버튼
   const btnAddSchedule = document.querySelector(".btn-add-schedule");

@@ -1,0 +1,55 @@
+/* ========== 오른쪽 탭 스타일 (요약 페이지 전용) ========== */
+
+.transcript-right {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* 탭 버튼 컨테이너 */
+.summary-tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* 기본 탭 */
+.summary-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+  font-size: 0.85rem;
+  color: #4b5563;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.summary-tab:hover {
+  background-color: #e5e7eb;
+}
+
+/* 선택된 탭 */
+.summary-tab-active {
+  background-color: #5a5a5a;
+  border-color: #5a5a5a;
+  color: #ffffff;
+}
+
+/* 오른쪽 내용 박스 */
+.summary-right-content {
+  flex: 1 1 auto;
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 1rem;
+}
+
+.summary-placeholder {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}

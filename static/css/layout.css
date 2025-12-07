@@ -87,14 +87,17 @@
   padding: 0.45rem 0.75rem;
   border-radius: 8px;
   font-size: 0.875rem;
-  color: var(--color-text);
+  color: #5A5A5A;              /* 기본 글자 색 */
+  font-weight: 500;            /* 기본은 보통 굵기 */
   text-decoration: none;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
+/* 새 회의 포함: 모든 사이드바 링크 hover 시 */
 .sidebar-link:hover {
-  background-color: #f3f4f6;
-  color: var(--color-text);
+  background-color: #dadbdf;   /* 홈 active와 동일 */
+  color: #5A5A5A;              /* 글씨 색 동일 */
+  font-weight: 600;            /* ★ hover 시 굵게 */
   text-decoration: none;
 }
 
@@ -106,10 +109,10 @@
   flex-shrink: 0;
 }
 
-/* 활성 메뉴 (내가 참여한 회의) */
+/* 활성 메뉴 (홈 등) */
 .sidebar-item-active .sidebar-link {
-  background-color: #dadbdf; /* 요청하신 색상 */
-  color: var(--color-text);
+  background-color: #dadbdf;
+  color: #5A5A5A;              /* var(--color-text) 대신 고정 */
   font-weight: 600;
 }
 
@@ -272,6 +275,7 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
+  color: #5A5A5A;
 }
 
 /* 오른쪽 유저 정보 */
@@ -281,21 +285,10 @@
   gap: 8px;
 }
 
-/* 유저 아이콘 컨테이너 */
-.header-user-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 /* 이미지 아이콘 */
 .user-icon {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
 }
 
@@ -303,7 +296,7 @@
 .header-user-info .user-name {
   font-size: 0.95rem;
   font-weight: 500;
-  color: #111827;
+  color: #5a5a5a;
 }
 
 .admin-dept-tree {
@@ -393,4 +386,143 @@
 .tree-dept.selected {
   background-color: #e5e7eb;
   font-weight: 600;
+}
+
+.dept-item-active {
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.admin-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.admin-header {
+  padding: 24px 32px 0;
+}
+
+.admin-header-title {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.admin-body {
+  display: flex;
+  gap: 24px;
+  padding: 24px 32px 32px;
+  box-sizing: border-box;
+}
+
+/* 왼쪽: 부서원 목록, 오른쪽: 상세 영역 */
+.admin-panel {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.admin-panel-left {
+  flex: 2;   /* 왼쪽이 더 넓게 */
+}
+
+.admin-panel-right {
+  flex: 1;   /* 오른쪽은 좁게 */
+}
+
+.admin-panel-header {
+  margin-bottom: 16px;
+}
+
+.admin-panel-title {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* 테이블 기본 틀 */
+.admin-table-card {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table thead th {
+  padding: 8px 12px;
+  font-weight: 600;
+  background: #f3f3f3;
+  text-align: left;
+}
+
+.admin-table tbody td {
+  padding: 8px 12px;
+  border-top: 1px solid #eee;
+}
+
+.admin-table-empty {
+  text-align: center;
+  padding: 24px 0;
+  color: #888;
+}
+
+/* 하단 버튼 */
+.admin-table-actions {
+  margin-top: 16px;
+  text-align: right;
+}
+
+.btn-admin-add {
+  padding: 6px 16px;
+}
+
+/* 오른쪽 패널 자리 표시용 */
+.admin-panel-placeholder {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  border: 1px dashed #ddd;
+  border-radius: 4px;
+}
+
+/* admin-panel-right 기본 상태: 보이지 않음 */
+#admin-panel-right {
+  display: none;  /* 기본: 닫힘 */
+}
+
+/* 열렸을 때 보여줄 클래스 */
+#admin-panel-right.open {
+  display: block;
+}
+
+/* 오른쪽 패널: 기본은 숨김 */
+#admin-panel-right {
+  display: none;
+}
+
+/* 패널이 열렸을 때 */
+#admin-panel-right.open {
+  display: block;
+}
+
+/* 레이아웃이 좌우로 나뉘어 보이도록 */
+.admin-body {
+  display: flex;
+  gap: 24px;
+  padding: 24px 32px 32px;
+  box-sizing: border-box;
+}
+
+.admin-panel-left {
+  flex: 2;
+}
+
+.admin-panel-right {
+  flex: 1;
 }

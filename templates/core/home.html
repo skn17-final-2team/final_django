@@ -14,18 +14,51 @@
   <section class="dashboard-main">
     <header class="dashboard-header">
       <div class="dashboard-header-left">
-        <span class="icon">📅</span>
+        <div class="calendar-icon-wrapper">
+          <img src="{% static 'img/icon-calendar.png' %}"
+              alt="달력"
+              class="dashboard-calendar-icon"
+              id="home-calendar-icon">
+
+          <!-- 달 선택 팝오버 (커스텀) -->
+          <div class="month-popover hidden" id="home-month-popover">
+            <div class="month-popover-header">
+              <button type="button" class="month-year-btn" id="month-prev-year">‹</button>
+              <span id="month-popover-year"></span>
+              <button type="button" class="month-year-btn" id="month-next-year">›</button>
+            </div>
+            <div class="month-popover-grid">
+              <button type="button" class="month-btn" data-month="0">1월</button>
+              <button type="button" class="month-btn" data-month="1">2월</button>
+              <button type="button" class="month-btn" data-month="2">3월</button>
+              <button type="button" class="month-btn" data-month="3">4월</button>
+              <button type="button" class="month-btn" data-month="4">5월</button>
+              <button type="button" class="month-btn" data-month="5">6월</button>
+              <button type="button" class="month-btn" data-month="6">7월</button>
+              <button type="button" class="month-btn" data-month="7">8월</button>
+              <button type="button" class="month-btn" data-month="8">9월</button>
+              <button type="button" class="month-btn" data-month="9">10월</button>
+              <button type="button" class="month-btn" data-month="10">11월</button>
+              <button type="button" class="month-btn" data-month="11">12월</button>
+            </div>
+          </div>
+        </div>
+
         <span id="home-current-date"></span>
       </div>
 
+
       <div class="dashboard-header-right">
-        <button type="button" class="btn-add-schedule">+ 일정 추가</button>
+        <button type="button" class="btn-add-schedule">
+          <img src="{% static 'img/icon-plus.png' %}" alt="추가" class="btn-add-icon">
+          <span class="btn-add-text">일정 추가</span>
+        </button>
       </div>
     </header>
 
     <div class="calendar-card">
       <div class="calendar-wrapper">
-        <!-- 여기 div에 FullCalendar가 렌더링됩니다 -->
+        <!-- FullCalendar -->
         <div id="home-calendar"></div>
       </div>
     </div>

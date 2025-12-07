@@ -26,15 +26,14 @@
           <span class="sidebar-link-text">홈</span>
         </a>
       </li>
-
       <!-- 새 회의 -->
       <li class="sidebar-item {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'meeting_create' %}sidebar-item-active{% endif %}">
         <a href="{% url 'meetings:meeting_create' %}" class="sidebar-link">
-            <img
+          <img
             src="{% static 'img/icon-new-meeting.png' %}"
             alt=""
             class="sidebar-icon"
-            />
+          />
           <span class="sidebar-link-text">새 회의</span>
         </a>
       </li>

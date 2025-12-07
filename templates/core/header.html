@@ -4,7 +4,7 @@
     <h1 class="header-title">
       {% block page_title %}
         {% if request.resolver_match.url_name == "home" %}
-            홈
+            홈  
         {% elif request.resolver_match.url_name == "meeting_create" %}
             새 회의
         {% elif request.resolver_match.url_name == "meeting_record" %}
@@ -20,7 +20,7 @@
         {% elif request.resolver_match.url_name == "list_dept" %}
             부서원이 참여한 회의
         {% else %}
-            다른 페이지 헤더
+            관리자 홈
         {% endif %}
       {% endblock %}
     </h1>
@@ -30,14 +30,11 @@
 
     <!-- 사용자 정보 박스 (두 번째 사진 스타일 적용) -->
     <div class="header-user">
-      <div class="header-user-avatar">
-        <img src="{% static 'img/icon-user.png' %}" alt="user" class="user-icon">
-      </div>
+      <img src="{% static 'img/icon-user.png' %}" alt="user" class="user-icon">
       <div class="header-user-info">
         <span class="user-name">{{ request.session.login_user_name }}님</span>
       </div>
     </div>
-
   </div>
 </header>
 

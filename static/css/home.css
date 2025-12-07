@@ -14,39 +14,141 @@
   min-height: 0;
 }
 
-/* 상단 제목/버튼 영역 */
+/* 오늘 날짜/일정 추가 버튼 영역 */
 .dashboard-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  background-color: #ffffff;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  flex: 0 0 auto;
+  justify-content: space-between;
+  width: 100%;
+  padding-bottom: 8px;
 }
 
+/* 달력 아이콘 */
+.dashboard-calendar-icon {
+  width: 23px;   
+  height: 23px;
+  object-fit: contain;
+  margin-right: 2px;
+}
+
+/* 아이콘과 팝오버 위치 기준 */
+.calendar-icon-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 월 선택 팝오버 기본 스타일 */
+.month-popover {
+  position: absolute;
+  top: 100%;          /* 아이콘 바로 아래 */
+  left: 0;
+  margin-top: 6ch;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 8px 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  min-width: 180px;
+  font-size: 0.85rem;}
+
+/* 연도 헤더 */
+.month-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.month-year-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #5a5a5a;
+}
+
+/* 연도 텍스트 */
+#month-popover-year {
+  font-weight: 600;
+}
+
+/* 월 버튼 그리드 */
+.month-popover-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.month-btn {
+  border: none;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+  color: #5a5a5a;
+}
+
+.month-btn:hover {
+  background: #e5e7eb;
+}
+
+.hidden {
+  display: none;
+}
+
+/* month input 기본 크기 조금 정리 */
+#home-month-input {
+  font-size: 0.9rem;
+}
+
+
+/* 오늘 날짜 표시 */
 .dashboard-header-left {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 1.1rem;
   font-weight: 600;
+  color: #5a5a5a;
+  margin-left: 12px;
 }
 
 .dashboard-header-left .icon {
   font-size: 1.25rem;
 }
 
+/* 일정 추가하기 버튼 */
 .btn-add-schedule {
+  display: inline-flex;
+  align-items: center;
   border: none;
-  border-radius: 999px;
-  padding: 0.4rem 0.9rem;
-  background-color: #f3f4f6;
-  font-size: 0.9rem;
+  background: none;
+  padding: 8px 10px;
   cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #555555;
+  border-radius: 18px;
+  transition: background 0.2s ease;
 }
 
+/* '+' 아이콘 이미지 */
+.btn-add-icon {
+  width: 22px;       
+  height: 22px;
+  object-fit: contain;
+  margin-right: 6px;
+}
+
+/* '일정 추가' 텍스트 */
+.btn-add-text {
+  white-space: nowrap;
+  margin-right: 5px;
+}
+
+/* 일정 추가 버튼 호버 시*/
 .btn-add-schedule:hover {
   background-color: #e5e7eb;
 }
@@ -82,6 +184,8 @@
     padding: 0.9rem 1rem;
     display: flex;
     flex-direction: column;
+    margin-bottom: 0.8rem;
+    color: #5a5a5a
 }
 
 .schedule-card-title {
@@ -399,4 +503,43 @@
 
 .event-modal-close-btn:hover {
   background: #f2f2f2;
+}
+
+#home-calendar .fc-daygrid-event {
+  margin-top: 2px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: none;
+  background-color: #D9D9D9 !important; /* 요청 색상 */
+  color: #5a5a5a !important;           /* 글씨는 검정이 더 잘 보임 */
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+#home-calendar .fc-daygrid-event:hover {
+  background-color: #c8c8c8 !important;
+}
+
+/* 오늘 날짜 칸 - 이벤트(#D9D9D9)와 조화되는 중간 톤 회색 */
+#home-calendar .fc-day-today {
+  background-color: #C4C4C4 !important;
+  color: #111111 !important;
+}
+
+/* 오늘 날짜 숫자 */
+#home-calendar .fc-day-today .fc-daygrid-day-number {
+  color: #111111 !important;
+  font-weight: 700;
+}
+
+/* 오늘 날짜 칸에 있는 이벤트 pill */
+#home-calendar .fc-day-today .fc-daygrid-event {
+  background-color: #D9D9D9 !important; /* 기존 이벤트 색 유지 */
+  color: #000000 !important;
+}
+
+.fc .fc-daygrid-event,
+.fc .fc-daygrid-event .fc-event-title,
+.fc .fc-daygrid-event .fc-event-time {
+  color: #5a5a5a !important;
 }
