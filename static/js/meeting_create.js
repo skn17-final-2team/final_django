@@ -1,5 +1,3 @@
-
-
 document.addEventListener("DOMContentLoaded", function () {
   /* ===== 특화 도메인: 최대 3개 제한 ===== */
   const domainCheckboxes = document.querySelectorAll("[data-domain-checkbox]");
@@ -30,7 +28,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // ===== 도메인 최대 3개 제한 =====
   function syncDomainLimit() {
     const checked = Array.from(domainCheckboxes).filter((c) => c.checked);
-    const isFull = checked.length >= 3;
+    const isFull = checked.length >= maxDomains;
     domainCheckboxes.forEach((c) => {
       if (!c.checked) {
         c.disabled = isFull;
@@ -45,7 +43,6 @@ document.addEventListener("DOMContentLoaded", function () {
   function updateDomainSelection(evt) {
     const checked = Array.from(domainCheckboxes).filter((cb) => cb.checked);
     if (checked.length > maxDomains) {
-      // 방금 체크한 것만 해제
       evt.target.checked = false;
       alert(`특화 도메인은 최대 ${maxDomains}개까지 선택할 수 있습니다.`);
     }
@@ -73,20 +70,23 @@ document.addEventListener("DOMContentLoaded", function () {
   const treeUsers = document.querySelectorAll(".tree-user");
   const selectedList = document.getElementById("selected-attendee-list");
   const attendeeCount = document.getElementById("attendee-count");
-  const loginUserId = document.getElementById("login-user-id")?.value;
-  const loginUserName = document.getElementById("login-user-name")?.value;
+  const loginUserIdInput = document.getElementById("login-user-id");
+  const loginUserNameInput = document.getElementById("login-user-name");
+  const loginUserId = loginUserIdInput?.value || null;
+  const loginUserName = loginUserNameInput?.value || "";
   const clearBtn = document.getElementById("btn-clear-attendees");
 
   function refreshCount() {
     if (!attendeeCount || !selectedList) return;
-    const count = selectedList.querySelectorAll(".selected-attendee-item").length;
-    attendeeCount.textContent = `${count}명`;
+    const items = selectedList.querySelectorAll(".selected-attendee-item");
+    const totalCount = items.length;
+    attendeeCount.textContent = `${totalCount}명`;
   }
 
   function createHiddenInput(userId) {
     const input = document.createElement("input");
     input.type = "hidden";
-    input.name = "attendees";
+    input.name = "attendees";      // 서버에서 getlist("attendees") 로 받는 값
     input.value = userId;
     return input;
   }
@@ -96,11 +96,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const userId = el.dataset.userId;
     const userName = el.dataset.userName || el.textContent.trim();
 
+    // 주최자는 트리에서 선택할 수 없음 (이미 기본 참석)
     if (userId === loginUserId) {
-    return;
+      return;
     }
 
     if (!selectedList) return;
+
     // 이미 선택되었는지 확인
     const exists = selectedList.querySelector(
       `.selected-attendee-item[data-user-id="${userId}"]`
@@ -120,43 +122,31 @@ document.addEventListener("DOMContentLoaded", function () {
     removeBtn.innerHTML = "×";
 
     removeBtn.addEventListener("click", function () {
-      const loginUserId = document.getElementById("login-user-id")?.value;
-
-      // 로그인 유저 삭제 금지
-      if (userId === loginUserId) {
-        alert("회의 생성자는 참석자 목록에서 제거할 수 없습니다.");
-        return;
-      }
-
       li.remove();
       refreshCount();
     });
 
     li.appendChild(nameSpan);
     li.appendChild(removeBtn);
-    li.appendChild(createHiddenInput(userId));
-    selectedList.appendChild(li);
 
+    // ★ 추가 참석자에만 hidden input 생성 (주최자는 생성하지 않음)
+    li.appendChild(createHiddenInput(userId));
+
+    selectedList.appendChild(li);
     refreshCount();
   }
 
+  // 부서 트리 참석자 클릭 이벤트 바인딩
   treeUsers.forEach((userEl) => {
-  if (userEl.dataset.userId === loginUserId) {
-    userEl.classList.add("tree-user-disabled");   // CSS로 비활성화 스타일 가능
-  } else {
-    userEl.addEventListener("click", handleUserClick);
-  }
- });
+    if (userEl.dataset.userId === loginUserId) {
+      userEl.classList.add("tree-user-disabled"); // 시각적 비활성화
+    } else {
+      userEl.addEventListener("click", handleUserClick);
+    }
+  });
 
-  /* ===== 로그인 유저를 기본 참석자로 자동 추가 ===== */
-  const loginUserIdInput = document.getElementById("login-user-id");
-  const loginUserNameInput = document.getElementById("login-user-name");
-
-  if (loginUserIdInput && loginUserNameInput && selectedList) {
-    const loginUserId = loginUserIdInput.value;
-    const loginUserName = loginUserNameInput.value;
-
-    // 이미 선택되어 있지 않은 경우에만 추가
+  /* ===== 로그인 유저를 기본 참석자로 자동 추가 (UI 용도만, hidden X) ===== */
+  if (loginUserId && loginUserName && selectedList) {
     const exists = selectedList.querySelector(
       `.selected-attendee-item[data-user-id="${loginUserId}"]`
     );
@@ -166,52 +156,59 @@ document.addEventListener("DOMContentLoaded", function () {
       li.dataset.userId = loginUserId;
 
       const nameSpan = document.createElement("span");
-      nameSpan.textContent = loginUserName;
+      nameSpan.textContent = loginUserName + " (주최자)";
 
       const removeBtn = document.createElement("button");
       removeBtn.type = "button";
       removeBtn.className = "attendee-remove-btn";
       removeBtn.innerHTML = "×";
 
+      // 주최자는 제거 불가
       removeBtn.addEventListener("click", function () {
-        if (loginUserId === loginUserIdInput.value) {
-            alert("회의 생성자는 참석자 목록에서 제거할 수 없습니다.");
-            return;
-        }
-        li.remove();
-        refreshCount();
+        alert("회의 생성자는 참석자 목록에서 제거할 수 없습니다.");
       });
 
       li.appendChild(nameSpan);
       li.appendChild(removeBtn);
+
+      // ※ 여기서는 createHiddenInput(loginUserId)를 붙이지 않는다
       selectedList.appendChild(li);
 
       refreshCount();
     }
   }
 
+  // "모두 지우기" 버튼: 주최자는 남기고, 나머지만 삭제
   if (clearBtn && selectedList) {
     clearBtn.addEventListener("click", function () {
-      selectedList.innerHTML = "";
+      const items = selectedList.querySelectorAll(".selected-attendee-item");
+      items.forEach((item) => {
+        if (item.dataset.userId !== loginUserId) {
+          item.remove();
+        }
+      });
       refreshCount();
     });
   }
 
   refreshCount();
 
-  // === 폼 제출 시 참석자 최소 1명 검사 ===
+  // === 폼 제출 시: 주최자를 제외한 '추가 참석자'가 최소 1명인지 검사 ===
   const form = document.querySelector(".meeting-form");
   const attendeeError = document.getElementById("attendee-error");
   const attendeeSelectedBox = document.querySelector(".attendee-selected");
 
   if (form && selectedList) {
     form.addEventListener("submit", function (e) {
-      const count = selectedList.querySelectorAll(
-        ".selected-attendee-item"
+      const items = selectedList.querySelectorAll(".selected-attendee-item");
+
+      // 주최자를 제외한 참석자 수
+      const extraCount = Array.from(items).filter(
+        (item) => item.dataset.userId !== loginUserId
       ).length;
 
-      if (count === 0) {
-        // 참석자 0명이면 제출 막고 에러 표시
+      if (extraCount === 0) {
+        // 추가 참석자 0명이면 제출 막고 에러 표시
         e.preventDefault();
 
         if (attendeeError) {
@@ -219,21 +216,19 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         if (attendeeSelectedBox) {
           attendeeSelectedBox.classList.add("attendee-error-border");
-          // 화면 중앙 정도로 스크롤
           attendeeSelectedBox.scrollIntoView({
             behavior: "smooth",
             block: "center",
           });
         }
       } else {
-        // 최소 1명 이상이면 에러 숨기고 그대로 제출
+        // 1명 이상이면 에러 숨기고 그대로 제출
         if (attendeeError) {
           attendeeError.style.display = "none";
         }
         if (attendeeSelectedBox) {
           attendeeSelectedBox.classList.remove("attendee-error-border");
         }
-        // e.preventDefault() 호출하지 않음 → 브라우저 기본 검증 + 제출 진행
       }
     });
   }
