@@ -4,6 +4,7 @@ from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
 
 from apps.accounts.models import User, Dept
+from datetime import date
 
 class LoginRequiredSessionMixin:
     login_url = "/accounts/login/"
