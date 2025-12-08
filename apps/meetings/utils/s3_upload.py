@@ -9,7 +9,6 @@ from django.utils import timezone
 from apps.meetings.models import S3File
 
 CONTENT_TYPE_MAP = {
-    "png": "image/png",     # 테스트용
     "wav": "audio/wav",
 }
 

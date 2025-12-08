@@ -352,12 +352,12 @@ def meeting_record_upload(request, meeting_id):
     if not uploaded_file:
         return JsonResponse({"error": "file is required"}, status=400)
 
-    # 4) 확장자 검증 (png / wav)
+    # 4) 확장자 검증 (wav)
     filename = uploaded_file.name
     ext = filename.split(".")[-1].lower()
-    if ext not in ["png", "wav"]:
+    if ext not in ["wav"]:
         return JsonResponse(
-            {"error": "PNG/WAV 파일만 업로드 가능합니다."},
+            {"error": "WAV 파일만 업로드 가능합니다."},
             status=400,
         )
 
