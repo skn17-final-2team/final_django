@@ -452,7 +452,7 @@ def today_meetings(request):
         Meeting.objects
         .filter(meet_date_time__date=today)
         .select_related("host")
-        .order_by("meet_date_time")
+        .order_by("-meet_date_time")[:3]
     )
 
     return {
