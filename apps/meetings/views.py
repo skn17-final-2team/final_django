@@ -16,6 +16,7 @@ from apps.meetings.utils.s3_upload import upload_raw_file_bytes, get_presigned_u
 from apps.meetings.utils.runpod import get_stt, runpod_health
 
 from apps.meetings.models import S3File
+from django.views.decorators.http import require_GET
 
 # 회의 목록에서 쓸 데이터 생성하는 함수
 def build_meeting_list_context(meeting_qs, login_user_id=None):
@@ -390,3 +391,51 @@ def meeting_summary(request, meeting_id):
     return render(request, "meetings/meeting_summary.html", {
         "meeting": meeting,
     })
+
+class MeetingRenderingView(LoginRequiredSessionMixin, TemplateView):
+    template_name = "meetings/rendering.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        meeting_id = self.kwargs.get("meeting_id")
+
+        meeting = get_object_or_404(Meeting, pk=meeting_id)
+
+        context["meeting"] = meeting
+        context["meeting_id"] = meeting_id
+        return context
+    
+
+@require_GET
+def meeting_transcript_prepare(request, meeting_id):
+    """
+    렌딩 페이지에서 호출하는 엔드포인트.
+    - 아직 transcript가 없으면 STT를 돌려서 생성
+    - 이미 있으면 바로 done 리턴
+    """
+    meeting = get_object_or_404(Meeting, pk=meeting_id)
+
+    transcript_html = meeting.transcript or ""
+
+    if not transcript_html:
+        # STT 호출
+        presigned_url = get_presigned_url(str(meeting.record_url))
+        res = get_stt(presigned_url)
+
+        if res.get("status_code") != 200 or not res.get("success"):
+            # 실패 시 프론트에서 메시지 보여줄 수 있도록 에러 내려줌
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": "전사 처리 중 오류가 발생했습니다.",
+                },
+                status=500,
+            )
+
+        transcript_html = res["data"]["full_text"].replace("\n", "<br>")
+        meeting.transcript = transcript_html
+        meeting.save(update_fields=["transcript"])
+
+    # 여기까지 왔다면 transcript 는 채워진 상태
+    return JsonResponse({"status": "done"})
+
