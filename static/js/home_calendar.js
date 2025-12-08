@@ -5,25 +5,25 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-const currentDateEl = document.getElementById("home-current-date");
+  const currentDateEl = document.getElementById("home-current-date");
 
-// 상단 현재 날짜 표시
-if (currentDateEl) {
-  const now = new Date();
+  // 상단 현재 날짜 표시
+  if (currentDateEl) {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      weekday: "long",
+    });
+    currentDateEl.textContent = formatter.format(now);
 
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
-
-  const formatted = `${year}년 ${month}월`;
-
-  currentDateEl.textContent = formatted;
-
-  // 오늘 날짜 텍스트 클릭 시 달력을 오늘로 이동
-  currentDateEl.style.cursor = "pointer";
-  currentDateEl.addEventListener("click", function () {
-    calendar.today();
-  });
-}
+      // 오늘 날짜 텍스트 클릭 시 달력을 오늘로 이동
+    currentDateEl.style.cursor = "pointer";
+    currentDateEl.addEventListener("click", function () {
+      calendar.today();
+    });
+  }
 
   // 일정 추가 모달 관련 요소
   const modal = document.getElementById("schedule-modal");

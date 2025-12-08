@@ -12,13 +12,13 @@
         {% elif request.resolver_match.url_name == "meeting_transcript" %}
             새 회의
         {% elif request.resolver_match.url_name == "meeting_detail" %}
-            새 회의
+            회의 상세 조회
         {% elif request.resolver_match.url_name == "list_all" %}
             전체 회의 목록
         {% elif request.resolver_match.url_name == "list_mine" %}
             내가 참여한 회의
-        {% elif request.resolver_match.url_name == "list_open" %}
-            열람 가능한 회의
+        {% elif request.resolver_match.url_name == "list_dept" %}
+            부서원이 참여한 회의
         {% else %}
             관리자 홈
         {% endif %}

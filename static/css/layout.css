@@ -156,6 +156,28 @@
   display: none;
 }
 
+/* 회의 목록 트리형 하위 메뉴: li 자체를 오른쪽으로 밀기 */
+.sidebar-menu-nested .sidebar-item-child {
+  margin-left: 1.0rem;    /* 들여쓰기 정도. 너무 많이 느껴지면 0.75rem 정도로 줄이세요. */
+}
+
+/* 하위 메뉴의 텍스트/아이콘은 살짝만 안쪽으로 */
+.sidebar-menu-nested .sidebar-item-child .sidebar-link {
+  padding-left: 1.25rem;
+  font-size: 0.82rem;
+}
+
+/* 활성화된 자식 메뉴도 같은 들여쓰기 유지 */
+.sidebar-menu-nested .sidebar-item-child.sidebar-item-active .sidebar-link {
+  padding-left: 1.25rem;
+}
+
+/* 접혔을 때 숨김 */
+.sidebar-menu-nested.is-collapsed {
+  display: none;
+}
+
+
 /* ========= 오늘의 회의 카드 ========= */
 
 .sidebar-meeting-list {
