@@ -11,7 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'final_django.settings.dev')    # 개발
-# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'final_django.settings.prod')   # 배포
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'final_django.settings')
 
 application = get_wsgi_application()
