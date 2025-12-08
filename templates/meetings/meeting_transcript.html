@@ -62,9 +62,10 @@
 
         <div class="speaker-assign-grid">
           <div class="speaker-assign-column">
+            {% for speaker in speakers %}
             <div class="speaker-row">
-              <span class="speaker-label">발화자 1</span>
-              <select class="speaker-select" name="speaker1" id="speaker1">
+              <span class="speaker-label">{{speaker}}</span>
+              <select class="speaker-select" name="{speaker}}" id="{{speaker}}">
                 {% for att in attendees %}
                   <option value="{{ att.user.user_id }}">
                     {{ att.user.name }} ({{ att.user.dept.dept_name }})
@@ -72,52 +73,7 @@
                 {% endfor %}
               </select>
             </div>
-
-            <div class="speaker-row">
-              <span class="speaker-label">발화자 2</span>
-              <select class="speaker-select" name="speaker2" id="speaker2">
-                {% for att in attendees %}
-                  <option value="{{ att.user.user_id }}">
-                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div class="speaker-row">
-              <span class="speaker-label">발화자 3</span>
-              <select class="speaker-select" name="speaker3" id="speaker3">
-                {% for att in attendees %}
-                  <option value="{{ att.user.user_id }}">
-                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-
-          <div class="speaker-assign-column">
-            <div class="speaker-row">
-              <span class="speaker-label">발화자 4</span>
-              <select class="speaker-select" name="speaker4" id="speaker4">
-                {% for att in attendees %}
-                  <option value="{{ att.user.user_id }}">
-                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div class="speaker-row">
-              <span class="speaker-label">발화자 5</span>
-              <select class="speaker-select" name="speaker5" id="speaker5">
-                {% for att in attendees %}
-                  <option value="{{ att.user.user_id }}">
-                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
+            {% endfor %}
           </div>
         </div>
       </div>

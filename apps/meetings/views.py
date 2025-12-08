@@ -19,6 +19,8 @@ from apps.meetings.models import S3File
 from django.views.decorators.http import require_GET
 from datetime import date
 
+import ast
+
 # 회의 목록에서 쓸 데이터 생성하는 함수
 def build_meeting_list_context(meeting_qs, login_user_id=None):
     meetings_data = []
@@ -288,15 +290,22 @@ class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
 
         attendees_qs = (meeting.attendees.select_related("user", "user__dept").all())
 
-        transcript_html = meeting.transcript
+        result_list = []
+        keys = set()
+        for f in ast.literal_eval(meeting.transcript):
+            for key, value in f.items():
+                result_list.append(f"{key}: {value}")
+                keys.add(key)
+        transcript_html = '<br>'.join(result_list)
+        speakers = sorted(keys)
 
-        # 이미 전사된 텍스트가 meeting_tbl.transcript
         context.update(
             {
                 "meeting": meeting,
                 "meeting_id": meeting_id,
                 "attendees": attendees_qs,
                 "transcript_html": transcript_html,
+                "speakers": speakers
             }
         )
 
@@ -418,11 +427,12 @@ def meeting_transcript_prepare(request, meeting_id):
                 status=500,
             )
         res = res.json()
-        result_list = []
-        for f in res['data']['full_text']:
-            for key, value in f.items():
-                result_list.append(f"{key}: {value}")
-        transcript_html = '<br>'.join(result_list)
+        # result_list = []
+        # for f in res['data']['full_text']:
+        #     for key, value in f.items():
+        #         result_list.append(f"{key}: {value}")
+        # transcript_html = '<br>'.join(result_list)
+        transcript_html = res['data']['full_text']
         meeting.transcript = transcript_html
         meeting.save(update_fields=["transcript"])
 
