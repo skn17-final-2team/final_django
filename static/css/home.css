@@ -36,6 +36,14 @@
   position: relative;
   display: inline-flex;
   align-items: center;
+  padding: 8px;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.calendar-icon-wrapper:hover {
+  background-color: #e5e7eb;
 }
 
 /* 월 선택 팝오버 기본 스타일 */
@@ -43,7 +51,7 @@
   position: absolute;
   top: 100%;          /* 아이콘 바로 아래 */
   left: 0;
-  margin-top: 6ch;
+  margin-top: 1ch;
   background: #ffffff;
   border-radius: 12px;
   padding: 8px 10px;
@@ -113,6 +121,14 @@
   font-weight: 600;
   color: #5a5a5a;
   margin-left: 12px;
+  padding: 8px 10px;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.dashboard-header-left:hover {
+  background-color: #e5e7eb;
 }
 
 .dashboard-header-left .icon {
@@ -160,9 +176,27 @@
   flex-direction: column;
   min-height: 0;
   background-color: #ffffff;
-  border-radius: 18px;
+  border-radius: 10px;
   border: 1px solid #e5e7eb;
-  padding: 1rem 1.25rem 1.25rem;
+  padding: 0.9rem 1rem;
+}
+
+/* 풀캘린더 바깥 래퍼를 둥글게 */
+#home-calendar .fc-view-harness {
+  border-radius: 12px;               /* 둥근 모서리 */
+  overflow: hidden;                  /* 안쪽 내용 잘라서 모서리 따라가게 */
+  border: 1px solid #e5e7eb;         /* 캘린더 외곽선 */
+}
+
+/* 바깥 테두리는 위에서 이미 줬으니 scrollgrid쪽 테두리는 제거 */
+#home-calendar .fc-theme-standard .fc-scrollgrid {
+  border: 0;
+}
+
+/* 셀 경계선은 그대로 유지 (안쪽 가로/세로 선들) */
+#home-calendar .fc-theme-standard td,
+#home-calendar .fc-theme-standard th {
+  border: 1px solid #e5e7eb;
 }
 
 /* 오른쪽 사이드 영역 */
@@ -541,5 +575,22 @@
 .fc .fc-daygrid-event,
 .fc .fc-daygrid-event .fc-event-title,
 .fc .fc-daygrid-event .fc-event-time {
+  color: #5a5a5a !important;
+}
+
+/* 캘린더 모든 텍스트를 #5a5a5a로 통일 */
+#home-calendar .fc-col-header-cell-cushion,
+#home-calendar .fc-daygrid-day-number,
+#home-calendar .fc-daygrid-day-top {
+  color: #5a5a5a !important;
+}
+
+/* 요일 헤더 */
+#home-calendar .fc-col-header-cell {
+  color: #5a5a5a !important;
+}
+
+/* 전체 캘린더 텍스트 일괄 적용 */
+#home-calendar .fc {
   color: #5a5a5a !important;
 }

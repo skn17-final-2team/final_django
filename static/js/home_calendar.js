@@ -5,23 +5,25 @@ document.addEventListener("DOMContentLoaded", function () {
     return;
   }
 
-  const currentDateEl = document.getElementById("home-current-date");
+const currentDateEl = document.getElementById("home-current-date");
 
-  // 상단 현재 날짜 표시
-  if (currentDateEl) {
-    const now = new Date();
+// 상단 현재 날짜 표시
+if (currentDateEl) {
+  const now = new Date();
 
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    const day = now.getDate();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
 
-    const weekNames = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
-    const weekName = weekNames[now.getDay()];
+  const formatted = `${year}년 ${month}월`;
 
-    const formatted = `${year}년 ${month}월 ${day}일 ${weekName}`;
+  currentDateEl.textContent = formatted;
 
-    currentDateEl.textContent = formatted;
-  }
+  // 오늘 날짜 텍스트 클릭 시 달력을 오늘로 이동
+  currentDateEl.style.cursor = "pointer";
+  currentDateEl.addEventListener("click", function () {
+    calendar.today();
+  });
+}
 
   // 일정 추가 모달 관련 요소
   const modal = document.getElementById("schedule-modal");
@@ -251,7 +253,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // 일정 상세 모달 관련 요소
-    const eventModal = document.getElementById("event-detail-modal");
+  const eventModal = document.getElementById("event-detail-modal");
   const eventDateEl = document.getElementById("event-detail-date");
   const eventTitleEl = document.getElementById("event-detail-title");
   const eventDescEl = document.getElementById("event-detail-description");
@@ -358,11 +360,7 @@ document.addEventListener("DOMContentLoaded", function () {
     height: "100%",
     contentHeight: "auto",
     expandRows: true,
-    headerToolbar: {
-      left: "prev,next today",
-      center: "title",
-      right: "",
-    },
+    headerToolbar: false,
 
     eventTextColor: "#5a5a5a",
 
