@@ -5,7 +5,7 @@ from apps.accounts.models import Dept, User
 from django.db.models import Prefetch, Q
 
 from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 
 from .models import Meeting, Attendee, Domain
 from django.contrib import messages
@@ -18,6 +18,36 @@ from apps.meetings.utils.runpod import get_stt, runpod_health
 from apps.meetings.models import S3File
 from django.views.decorators.http import require_GET
 from datetime import date
+
+from django.template.loader import render_to_string  
+from io import BytesIO
+from docx import Document
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from django.utils.html import strip_tags
+import json
+
+# 한글 폰트 등록 (맑은 고딕 사용)
+KOREAN_FONT_NAME = "MalgunGothic"
+
+def _register_korean_font():
+    from pathlib import Path
+
+    # Windows 기본 맑은 고딕 경로
+    default_path = Path(r"C:\Windows\Fonts\malgun.ttf")
+
+    if default_path.exists():
+        try:
+            pdfmetrics.registerFont(TTFont(KOREAN_FONT_NAME, str(default_path)))
+        except Exception:
+            # 이미 등록되어 있거나 오류가 나도 앱 전체가 죽지 않게 함
+            pass
+
+# 모듈 import 시 한 번 호출
+_register_korean_font()
+
 
 # 회의 목록에서 쓸 데이터 생성하는 함수
 def build_meeting_list_context(meeting_qs, login_user_id=None):
@@ -458,3 +488,206 @@ def today_meetings(request):
     return {
         "today_meetings": meetings
     }
+
+def minutes_save(request, meeting_id):
+    """
+    회의록 HTML(meeting_notes)을 저장하는 뷰
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid method"}, status=405)
+
+    meeting = get_object_or_404(Meeting, pk=meeting_id)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    content = data.get("content", "")
+
+    # 필요하면 길이 제한 등 검증 추가 가능
+    meeting.meeting_notes = content
+    meeting.save(update_fields=["meeting_notes"])
+
+    return JsonResponse({"ok": True})
+
+def minutes_download(request, meeting_id, fmt):
+    meeting = get_object_or_404(Meeting, pk=meeting_id)
+
+    attendees_qs = (
+        meeting.attendees
+               .select_related("user", "user__dept")
+               .all()
+    )
+
+    # 1) 회의록 내용 결정: meeting_notes > summary > transcript
+    if meeting.meeting_notes:
+        # meeting_notes가 있으면 "완성된 회의록"으로 간주
+        has_full_minutes = True
+        raw_html = (
+            meeting.meeting_notes
+            .replace("<br>", "\n")
+            .replace("<br/>", "\n")
+            .replace("<br />", "\n")
+        )
+        text_body = strip_tags(raw_html).replace("&nbsp;", " ")
+    else:
+        has_full_minutes = False
+        if meeting.summary:
+            text_body = meeting.summary
+        elif meeting.transcript:
+            text_body = meeting.transcript
+        else:
+            text_body = "회의 내용이 아직 등록되지 않았습니다."
+
+    # 2) PDF 생성
+    if fmt == "pdf":
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer, pagesize=A4)
+
+        width, height = A4
+        x_margin = 50
+        top_margin = height - 50
+        bottom_margin = 50
+        line_height = 14
+
+        font = KOREAN_FONT_NAME
+
+        # 제목
+        y = top_margin
+        p.setFont(font, 18)
+        p.drawString(x_margin, y, meeting.title or "회의록")
+        y -= 30
+
+        # 기본 정보
+        p.setFont(font, 11)
+        p.drawString(
+            x_margin, y,
+            f"일시: {meeting.meet_date_time.strftime('%Y.%m.%d %H:%M')}"
+        )
+        y -= 18
+
+        p.drawString(
+            x_margin, y,
+            f"장소: {meeting.place or ''}"
+        )
+        y -= 24
+
+        # 참석자
+        p.drawString(x_margin, y, "참석자:")
+        y -= 16
+        for att in attendees_qs:
+            line = att.user.name
+            if att.user.dept:
+                line += f" ({att.user.dept.dept_name})"
+            p.drawString(x_margin + 16, y, f"- {line}")
+            y -= line_height
+            # 페이지 바닥에 닿으면 새 페이지
+            if y < bottom_margin:
+                p.showPage()
+                p.setFont(font, 11)
+                y = top_margin
+
+        y -= 18
+
+        # 회의 내용
+        p.drawString(x_margin, y, "회의 내용:")
+        y -= 16
+
+        # 본문 (여러 페이지로 나누기)
+        p.setFont(font, 10)
+
+        text_obj = p.beginText()
+        text_obj.setTextOrigin(x_margin, y)
+        text_obj.setLeading(line_height)
+        current_y = y
+
+        def flush_text():
+            nonlocal text_obj, current_y
+            p.drawText(text_obj)
+            p.showPage()
+            p.setFont(font, 10)
+            text_obj = p.beginText()
+            text_obj.setTextOrigin(x_margin, top_margin)
+            text_obj.setLeading(line_height)
+            current_y = top_margin
+
+        for raw_line in text_body.splitlines():
+            line = raw_line
+            # 너무 긴 줄은 잘라서 여러 줄로
+            while len(line) > 80:
+                chunk = line[:80]
+                line = line[80:]
+
+                if current_y < bottom_margin:
+                    flush_text()
+                text_obj.textLine(chunk)
+                current_y -= line_height
+
+            # 나머지 줄
+            if current_y < bottom_margin:
+                flush_text()
+            text_obj.textLine(line)
+            current_y -= line_height
+
+        # 마지막 페이지 그리기
+        p.drawText(text_obj)
+        p.showPage()
+        p.save()
+
+        pdf_value = buffer.getvalue()
+        buffer.close()
+
+        filename = f"meeting_{meeting_id}_minutes.pdf"
+        response = HttpResponse(pdf_value, content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
+    # 3) DOCX 생성
+    if fmt == "docx":
+        doc = Document()
+
+        # 제목
+        doc.add_heading(meeting.title, level=1)
+
+        # meeting_notes가 없을 때만 기본 정보 + 참석자 + "회의 내용" 헤더 추가
+        if not has_full_minutes:
+            p = doc.add_paragraph()
+            p.add_run("일시: ").bold = True
+            p.add_run(meeting.meet_date_time.strftime("%Y.%m.%d %H:%M"))
+
+            p = doc.add_paragraph()
+            p.add_run("장소: ").bold = True
+            p.add_run(meeting.place or "")
+
+            doc.add_paragraph("")
+            doc.add_paragraph("참석자", style="Heading 2")
+            for att in attendees_qs:
+                line = att.user.name
+                if att.user.dept:
+                    line += f" ({att.user.dept.dept_name})"
+                doc.add_paragraph(line, style="List Bullet")
+
+            doc.add_paragraph("")
+            doc.add_paragraph("회의 내용", style="Heading 2")
+
+        # 본문: text_body 전체
+        for line in text_body.splitlines():
+            doc.add_paragraph(line)
+
+        buf = BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+
+        filename = f"meeting_{meeting_id}_minutes.docx"
+        response = HttpResponse(
+            buf.getvalue(),
+            content_type=(
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            ),
+        )
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
+
+    return HttpResponse("invalid format", status=400)
+
