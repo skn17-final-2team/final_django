@@ -318,3 +318,119 @@
   color: #999999;
   padding: 4px 2px;
 }
+
+/* ========== 회의 정보 토글 & 팝업 ========== */
+
+/* 제목 + 화살표 버튼 컨테이너 */
+.detail-meeting-title-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 회의 제목 텍스트는 이미 정의되어 있음 (detail-meeting-title) */
+
+/* 화살표 버튼 */
+.meeting-info-toggle {
+  border: none;
+  background: none;
+  padding: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.meeting-info-arrow {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #555555;
+  border-bottom: 2px solid #555555;
+  transform: rotate(45deg); /* 기본: 아래쪽 화살표 */
+  transition: transform 0.18s ease-out;
+}
+
+/* 열려 있을 때 회전(위쪽 화살표) */
+.meeting-info-toggle[aria-expanded="true"] .meeting-info-arrow {
+  transform: rotate(-135deg);
+}
+
+/* 전체 화면 오버레이 */
+.meeting-info-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;                /* 기본은 숨김 */
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+/* JS에서 is-open 클래스로 표시 */
+.meeting-info-overlay.is-open {
+  display: flex;
+}
+
+/* 팝업 카드 */
+.meeting-info-modal {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 20px 24px 20px;
+  box-sizing: border-box;
+  width: 360px;
+  max-width: calc(100% - 40px);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.45);
+}
+
+/* 팝업 헤더 */
+.meeting-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: -12px;
+}
+
+.meeting-info-close {
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: #777777;
+}
+
+/* 팝업 본문 */
+.meeting-info-body {
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.meeting-info-line {
+  margin: 0 0 8px;
+}
+
+.meeting-info-line-attendees-label {
+  margin-top: 10px;
+}
+
+.meeting-info-label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.meeting-info-value {
+  word-break: break-word;
+}
+
+/* 참석자 리스트 */
+.meeting-info-attendee-list {
+  margin: 0;
+  padding-left: 18px;
+  list-style-type: disc;
+}
+
+.meeting-info-attendee-list li {
+  margin-bottom: 4px;
+}
