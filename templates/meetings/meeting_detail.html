@@ -8,16 +8,62 @@
 
 {% block content %}
 <div class="meeting-detail-page">
-  <!-- 상단 제목 + 우측 라인 -->
+  <!-- 상단 제목 + 우측 라인 + 화살표 버튼 -->
   <div class="detail-header-row">
-    <h2 class="detail-page-title">{{ meeting.title }}</h2>
+    <div class="detail-meeting-title-container">
+      <h2 class="detail-page-title">{{ meeting.title }}</h2>
+      <button
+        type="button"
+        class="meeting-info-toggle"
+        id="meeting-info-toggle"
+        aria-expanded="false"
+      >
+        <span class="meeting-info-arrow"></span>
+      </button>
+    </div>
     <div class="detail-page-title-line"></div>
   </div>
 
-  <!-- 회의 제목 -->
-  <div class="detail-meeting-title-row">
+  <!--회의 정보 팝업 오버레이 -->
+  <div class="meeting-info-overlay" id="meeting-info-overlay">
+    <div class="meeting-info-modal">
+      <div class="meeting-info-header">
+        <button type="button" class="meeting-info-close" id="meeting-info-close">
+          ✕
+        </button>
+      </div>
 
-    <!-- 필요하다면 드롭다운 / 아이콘 영역 추가 -->
+      <div class="meeting-info-body">
+        <p class="meeting-info-line">
+          <span class="meeting-info-label">일시 :</span>
+          <span class="meeting-info-value">
+            {{ meeting.meet_date_time|date:"Y.m.d  H:i" }}
+          </span>
+        </p>
+
+        <p class="meeting-info-line">
+          <span class="meeting-info-label">장소 :</span>
+          <span class="meeting-info-value">
+            {{ meeting.place }}
+          </span>
+        </p>
+
+        <p class="meeting-info-line meeting-info-line-attendees-label">
+          <span class="meeting-info-label">참여자 :</span>
+        </p>
+
+        <ul class="meeting-info-attendee-list">
+          {% for att in attendees %}
+            <li>
+              {{ att.user.name }}
+              {% if att.user.dept %}
+                ({{ att.user.dept.dept_name }})
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
   </div>
 
   <!-- 좌우 2컬럼 레이아웃 -->

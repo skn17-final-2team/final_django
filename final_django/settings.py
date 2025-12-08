@@ -63,7 +63,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                "apps.core.context_processors.today_meetings",
+                "apps.meetings.views.today_meetings",
             ],
         },
     },
