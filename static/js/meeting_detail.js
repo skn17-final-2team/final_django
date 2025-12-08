@@ -20,53 +20,107 @@ document.addEventListener("DOMContentLoaded", function () {
           panel.classList.remove("detail-tab-panel-active");
         }
       });
+
+      // 회의록 탭이면 구성 팝업 띄우기
+      if (target === "minutes") {
+        openMinutesConfig();
+      }
     });
   });
 
-  // ================== 회의 정보 팝업 ==================
-  const overlay = document.getElementById("meeting-info-overlay");
+  // ================== 회의 정보 팝업 (제목 옆 화살표) ==================
+  const overlayInfo = document.getElementById("meeting-info-overlay");
   const toggleBtn = document.getElementById("meeting-info-toggle");
   const closeBtn = document.getElementById("meeting-info-close");
 
-  if (overlay && toggleBtn) {
-    function openOverlay() {
-      overlay.classList.add("is-open");
+  if (overlayInfo && toggleBtn) {
+    function openInfoOverlay() {
+      overlayInfo.classList.add("is-open");
       toggleBtn.setAttribute("aria-expanded", "true");
     }
 
-    function closeOverlay() {
-      overlay.classList.remove("is-open");
+    function closeInfoOverlay() {
+      overlayInfo.classList.remove("is-open");
       toggleBtn.setAttribute("aria-expanded", "false");
     }
 
     toggleBtn.addEventListener("click", function () {
-      const isOpen = overlay.classList.contains("is-open");
-      if (isOpen) {
-        closeOverlay();
-      } else {
-        openOverlay();
-      }
+      const isOpen = overlayInfo.classList.contains("is-open");
+      isOpen ? closeInfoOverlay() : openInfoOverlay();
     });
 
     if (closeBtn) {
-      closeBtn.addEventListener("click", function () {
-        closeOverlay();
-      });
+      closeBtn.addEventListener("click", closeInfoOverlay);
     }
 
-    // 오버레이 배경 클릭 시 닫기
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) {
-        closeOverlay();
+    overlayInfo.addEventListener("click", function (e) {
+      if (e.target === overlayInfo) closeInfoOverlay();
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && overlayInfo.classList.contains("is-open")) {
+        closeInfoOverlay();
+      }
+    });
+  }
+
+  // ================== 회의록 구성 팝업 ==================
+  const minutesConfigOverlay = document.getElementById("minutes-config-overlay");
+  const minutesConfigApply = document.getElementById("minutes-config-apply");
+  const minutesConfigCancel = document.getElementById("minutes-config-cancel");
+  const minutesConfigCheckboxes = document.querySelectorAll(".minutes-config-checkbox");
+  const minutesSections = document.querySelectorAll("[data-minutes-section]");
+
+  function applyMinutesConfig() {
+    const selected = Array.from(minutesConfigCheckboxes)
+      .filter((cb) => cb.checked)
+      .map((cb) => cb.dataset.section);
+
+    minutesSections.forEach((sec) => {
+      const key = sec.dataset.minutesSection;
+      if (!key) return;
+      if (selected.includes(key)) {
+        sec.style.display = "";
+      } else {
+        sec.style.display = "none";
+      }
+    });
+  }
+
+  function openMinutesConfig() {
+    if (!minutesConfigOverlay) return;
+    minutesConfigOverlay.classList.add("is-open");
+  }
+
+  function closeMinutesConfig() {
+    if (!minutesConfigOverlay) return;
+    minutesConfigOverlay.classList.remove("is-open");
+  }
+
+  if (minutesConfigOverlay && minutesConfigApply && minutesConfigCancel) {
+    minutesConfigApply.addEventListener("click", function () {
+      applyMinutesConfig();
+      closeMinutesConfig();
+    });
+
+    minutesConfigCancel.addEventListener("click", function () {
+      closeMinutesConfig();
+    });
+
+    minutesConfigOverlay.addEventListener("click", function (e) {
+      if (e.target === minutesConfigOverlay) {
+        closeMinutesConfig();
       }
     });
 
-    // ESC 키로 닫기
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && overlay.classList.contains("is-open")) {
-        closeOverlay();
+      if (e.key === "Escape" && minutesConfigOverlay.classList.contains("is-open")) {
+        closeMinutesConfig();
       }
     });
+
+    // 초기 상태도 체크박스에 맞게 반영
+    applyMinutesConfig();
   }
 
   // ================== 전문 전체 복사 ==================

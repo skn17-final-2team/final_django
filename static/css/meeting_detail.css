@@ -434,3 +434,145 @@
 .meeting-info-attendee-list li {
   margin-bottom: 4px;
 }
+
+/* ========== 회의록 편집 레이아웃 ========== */
+
+.minutes-editable-root {
+  margin-top: 8px;
+}
+
+/* 테이블 안의 편집 가능한 셀 */
+.minutes-cell-editable {
+  min-height: 32px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+/* 아래 섹션 공통 */
+.minutes-section {
+  margin-top: 16px;
+}
+
+.minutes-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.minutes-section-box {
+  min-height: 80px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* contenteditable 시 outline 제거 */
+.minutes-section-box:focus,
+.minutes-cell-editable:focus,
+.minutes-editable-root [contenteditable="true"]:focus {
+  outline: none;
+  border-color: #4f46e5;
+  background: #ffffff;
+}
+
+/* ========== 회의록 구성 선택 팝업 ========== */
+.minutes-config-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.minutes-config-overlay.is-open {
+  display: flex;
+}
+
+.minutes-config-modal {
+  width: 280px;
+  max-width: calc(100% - 40px);
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px 22px 18px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.4);
+  box-sizing: border-box;
+}
+
+.minutes-config-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.minutes-config-options {
+  margin-bottom: 18px;
+}
+
+.minutes-config-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.minutes-config-option input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+}
+
+.minutes-config-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.minutes-config-btn {
+  min-width: 64px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.minutes-config-btn-primary {
+  background: #4b5563;
+  color: #ffffff;
+  border-color: #4b5563;
+}
+
+.minutes-config-btn-primary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* 회의록 탭 하단 다운로드 버튼 영역 */
+.detail-minutes-btn-wrapper {
+  margin-top: 12px;          /* 위 컨텐츠와 간격 – 숫자 키우면 더 아래로 내려감 */
+  margin-bottom: -8px;
+  display: flex;
+  flex-direction: row;    /* 위아래로 쌓이게 */
+  gap: 6px;                 /* 버튼들 사이 간격 */
+  align-items: flex-end;     /* 오른쪽 정렬 (지금처럼 우측 하단 느낌 유지) */
+}
+
+/* 버튼 자체 여유 조금 주고 싶으면 */
+.detail-minutes-btn {
+  min-width: 110px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  font-size: 13px;
+  cursor: pointer;
+}

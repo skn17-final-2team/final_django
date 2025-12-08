@@ -213,51 +213,173 @@
               {% if meeting.meeting_notes %}
                 {{ meeting.meeting_notes|safe }}
               {% else %}
-                {# 기본 회의록 서식 (이미지 대신 테이블 형태로 구현) #}
-                <table class="minutes-table">
-                  <colgroup>
-                    <col style="width: 20%;">
-                    <col style="width: 80%;">
-                  </colgroup>
-                  <tbody>
-                    <tr>
-                      <th>일 시</th>
-                      <td>{{ meeting.meet_date_time|date:"Y.m.d H:i" }}</td>
-                    </tr>
-                    <tr>
-                      <th>장 소</th>
-                      <td>{{ meeting.place }}</td>
-                    </tr>
-                    <tr>
-                      <th>참석자</th>
-                      <td>
-                        {% for att in attendees %}
-                          {{ att.user.name }}{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>회의 안건</th>
-                      <td>{{ meeting.title }}</td>
-                    </tr>
-                  </tbody>
-                </table>
+                {# 기본 회의록 서식: 선택 가능한 섹션들 #}
+                <div class="minutes-editable-root">
+                  <table class="minutes-table">
+                    <colgroup>
+                      <col style="width: 20%;">
+                      <col style="width: 80%;">
+                    </colgroup>
+                    <tbody>
+                      <tr>
+                        <th>일 시</th>
+                        <td contenteditable="true">
+                          {{ meeting.meet_date_time|date:"Y.m.d H:i" }}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>장 소</th>
+                        <td contenteditable="true">
+                          {{ meeting.place }}
+                        </td>
+                      </tr>
+                      <tr data-minutes-section="attendees">
+                        <th>참석자</th>
+                        <td contenteditable="true">
+                          {% for att in attendees %}
+                            {{ att.user.name }}{% if att.user.dept %} ({{ att.user.dept.dept_name }}){% endif %}{% if not forloop.last %}, {% endif %}
+                          {% endfor %}
+                        </td>
+                      </tr>
+                      <tr data-minutes-section="key_issues">
+                        <th>주요 안건</th>
+                        <td>
+                          <div
+                            class="minutes-cell-editable"
+                            contenteditable="true"
+                          ></div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
 
-                <div class="minutes-section-title">회의 내용</div>
-                <div class="minutes-section-box"></div>
+                  <div
+                    class="minutes-section"
+                    data-minutes-section="content"
+                  >
+                    <div class="minutes-section-title">회의 내용</div>
+                    <div
+                      class="minutes-section-box"
+                      contenteditable="true"
+                    ></div>
+                  </div>
 
-                <div class="minutes-section-title">추가 메모</div>
-                <div class="minutes-section-box"></div>
+                  <div
+                    class="minutes-section"
+                    data-minutes-section="result"
+                  >
+                    <div class="minutes-section-title">회의 결과</div>
+                    <div
+                      class="minutes-section-box"
+                      contenteditable="true"
+                    ></div>
+                  </div>
+
+                  <div
+                    class="minutes-section"
+                    data-minutes-section="todos"
+                  >
+                    <div class="minutes-section-title">해야 할 일</div>
+                    <div
+                      class="minutes-section-box"
+                      contenteditable="true"
+                    ></div>
+                  </div>
+                </div>
               {% endif %}
             </div>
 
+                        
+            {# 회의록 구성 선택 팝업 #}
+            <div class="minutes-config-overlay" id="minutes-config-overlay">
+              <div class="minutes-config-modal">
+                <div class="minutes-config-title">회의록 구성 선택</div>
+
+                <div class="minutes-config-options">
+                  <label class="minutes-config-option">
+                    <input
+                      type="checkbox"
+                      class="minutes-config-checkbox"
+                      data-section="attendees"
+                      checked
+                    >
+                    <span>참석자</span>
+                  </label>
+
+                  <label class="minutes-config-option">
+                    <input
+                      type="checkbox"
+                      class="minutes-config-checkbox"
+                      data-section="content"
+                    >
+                    <span>회의 내용</span>
+                  </label>
+
+                  <label class="minutes-config-option">
+                    <input
+                      type="checkbox"
+                      class="minutes-config-checkbox"
+                      data-section="result"
+                    >
+                    <span>회의 결과</span>
+                  </label>
+
+                  <label class="minutes-config-option">
+                    <input
+                      type="checkbox"
+                      class="minutes-config-checkbox"
+                      data-section="key_issues"
+                      checked
+                    >
+                    <span>주요 안건</span>
+                  </label>
+
+                  <label class="minutes-config-option">
+                    <input
+                      type="checkbox"
+                      class="minutes-config-checkbox"
+                      data-section="todos"
+                      checked
+                    >
+                    <span>해야 할 일</span>
+                  </label>
+                </div>
+
+                <div class="minutes-config-actions">
+                  <button
+                    type="button"
+                    class="minutes-config-btn minutes-config-btn-primary"
+                    id="minutes-config-apply"
+                  >
+                    적용
+                  </button>
+                  <button
+                    type="button"
+                    class="minutes-config-btn"
+                    id="minutes-config-cancel"
+                  >
+                    취소
+                  </button>
+                </div>
+              </div>
+            </div>
+
+                <div class="minutes-config-actions">
+                  <button type="button" class="minutes-config-btn minutes-config-btn-primary" id="minutes-config-apply">적용</button>
+                  <button type="button" class="minutes-config-btn" id="minutes-config-cancel">취소</button>
+                </div>
+              </div>
+            </div>
+
             <div class="detail-minutes-actions">
-              <button type="button" class="detail-minutes-btn">
-                pdf 다운로드
-              </button>
-              <button type="button" class="detail-minutes-btn">
-                docx 다운로드
-              </button>
+              <div class="detail-minutes-btn-wrapper">
+                <button type="button" class="detail-minutes-btn">
+                  pdf 다운로드
+                </button>
+                <button type="button" class="detail-minutes-btn">
+                  docx 다운로드
+                </button>
+              </div>
             </div>
           </div>
         </div>
