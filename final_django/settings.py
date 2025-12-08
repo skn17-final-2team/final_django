@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 GOOGLE_OAUTH2_CLIENT_SECRETS_JSON = BASE_DIR / "client_secret.json"
 GOOGLE_OAUTH2_SCOPES = [
     "https://www.googleapis.com/auth/calendar",
@@ -12,10 +12,15 @@ load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
-# DEBUG, DATABASES, ALLOWED_HOSTS 등은 환경별에서 오버라이드
-DEBUG = False
+DEBUG = True
+# DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    '127.0.0.1',
+    'localhost',
+    # os.getenv("AWS_ELASTIC_IP") or '',
+    # os.getenv("DOMAIN_URL") or '',
+]
 
 # Application definition
 INSTALLED_APPS = [
@@ -66,8 +71,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'final_django.wsgi.application'
 
-# 여기도 오버라이드
-DATABASES = {}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'testdb',          # 실제 DB 이름으로 수정
+        'USER': 'admin',           # 실제 유저명으로 수정
+        'PASSWORD': os.getenv('DATABASES_PASSWORD'),
+        'HOST': os.getenv('DATABASES_HOST'),
+        'PORT': '3306',
+        'OPTIONS': {
+            'sql_mode': 'STRICT_TRANS_TABLES',
+            'charset': 'utf8mb4',
+        },
+    },
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {

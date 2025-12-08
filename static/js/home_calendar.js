@@ -13,10 +13,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const formatter = new Intl.DateTimeFormat("ko-KR", {
       year: "numeric",
       month: "long",
-      day: "numeric",
-      weekday: "long",
+      // day: "numeric",
+      // weekday: "long",
     });
     currentDateEl.textContent = formatter.format(now);
+
+      // 오늘 날짜 텍스트 클릭 시 달력을 오늘로 이동
+    currentDateEl.style.cursor = "pointer";
+    currentDateEl.addEventListener("click", function () {
+      calendar.today();
+    });
   }
 
   // 일정 추가 모달 관련 요소
@@ -247,7 +253,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // 일정 상세 모달 관련 요소
-    const eventModal = document.getElementById("event-detail-modal");
+  const eventModal = document.getElementById("event-detail-modal");
   const eventDateEl = document.getElementById("event-detail-date");
   const eventTitleEl = document.getElementById("event-detail-title");
   const eventDescEl = document.getElementById("event-detail-description");
@@ -354,11 +360,7 @@ document.addEventListener("DOMContentLoaded", function () {
     height: "100%",
     contentHeight: "auto",
     expandRows: true,
-    headerToolbar: {
-      left: "prev,next today",
-      center: "title",
-      right: "",
-    },
+    headerToolbar: false,
 
     eventTextColor: "#5a5a5a",
 
