@@ -98,7 +98,7 @@ uploadBtn.addEventListener('click', async (e) => {
             selectedFiles = [];
             preview.innerHTML = '';
             if (hiddenInput) hiddenInput.value = "";
-            window.location.href = `/meetings/${meetingId}/transcript/`;
+            window.location.href = `/meetings/${meetingId}/rendering/`;
         } else {
             const data = await res.json().catch(() => ({}));
             alert(`업로드 실패: ${data.error ?? '알 수 없는 오류'}`);
