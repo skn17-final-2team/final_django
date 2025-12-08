@@ -13,8 +13,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const formatter = new Intl.DateTimeFormat("ko-KR", {
       year: "numeric",
       month: "long",
-      day: "numeric",
-      weekday: "long",
+      // day: "numeric",
+      // weekday: "long",
     });
     currentDateEl.textContent = formatter.format(now);
 
