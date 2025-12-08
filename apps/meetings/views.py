@@ -281,44 +281,26 @@ class MeetingRecordView(LoginRequiredSessionMixin, TemplateView):
 class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_transcript.html"
 
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     meeting_id = self.kwargs.get("meeting_id")
-    #     meeting = Meeting.objects.get(pk=meeting_id)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        meeting_id = self.kwargs.get("meeting_id")
+        meeting = Meeting.objects.get(pk=meeting_id)
 
-    #     attendees_qs = (
-    #         meeting.attendees
-    #                .select_related("user", "user__dept")
-    #                .all()
-    #     )
+        attendees_qs = (meeting.attendees.select_related("user", "user__dept").all())
 
-    #     transcript_html = meeting.transcript or ""
+        transcript_html = meeting.transcript
 
-    #     if not transcript_html:
-    #         print('전사 진행 중')
-    #         res = get_stt(get_presigned_url(str(meeting.record_url)))
-    #         if res['status_code'] != 200 or not res['success']:
-    #             transcript_html = res
-    #         else:
-    #             transcript_html = res['data']['full_text'].replace("\n", "<br>")
-    #             meeting.transcript = transcript_html
-    #             meeting.save()
-        
+        # 이미 전사된 텍스트가 meeting_tbl.transcript
+        context.update(
+            {
+                "meeting": meeting,
+                "meeting_id": meeting_id,
+                "attendees": attendees_qs,
+                "transcript_html": transcript_html,
+            }
+        )
 
-    #     # 이미 전사된 텍스트가 meeting_tbl.transcript
-    #     context.update(
-    #         {
-    #             "meeting": meeting,
-    #             "meeting_id": meeting_id,
-    #             "attendees": attendees_qs,
-    #             "transcript_html": transcript_html,
-    #         }
-    #     )
-
-    #     # attendee_tbl, task_tbl 등도 필요하면 함께 조회
-    #     # context["attendees"] = Attendee.objects.filter(meeting_id=meeting_id)
-
-    #     return context
+        return context
     
 
 
@@ -369,7 +351,8 @@ def meeting_record_upload(request, meeting_id):
         s3_key = upload_raw_file_bytes(
             file_bytes=file_bytes,
             original_filename=filename,
-            delete_after_seconds=3600,
+            # delete_after_seconds=172800, # 48시간 뒤 삭제
+            delete_after_seconds=3600, # 테스트용 1시간 뒤 삭제
         )
     except Exception as e:
         # 유틸 호출 중 에러가 나도 반드시 응답을 반환
@@ -420,10 +403,12 @@ def meeting_transcript_prepare(request, meeting_id):
 
     if not transcript_html:
         # STT 호출
+        print(str(meeting.record_url))
         presigned_url = get_presigned_url(str(meeting.record_url))
+        print(presigned_url)
         res = get_stt(presigned_url)
 
-        if res.get("status_code") != 200 or not res.get("success"):
+        if res.status_code != 200 or not res.json().get("success"):
             # 실패 시 프론트에서 메시지 보여줄 수 있도록 에러 내려줌
             return JsonResponse(
                 {
@@ -432,8 +417,12 @@ def meeting_transcript_prepare(request, meeting_id):
                 },
                 status=500,
             )
-
-        transcript_html = res["data"]["full_text"].replace("\n", "<br>")
+        res = res.json()
+        result_list = []
+        for f in res['data']['full_text']:
+            for key, value in f.items():
+                result_list.append(f"{key}: {value}")
+        transcript_html = '<br>'.join(result_list)
         meeting.transcript = transcript_html
         meeting.save(update_fields=["transcript"])
 

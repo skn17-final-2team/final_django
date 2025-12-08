@@ -12,28 +12,11 @@ CONTENT_TYPE_MAP = {
     "wav": "audio/wav",
 }
 
-REGION_NAME=settings.AWS_S3_REGION_NAME
 BUCKET_NAME=settings.AWS_STORAGE_BUCKET_NAME
-
-def get_s3_client():
-    session = boto3.session.Session(
-        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-        region_name=REGION_NAME,
-    )
-
-    client = session.client(
-        "s3",
-        region_name=REGION_NAME,
-        endpoint_url=f"https://s3.{REGION_NAME}.amazonaws.com",
-        config=Config(signature_version="s3v4"),
-    )
-
-    return client
+REGION_NAME = settings.AWS_S3_REGION_NAME
 
 def upload_raw_file_bytes(file_bytes: bytes, original_filename: str, delete_after_seconds: int) -> str:
-    s3 = get_s3_client()
-    
+    s3 = boto3.client("s3")
     ext = original_filename.split(".")[-1].lower()
     s3_key = f"tests/{uuid.uuid4()}.{ext}"
 
@@ -61,7 +44,11 @@ def upload_raw_file_bytes(file_bytes: bytes, original_filename: str, delete_afte
     return s3_key
 
 def get_presigned_url(s3_key):
-    s3 = get_s3_client()
+    s3 = boto3.client("s3", 
+        region_name=REGION_NAME,
+        endpoint_url=f"https://s3.{REGION_NAME}.amazonaws.com",
+        config=Config(signature_version='s3v4')
+    )
     presigned_url = s3.generate_presigned_url(
         ClientMethod="get_object",
         Params={"Bucket": BUCKET_NAME, "Key": s3_key},
