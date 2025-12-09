@@ -286,31 +286,30 @@ class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         meeting_id = self.kwargs.get("meeting_id")
-        meeting = Meeting.objects.get(pk=meeting_id)
-
-        attendees_qs = (meeting.attendees.select_related("user", "user__dept").all())
-
-        result_list = []
-        keys = set()
-        for f in ast.literal_eval(meeting.transcript):
-            for key, value in f.items():
-                result_list.append(f"{key}: {value}")
-                keys.add(key)
-        transcript_html = '<br>'.join(result_list)
-        speakers = sorted(keys)
-
-        context.update(
-            {
-                "meeting": meeting,
-                "meeting_id": meeting_id,
-                "attendees": attendees_qs,
-                "transcript_html": transcript_html,
-                "speakers": speakers
-            }
-        )
-
+        context["meeting_id"] = meeting_id
         return context
-    
+
+# @require_GET  
+def meeting_transcript_api(request, meeting_id):
+    meeting = get_object_or_404(Meeting, pk=meeting_id)
+    meeting = Meeting.objects.get(pk=meeting_id)
+    attendees_qs = (meeting.attendees.select_related("user", "user__dept").all())
+
+    keys = set()
+    for f in ast.literal_eval(meeting.transcript):
+        for key, _ in f.items():
+            keys.add(key)
+    speakers = sorted(keys)
+    speakers = sorted(keys)
+
+    return JsonResponse({
+        "meeting_title": meeting.title,
+        "transcript": meeting.transcript,
+        "record_url": meeting.record_url,
+        "attendees": [{"user_id": a.user_id,"name": a.user.name, "dept_name": a.user.dept.dept_name} for a in attendees_qs],
+        "speakers": speakers
+    })
+
 
 
 class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
@@ -427,11 +426,6 @@ def meeting_transcript_prepare(request, meeting_id):
                 status=500,
             )
         res = res.json()
-        # result_list = []
-        # for f in res['data']['full_text']:
-        #     for key, value in f.items():
-        #         result_list.append(f"{key}: {value}")
-        # transcript_html = '<br>'.join(result_list)
         transcript_html = res['data']['full_text']
         meeting.transcript = transcript_html
         meeting.save(update_fields=["transcript"])
