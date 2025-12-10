@@ -48,12 +48,15 @@ document.addEventListener("DOMContentLoaded", function () {
       const curInput = document.getElementById("current_pw");
       const n1Input = document.getElementById("new_pw");
       const n2Input = document.getElementById("new_pw2");
+      const curOk = document.getElementById("current_pw_ok");
+      const newPwOk = document.getElementById("new_pw_ok");
+      const newPw2Ok = document.getElementById("new_pw2_ok");
 
       if (curInput) curInput.value = "";
       if (n1Input) n1Input.value = "";
       if (n2Input) n2Input.value = "";
 
-      [curErr, newPwErr, newPw2Err, commonErr].forEach((el) => {
+      [curErr, newPwErr, newPw2Err, commonErr, curOk, newPwOk, newPw2Ok].forEach((el) => {
         if (el) {
           el.classList.remove("visible");
           if (el === commonErr) el.textContent = "";

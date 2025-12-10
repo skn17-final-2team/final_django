@@ -357,10 +357,24 @@
 .schedule-datetime-row {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;           /* allow wrapping on narrow viewports */
 }
 
 .schedule-datetime-row .schedule-input {
-  flex: 1;
+  flex: 1 1 200px;           /* keep two columns by default */
+  min-width: 0;              /* prevent overflow from native controls */
+}
+
+@media (max-width: 520px) {
+  .schedule-modal-dialog {
+    width: 95%;
+    padding: 24px 20px 20px;
+  }
+
+  .schedule-datetime-row {
+    flex-direction: column;  /* stack fields on very narrow screens */
+    gap: 10px;
+  }
 }
 
 /* 종일 체크 영역 */
