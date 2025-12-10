@@ -437,60 +437,65 @@
 
 /* ========== 회의록 편집 레이아웃 ========== */
 
-.minutes-editable-root {
+/* 회의록 전체 편집 영역 루트 */
+#minutes-editor.minutes-editor {
   margin-top: 8px;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-/* 테이블 안의 편집 가능한 셀 */
-.minutes-cell-editable {
-  min-height: 32px;
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
-  background: #f9fafb;
-}
-
-/* 아래 섹션 공통 */
+/* 각 섹션(wrapper) */
 .minutes-section {
   margin-top: 16px;
 }
 
-.minutes-section-title {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 6px;
+/* 첫 번째 섹션은 위 여백 제거 */
+.minutes-section:first-child {
+  margin-top: 0;
 }
 
-.minutes-section-box {
+/* 템플릿 안에서 내용 입력하는 박스 */
+.minutes-editbox[contenteditable="true"] {
   min-height: 80px;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
   border: 1px solid #e5e7eb;
   background: #f9fafb;
-  font-size: 13px;
-  line-height: 1.6;
+  box-sizing: border-box;
 }
 
-/* contenteditable 시 outline 제거 */
-.minutes-section-box:focus,
-.minutes-cell-editable:focus,
-.minutes-editable-root [contenteditable="true"]:focus {
+/* contenteditable 포커스 시 스타일 */
+.minutes-editbox[contenteditable="true"]:focus {
   outline: none;
   border-color: #4f46e5;
   background: #ffffff;
 }
 
-/* ========== 회의록 구성 선택 팝업 ========== */
-.minutes-config-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
+/* 혹시 다른 contenteditable 이 들어와도 공통 적용 */
+#minutes-editor [contenteditable="true"] {
+  outline: none;
 }
 
+/* ========== 회의록 구성 선택 팝업 ========== */
+
+.minutes-config-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.45);
+
+  display: none; /* 기본 숨김 */
+
+  /* 절대 중앙 정렬 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 1000;
+}
+/* JS에서 is-open 클래스 토글 */
 .minutes-config-overlay.is-open {
   display: flex;
 }
@@ -501,34 +506,59 @@
   background: #ffffff;
   border-radius: 16px;
   padding: 20px 22px 18px;
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.4);
   box-sizing: border-box;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.4);
+  margin: 0;
 }
 
-.minutes-config-title {
+/* 헤더: 제목 + 닫기 버튼 */
+.minutes-config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.minutes-config-header h3 {
+  margin: 0;
   font-size: 16px;
   font-weight: 700;
+}
+
+.minutes-config-close {
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: #777777;
+}
+
+/* 본문 (체크박스 리스트) */
+.minutes-config-body {
   margin-bottom: 16px;
+  font-size: 14px;
 }
 
-.minutes-config-options {
-  margin-bottom: 18px;
-}
-
-.minutes-config-option {
+.minutes-config-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
   margin-bottom: 6px;
 }
 
-.minutes-config-option input[type="checkbox"] {
+.minutes-config-item:last-child {
+  margin-bottom: 0;
+}
+
+.minutes-config-item input[type="checkbox"] {
   width: 14px;
   height: 14px;
 }
 
-.minutes-config-actions {
+/* 하단 버튼 영역 */
+.minutes-config-footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
@@ -545,88 +575,7 @@
   cursor: pointer;
 }
 
-.minutes-config-btn-primary {
-  background: #4b5563;
-  color: #ffffff;
-  border-color: #4b5563;
-}
-
-.minutes-config-btn-primary:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-/* 회의록 탭 하단 다운로드 버튼 영역 */
-.detail-minutes-btn-wrapper {
-  margin-top: 12px;          /* 위 컨텐츠와 간격 – 숫자 키우면 더 아래로 내려감 */
-  margin-bottom: -8px;
-  display: flex;
-  flex-direction: row;    /* 위아래로 쌓이게 */
-  gap: 6px;                 /* 버튼들 사이 간격 */
-  align-items: flex-end;     /* 오른쪽 정렬 (지금처럼 우측 하단 느낌 유지) */
-}
-
-/* 버튼 자체 여유 조금 주고 싶으면 */
-.detail-minutes-btn {
-  min-width: 110px;
-  height: 32px;
-  border-radius: 10px;
-  border: 1px solid #d1d5db;
-  background: #ffffff;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.minutes-config-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: rgba(0, 0, 0, 0.35);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.minutes-config-overlay.is-open {
-  display: flex;
-}
-
-.minutes-config-modal {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 20px 24px;
-  width: 260px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
-}
-
-.minutes-config-title {
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 16px;
-}
-
-.minutes-config-options {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.minutes-config-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-}
-
-.minutes-config-checkbox {
-  width: 16px;
-  height: 16px;
-}
-
-.minutes-config-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+.minutes-config-btn:hover {
+  background: #f3f4f6;
 }
 

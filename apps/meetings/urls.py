@@ -29,7 +29,7 @@ urlpatterns = [
     path("<int:meeting_id>/detail", MeetingDetailView.as_view(), name="meeting_detail"),
 
     path("<int:meeting_id>/minutes/save/", minutes_save, name="minutes_save"),
-    path("<int:meeting_id>/minutes/<str:fmt>/download/", minutes_download, name="minutes_download"),
+    path("<int:meeting_id>/minutes/download/<str:fmt>/", minutes_download, name="minutes_download"),
 
     path("list/all/", MeetingListAllView.as_view(), name="list_all"),
     path("list/mine/", MeetingListMineView.as_view(), name="list_mine"),

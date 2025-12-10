@@ -1,4 +1,4 @@
-from django.shortcuts import redirect, render
+﻿from django.shortcuts import redirect, render
 from django.views.generic import TemplateView
 from apps.core.views import LoginRequiredSessionMixin
 from apps.accounts.models import Dept, User
@@ -28,6 +28,9 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from django.utils.html import strip_tags
 import json
+import math
+import re
+from typing import Dict
 
 # 한글 폰트 등록 (맑은 고딕 사용)
 KOREAN_FONT_NAME = "MalgunGothic"
@@ -491,7 +494,7 @@ def today_meetings(request):
 
 def minutes_save(request, meeting_id):
     """
-    회의록 HTML(meeting_notes)을 저장하는 뷰
+    회의록 HTML(meeting_notes)을 저장하는 용도
     """
     if request.method != "POST":
         return JsonResponse({"error": "Invalid method"}, status=405)
@@ -505,11 +508,53 @@ def minutes_save(request, meeting_id):
 
     content = data.get("content", "")
 
-    # 필요하면 길이 제한 등 검증 추가 가능
     meeting.meeting_notes = content
     meeting.save(update_fields=["meeting_notes"])
 
     return JsonResponse({"ok": True})
+
+
+def parse_minutes_sections(html: str) -> Dict[str, str]:
+    """
+    meeting.meeting_notes 에 저장된 HTML에서 data-minutes-section 별 텍스트 추출
+    """
+    if not html:
+        return {}
+
+    pattern = re.compile(
+        r'<div[^>]*data-minutes-section="(?P<key>[^"]+)"[^>]*>(?P<body>.*?)</div>',
+        re.DOTALL | re.IGNORECASE,
+    )
+
+    sections: Dict[str, str] = {}
+    for match in pattern.finditer(html):
+        key = match.group("key")
+        body_html = match.group("body")
+        text = strip_tags(body_html).replace("&nbsp;", " ")
+        lines = [ln.rstrip() for ln in text.splitlines()]
+        text_clean = "\n".join(ln for ln in lines if ln.strip())
+        sections[key] = text_clean
+
+    return sections
+
+def extract_major_agenda(html: str) -> str:
+    """
+    회의록 HTML 안에서 '주요안건' 행 아래 minutes-editbox 내용을 우선 추출
+    """
+    if not html:
+        return ""
+
+    pattern = re.compile(
+        r'<th[^>]*>\s*주요안건\s*</th>.*?<div[^>]*class="[^"]*minutes-editbox[^"]*"[^>]*>(?P<body>.*?)</div>',
+        re.DOTALL | re.IGNORECASE,
+    )
+    match = pattern.search(html)
+    if not match:
+        return ""
+
+    text = strip_tags(match.group("body")).replace("&nbsp;", " ").strip()
+    return text
+
 
 def minutes_download(request, meeting_id, fmt):
     meeting = get_object_or_404(Meeting, pk=meeting_id)
@@ -519,10 +564,67 @@ def minutes_download(request, meeting_id, fmt):
                .select_related("user", "user__dept")
                .all()
     )
+    attendees_count = attendees_qs.count()
 
-    # 1) 회의록 내용 결정: meeting_notes > summary > transcript
+    sections = parse_minutes_sections(meeting.meeting_notes or "")
+
+    raw_contents = sections.get("contents", "")
+    raw_results = sections.get("results", "")
+    raw_todos = sections.get("todos", "")
+    raw_base = sections.get("base", "")
+
+    def clean_section(text: str, header_keywords) -> str:
+        if not text:
+            return ""
+        lines = [ln.rstrip() for ln in text.splitlines()]
+        while lines and not lines[0].strip():
+            lines.pop(0)
+
+        if lines:
+            first = lines[0].replace(" ", "")
+            if all(keyword in first for keyword in header_keywords):
+                lines.pop(0)
+
+        return "\n".join(lines).strip()
+
+    contents_text = clean_section(raw_contents, ["회의", "내용"])
+    results_text = clean_section(raw_results, ["회의", "결과"])
+    todos_text = clean_section(raw_todos, ["해야", "할", "일"])
+    base_text = clean_section(raw_base, ["기본", "정보"])
+
+
+
+    has_base = "base" in sections
+    has_contents = "contents" in sections
+    has_results = "results" in sections
+    has_todos = "todos" in sections
+    has_attendees_section = "attendees" in sections
+
+    main_agenda = extract_major_agenda(meeting.meeting_notes or "")
+    if not main_agenda and base_text:
+        for ln in base_text.splitlines():
+            if ln.strip():
+                main_agenda = ln.strip()
+                break
+    if not main_agenda and contents_text:
+        for ln in contents_text.splitlines():
+            if ln.strip():
+                main_agenda = ln.strip()
+                break
+
+    agenda = meeting.title or ""
+    meeting_dt_str = (
+        meeting.meet_date_time.strftime("%Y.%m.%d %H:%M")
+        if meeting.meet_date_time
+        else ""
+    )
+    place = meeting.place or ""
+    if hasattr(meeting, "host") and meeting.host:
+        host_name = meeting.host.name
+    else:
+        host_name = getattr(meeting, "responsible_name", "")
+
     if meeting.meeting_notes:
-        # meeting_notes가 있으면 "완성된 회의록"으로 간주
         has_full_minutes = True
         raw_html = (
             meeting.meeting_notes
@@ -540,7 +642,6 @@ def minutes_download(request, meeting_id, fmt):
         else:
             text_body = "회의 내용이 아직 등록되지 않았습니다."
 
-    # 2) PDF 생성
     if fmt == "pdf":
         buffer = BytesIO()
         p = canvas.Canvas(buffer, pagesize=A4)
@@ -548,90 +649,264 @@ def minutes_download(request, meeting_id, fmt):
         width, height = A4
         x_margin = 50
         top_margin = height - 50
-        bottom_margin = 50
+        bottom_margin = 40
         line_height = 14
 
         font = KOREAN_FONT_NAME
 
-        # 제목
+        def draw_page_border(top_y, bottom_y):
+            p.line(x_left, top_y, x_left, bottom_y)
+            p.line(x_right, top_y, x_right, bottom_y)
+
+        def start_new_page():
+            nonlocal current_top, table_top_y
+            p.setFont(font, 11)
+            current_top = top_margin
+            table_top_y = current_top
+
+        def finalize_current_page(outer_bottom_value):
+            draw_page_border(table_top_y, outer_bottom_value)
+
         y = top_margin
         p.setFont(font, 18)
         p.drawString(x_margin, y, meeting.title or "회의록")
-        y -= 30
+        y -= 40
 
-        # 기본 정보
         p.setFont(font, 11)
-        p.drawString(
-            x_margin, y,
-            f"일시: {meeting.meet_date_time.strftime('%Y.%m.%d %H:%M')}"
-        )
-        y -= 18
+        x_left = x_margin
+        x_right = width - x_margin
 
-        p.drawString(
-            x_margin, y,
-            f"장소: {meeting.place or ''}"
-        )
-        y -= 24
+        header_row_h = 24
+        label_row_h = 24
+        contents_h = 200
+        results_h = 200
+        todos_h = 150
+        attend_header_h = 24
+        attend_row_h = 24
 
-        # 참석자
-        p.drawString(x_margin, y, "참석자:")
-        y -= 16
-        for att in attendees_qs:
-            line = att.user.name
-            if att.user.dept:
-                line += f" ({att.user.dept.dept_name})"
-            p.drawString(x_margin + 16, y, f"- {line}")
-            y -= line_height
-            # 페이지 바닥에 닿으면 새 페이지
-            if y < bottom_margin:
-                p.showPage()
-                p.setFont(font, 11)
-                y = top_margin
+        rows_per_side = max(4, math.ceil(attendees_count / 2))
+        attend_rows_h = rows_per_side * attend_row_h
 
-        y -= 18
+        table_top_y = y
+        current_top = table_top_y
 
-        # 회의 내용
-        p.drawString(x_margin, y, "회의 내용:")
-        y -= 16
+        center_x = (x_left + x_right) / 2.0
 
-        # 본문 (여러 페이지로 나누기)
+        if has_base:
+            label_w = 80
+            right_w = 120
+            x_label = x_left + label_w
+            x_right_block = x_right - right_w
+
+            header_top = current_top
+
+            for i in range(5):
+                y_line = header_top - header_row_h * i
+                p.line(x_left, y_line, x_right, y_line)
+
+            p.line(x_left, header_top, x_left, header_top - 4 * header_row_h)
+            p.line(x_right, header_top, x_right, header_top - 4 * header_row_h)
+
+            p.line(x_label, header_top, x_label, header_top - header_row_h)
+            p.line(x_label, header_top - header_row_h, x_label, header_top - 2 * header_row_h)
+            p.line(x_label, header_top - 2 * header_row_h, x_label, header_top - 3 * header_row_h)
+            p.line(x_label, header_top - 3 * header_row_h, x_label, header_top - 4 * header_row_h)
+
+            p.line(x_right_block, header_top - header_row_h, x_right_block, header_top - 3 * header_row_h)
+
+            def header_text_y(row_idx: int) -> float:
+                return header_top - header_row_h * row_idx - header_row_h + 8
+
+            y_row1 = header_text_y(0)
+            p.drawString(x_left + 5, y_row1, "안 건")
+            p.drawString(x_left + 5 + 80, y_row1, agenda)
+
+            y_row2 = header_text_y(1)
+            p.drawString(x_left + 5, y_row2, "일 시")
+            p.drawString(x_left + 5 + 80, y_row2, meeting_dt_str)
+            host_label = "주최자명"
+            if host_name:
+                host_label += f" {host_name}"
+            p.drawString(x_right_block + 5, y_row2, host_label)
+
+            y_row3 = header_text_y(2)
+            p.drawString(x_left + 5, y_row3, "장 소")
+            p.drawString(x_left + 5 + 80, y_row3, place)
+            p.drawString(x_right_block + 5, y_row3, f"참석인원  {attendees_count}")
+
+            y_row4 = header_text_y(3)
+            p.drawString(x_left + 5, y_row4, "주요안건")
+            if main_agenda:
+                short_agenda = (main_agenda[:50] + "…") if len(main_agenda) > 50 else main_agenda
+                p.drawString(x_left + 5 + 80, y_row4, short_agenda)
+
+            current_top = header_top - 4 * header_row_h
+        else:
+            current_top = y
+
+        if has_contents:
+            contents_title_top = current_top
+            contents_title_bottom = contents_title_top - label_row_h
+            p.line(x_left, contents_title_bottom, x_right, contents_title_bottom)
+            p.drawCentredString(center_x, contents_title_bottom + 8, "회의 내용")
+
+            contents_box_top = contents_title_bottom
+            contents_box_bottom = contents_box_top - contents_h
+            p.line(x_left, contents_box_bottom, x_right, contents_box_bottom)
+
+            current_top = contents_box_bottom
+        else:
+            contents_box_top = contents_box_bottom = None
+
+        if has_results:
+            results_title_top = current_top
+            results_title_bottom = results_title_top - label_row_h
+            p.line(x_left, results_title_bottom, x_right, results_title_bottom)
+            p.drawCentredString(center_x, results_title_bottom + 8, "회의 결과")
+
+            results_box_top = results_title_bottom
+            results_box_bottom = results_box_top - results_h
+            p.line(x_left, results_box_bottom, x_right, results_box_bottom)
+
+            current_top = results_box_bottom
+        else:
+            results_box_top = results_box_bottom = None
+
+        if has_todos:
+            todos_title_top = current_top
+            todos_title_bottom = todos_title_top - label_row_h
+            p.line(x_left, todos_title_bottom, x_right, todos_title_bottom)
+            p.drawCentredString(center_x, todos_title_bottom + 8, "해야 할 일")
+
+            todos_box_top = todos_title_bottom
+            todos_box_bottom = todos_box_top - todos_h
+            p.line(x_left, todos_box_bottom, x_right, todos_box_bottom)
+
+            current_top = todos_box_bottom
+        else:
+            todos_box_top = todos_box_bottom = None
+
         p.setFont(font, 10)
 
-        text_obj = p.beginText()
-        text_obj.setTextOrigin(x_margin, y)
-        text_obj.setLeading(line_height)
-        current_y = y
+        def draw_multiline_in_box(text, x_left_box, x_right_box, top_y, bottom_y):
+            max_chars = 80
+            y_pos = top_y - 14
+            for raw_line in (text or "").splitlines():
+                line = raw_line
+                while len(line) > max_chars:
+                    chunk = line[:max_chars]
+                    line = line[max_chars:]
+                    if y_pos < bottom_y + line_height:
+                        return
+                    p.drawString(x_left_box + 5, y_pos, chunk)
+                    y_pos -= line_height
+                if line:
+                    if y_pos < bottom_y + line_height:
+                        return
+                    p.drawString(x_left_box + 5, y_pos, line)
+                    y_pos -= line_height
 
-        def flush_text():
-            nonlocal text_obj, current_y
-            p.drawText(text_obj)
-            p.showPage()
-            p.setFont(font, 10)
-            text_obj = p.beginText()
-            text_obj.setTextOrigin(x_margin, top_margin)
-            text_obj.setLeading(line_height)
-            current_y = top_margin
+        if has_contents and contents_box_top is not None:
+            draw_multiline_in_box(
+                contents_text,
+                x_left,
+                x_right,
+                contents_box_top,
+                contents_box_bottom,
+            )
 
-        for raw_line in text_body.splitlines():
-            line = raw_line
-            # 너무 긴 줄은 잘라서 여러 줄로
-            while len(line) > 80:
-                chunk = line[:80]
-                line = line[80:]
+        if has_results and results_box_top is not None:
+            draw_multiline_in_box(
+                results_text,
+                x_left,
+                x_right,
+                results_box_top,
+                results_box_bottom,
+            )
 
-                if current_y < bottom_margin:
-                    flush_text()
-                text_obj.textLine(chunk)
-                current_y -= line_height
+        if has_todos and todos_box_top is not None:
+            draw_multiline_in_box(
+                todos_text,
+                x_left,
+                x_right,
+                todos_box_top,
+                todos_box_bottom,
+            )
 
-            # 나머지 줄
-            if current_y < bottom_margin:
-                flush_text()
-            text_obj.textLine(line)
-            current_y -= line_height
+        p.setFont(font, 11)
 
-        # 마지막 페이지 그리기
-        p.drawText(text_obj)
+        if has_attendees_section or not sections:
+            attend_label_top = current_top
+            attend_label_bottom = attend_label_top - label_row_h
+            attend_block_height = label_row_h + attend_header_h + attend_rows_h
+
+            if attend_label_top - attend_block_height < bottom_margin:
+                outer_bottom = current_top
+                finalize_current_page(outer_bottom)
+                p.showPage()
+                start_new_page()
+                attend_label_top = current_top
+                attend_label_bottom = attend_label_top - label_row_h
+
+            p.line(x_left, attend_label_bottom, x_right, attend_label_bottom)
+            p.drawCentredString(center_x, attend_label_bottom + 8, "참석자")
+
+            attend_header_top = attend_label_bottom
+            attend_header_bottom = attend_header_top - attend_header_h
+            p.line(x_left, attend_header_bottom, x_right, attend_header_bottom)
+
+            col_w = (x_right - x_left) / 6.0
+            x_cols = [x_left + col_w * i for i in range(7)]
+
+            attend_table_bottom = attend_header_bottom - attend_rows_h
+            for xv in x_cols:
+                p.line(xv, attend_header_top, xv, attend_table_bottom)
+
+            header_y = attend_header_bottom + 5
+            p.drawString(x_cols[0] + 5, header_y, "소 속")
+            p.drawString(x_cols[1] + 5, header_y, "성 명")
+            p.drawString(x_cols[2] + 5, header_y, "서 명")
+            p.drawString(x_cols[3] + 5, header_y, "소 속")
+            p.drawString(x_cols[4] + 5, header_y, "성 명")
+            p.drawString(x_cols[5] + 5, header_y, "서 명")
+
+            row_top = attend_header_bottom
+            for _ in range(rows_per_side):
+                row_top -= attend_row_h
+                p.line(x_left, row_top, x_right, row_top)
+
+            outer_bottom = attend_table_bottom
+        else:
+            outer_bottom = current_top
+
+        finalize_current_page(outer_bottom)
+
+        if has_attendees_section or not sections:
+            attendees_list = list(attendees_qs)
+            rows_per_side = max(4, math.ceil(len(attendees_list) / 2))
+            col_w = (x_right - x_left) / 6.0
+            x_cols = [x_left + col_w * i for i in range(7)]
+            for row_idx in range(rows_per_side):
+                row_text_y = attend_header_bottom - attend_row_h * row_idx - attend_row_h + 5
+
+                left_idx = row_idx
+                if left_idx < len(attendees_list):
+                    att = attendees_list[left_idx]
+                    dept = att.user.dept.dept_name if att.user.dept else ""
+                    name = att.user.name
+                    p.drawString(x_cols[0] + 5, row_text_y, dept)
+                    p.drawString(x_cols[1] + 5, row_text_y, name)
+                p.drawString(x_cols[2] + 5, row_text_y, "(인)")
+
+                right_idx = row_idx + rows_per_side
+                if right_idx < len(attendees_list):
+                    att = attendees_list[right_idx]
+                    dept = att.user.dept.dept_name if att.user.dept else ""
+                    name = att.user.name
+                    p.drawString(x_cols[3] + 5, row_text_y, dept)
+                    p.drawString(x_cols[4] + 5, row_text_y, name)
+                p.drawString(x_cols[5] + 5, row_text_y, "(인)")
+
         p.showPage()
         p.save()
 
@@ -643,37 +918,75 @@ def minutes_download(request, meeting_id, fmt):
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
 
-    # 3) DOCX 생성
     if fmt == "docx":
         doc = Document()
+        doc.add_heading(meeting.title or "회의록", level=1)
 
-        # 제목
-        doc.add_heading(meeting.title, level=1)
+        info_rows = [
+            ("안건", agenda or "-"),
+            ("일시", meeting_dt_str or "-"),
+            ("장소", place or "-"),
+            ("주최자", host_name or "-"),
+            ("주요안건", main_agenda or "-"),
+            ("참석자 수", str(attendees_count)),
+        ]
+        info_table = doc.add_table(rows=len(info_rows), cols=2)
+        info_table.style = "Table Grid"
+        for idx, (label, value) in enumerate(info_rows):
+            cells = info_table.rows[idx].cells
+            cells[0].text = label
+            cells[1].text = value
 
-        # meeting_notes가 없을 때만 기본 정보 + 참석자 + "회의 내용" 헤더 추가
-        if not has_full_minutes:
-            p = doc.add_paragraph()
-            p.add_run("일시: ").bold = True
-            p.add_run(meeting.meet_date_time.strftime("%Y.%m.%d %H:%M"))
-
-            p = doc.add_paragraph()
-            p.add_run("장소: ").bold = True
-            p.add_run(meeting.place or "")
-
+        def add_doc_section(title: str, text: str):
+            cleaned = (text or "").strip()
+            if not cleaned:
+                return
             doc.add_paragraph("")
-            doc.add_paragraph("참석자", style="Heading 2")
-            for att in attendees_qs:
-                line = att.user.name
-                if att.user.dept:
-                    line += f" ({att.user.dept.dept_name})"
-                doc.add_paragraph(line, style="List Bullet")
+            doc.add_heading(title, level=2)
+            for ln in cleaned.splitlines():
+                doc.add_paragraph(ln)
 
+        add_doc_section("회의 내용", contents_text)
+        add_doc_section("회의 결과", results_text)
+        add_doc_section("해야 할 일", todos_text)
+
+        doc.add_paragraph("")
+        doc.add_heading("참석자", level=2)
+        attendees_list = list(attendees_qs)
+        if attendees_list:
+            rows = max(1, math.ceil(len(attendees_list) / 2))
+            table = doc.add_table(rows=rows + 1, cols=4)
+            table.style = "Table Grid"
+            header_cells = table.rows[0].cells
+            header_cells[0].text = "소 속"
+            header_cells[1].text = "성 명"
+            header_cells[2].text = "소 속"
+            header_cells[3].text = "성 명"
+
+            for row_idx in range(rows):
+                row_cells = table.rows[row_idx + 1].cells
+                left_idx = row_idx
+                if left_idx < len(attendees_list):
+                    att = attendees_list[left_idx]
+                    dept = att.user.dept.dept_name if att.user.dept else ""
+                    name = att.user.name
+                    row_cells[0].text = dept
+                    row_cells[1].text = name
+                right_idx = row_idx + rows
+                if right_idx < len(attendees_list):
+                    att = attendees_list[right_idx]
+                    dept = att.user.dept.dept_name if att.user.dept else ""
+                    name = att.user.name
+                    row_cells[2].text = dept
+                    row_cells[3].text = name
+        else:
+            doc.add_paragraph("참석자 정보가 없습니다.")
+
+        if not meeting.meeting_notes and text_body:
             doc.add_paragraph("")
-            doc.add_paragraph("회의 내용", style="Heading 2")
-
-        # 본문: text_body 전체
-        for line in text_body.splitlines():
-            doc.add_paragraph(line)
+            doc.add_heading("회의 내용", level=2)
+            for line in text_body.splitlines():
+                doc.add_paragraph(line)
 
         buf = BytesIO()
         doc.save(buf)
@@ -690,4 +1003,5 @@ def minutes_download(request, meeting_id, fmt):
         return response
 
     return HttpResponse("invalid format", status=400)
+
 
