@@ -388,7 +388,6 @@ document.addEventListener("DOMContentLoaded", function () {
     initialView: "dayGridMonth",
     locale: "ko",
     fixedWeekCount: false,
-    showNonCurrentDates: false,
     height: "100%",
     contentHeight: "auto",
     expandRows: true,
