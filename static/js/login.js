@@ -80,13 +80,13 @@ document.addEventListener("DOMContentLoaded", function () {
           if (msgArea) {
             const allMessages = [];
 
-            if (errors.__all__) {
+            if (Array.isArray(errors.__all__)) {
               allMessages.push(...errors.__all__);
             }
-            if (errors.user_id) {
+            if (Array.isArray(errors.user_id)) {
               allMessages.push(...errors.user_id);
             }
-            if (errors.password) {
+            if (Array.isArray(errors.password)) {
               allMessages.push(...errors.password);
             }
 
