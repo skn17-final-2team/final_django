@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+﻿document.addEventListener("DOMContentLoaded", () => {
   const meetingDetailRoot = document.getElementById("meeting-detail-root");
   if (!meetingDetailRoot) return;
 
@@ -134,23 +134,42 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("#tab-minutes #minutes-editor") ||
     document.getElementById("minutes-editor");
   const minutesTemplates = document.getElementById("minutes-templates");
-
-  const minutesConfigOverlay = document.getElementById("minutes-config-overlay");
+  const btnMinutesSave = document.getElementById("btn-minutes-save");
+  const minutesRoot = document.getElementById("minutes-root");
+  const minutesConfigOverlay = document.getElementById(
+    "minutes-config-overlay"
+  );
   const minutesConfigForm = document.getElementById("minutes-config-form");
-  const btnMinutesConfigOpen = document.getElementById("minutes-config-open");
   const btnMinutesConfigConfirm = document.getElementById(
     "minutes-config-confirm"
   );
   const btnMinutesConfigCancel = document.getElementById(
     "minutes-config-cancel"
   );
+  const btnMinutesConfigClose = document.getElementById("minutes-config-close");
+  const pdfDownloadBtn = document.getElementById("btn-minutes-download-pdf");
+  const wordDownloadBtn = document.getElementById("btn-minutes-download-word");
 
-  const btnMinutesSave = document.getElementById("btn-minutes-save");
+  const isHost =
+    (meetingDetailRoot.dataset.isHost || "") === "true" ||
+    (minutesRoot && minutesRoot.dataset.isHost === "true") ||
+    !!minutesConfigOverlay;
 
-  if (!minutesEditor || !minutesTemplates || !minutesConfigForm) {
-    // 회의록 기능이 없는 화면이면 이하 로직은 생략
+  if (!minutesEditor || !minutesTemplates) {
     return;
   }
+
+  function setDownloadButtonsVisibility(visible) {
+    const displayValue = visible ? "inline-flex" : "none";
+    [pdfDownloadBtn, wordDownloadBtn].forEach((btn) => {
+      if (!btn) return;
+      btn.style.display = displayValue;
+    });
+  }
+
+  const hasInitialMinutes =
+    minutesEditor.dataset.hasMinutes === "true" ? true : false;
+  setDownloadButtonsVisibility(hasInitialMinutes);
 
   /* ---------- 유틸: 현재 에디터 섹션 키 목록 ---------- */
   function getCurrentSectionKeys() {
@@ -161,6 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------- 유틸: 팝업에서 체크된 섹션 키 ---------- */
   function getSelectedKeysFromForm() {
+    if (!minutesConfigForm) return [];
     return Array.from(
       minutesConfigForm.querySelectorAll('input[name="minutes_section"]:checked')
     ).map((input) => input.value);
@@ -178,32 +198,46 @@ document.addEventListener("DOMContentLoaded", () => {
     return tpl.innerHTML.trim();
   }
 
+  function hideMinutesEmptyMessage() {
+    const emptyMsg = document.getElementById("detail-minutes-empty-msg");
+    if (emptyMsg) {
+      emptyMsg.style.display = "none";
+    }
+  }
+
+  function syncMinutesEditboxesEditable() {
+    const editBoxes = minutesEditor.querySelectorAll(".minutes-editbox");
+    editBoxes.forEach((box) => {
+      if (isHost) {
+        box.setAttribute("contenteditable", "true");
+      } else {
+        box.setAttribute("contenteditable", "false");
+      }
+    });
+  }
+
   /* ---------- 에디터 재구성: 체크박스 상태 → 화면 ---------- */
   function buildMinutesEditorHtml() {
+    if (!isHost) return;
+
     const selectedKeys = getSelectedKeysFromForm();
     const htmlParts = [];
 
     selectedKeys.forEach((key) => {
       const existingEl = findExistingSectionElement(key);
-      let bodyHtml = existingEl ? existingEl.innerHTML : "";
+      let bodyHtml = existingEl
+        ? existingEl.innerHTML
+        : getTemplateHtml(key) || "";
 
-      if (!bodyHtml) {
-        bodyHtml = getTemplateHtml(key);
-      }
-
-      let html_push = `<div class="minutes-section" data-minutes-section="${key}"`
-      if (key == 'base') html_push += 'contenteditable="false"'
-      html_push += `>${bodyHtml}</div>`
-      if (bodyHtml) {
-        htmlParts.push(
-          html_push
-        );
-      }
+      htmlParts.push(
+        `<div class="minutes-section" data-minutes-section="${key}">${bodyHtml}</div>`
+      );
     });
 
     minutesEditor.innerHTML = htmlParts.join("");
+    hideMinutesEmptyMessage();
+    syncMinutesEditboxesEditable();
   }
-
 
   /* ---------- 저장용 HTML 생성 (base/attendees 제외) ---------- */
     function getMinutesHtmlForSaving() {
@@ -229,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------- 팝업 열기/닫기 ---------- */
   function openMinutesConfig() {
-    if (!minutesConfigOverlay) return;
+    if (!isHost || !minutesConfigOverlay || !minutesConfigForm) return;
 
     const currentKeys = new Set(getCurrentSectionKeys());
 
@@ -237,7 +271,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .querySelectorAll('input[name="minutes_section"]')
       .forEach((input) => {
         if (currentKeys.size === 0) {
-          // 처음 진입이면 템플릿 기본 checked 유지
           return;
         }
         input.checked = currentKeys.has(input.value);
@@ -251,41 +284,42 @@ document.addEventListener("DOMContentLoaded", () => {
     minutesConfigOverlay.style.display = "none";
   }
 
-  if (btnMinutesConfigOpen) {
-    btnMinutesConfigOpen.addEventListener("click", openMinutesConfig);
-  }
-  if (btnMinutesConfigCancel) {
-    btnMinutesConfigCancel.addEventListener("click", closeMinutesConfig);
-  }
-  const btnMinutesConfigClose = document.getElementById("minutes-config-close");
-  if (btnMinutesConfigClose) {
-    btnMinutesConfigClose.addEventListener("click", closeMinutesConfig);
-  }
-  if (minutesConfigOverlay) {
-    minutesConfigOverlay.addEventListener("click", (e) => {
-      if (e.target === minutesConfigOverlay) {
-        closeMinutesConfig();
-      }
-    });
-  }
+  if (isHost) {
+    if (btnMinutesConfigCancel) {
+      btnMinutesConfigCancel.addEventListener("click", closeMinutesConfig);
+    }
+    if (btnMinutesConfigClose) {
+      btnMinutesConfigClose.addEventListener("click", closeMinutesConfig);
+    }
+    if (minutesConfigOverlay) {
+      minutesConfigOverlay.addEventListener("click", (e) => {
+        if (e.target === minutesConfigOverlay) {
+          closeMinutesConfig();
+        }
+      });
+    }
 
-  if (btnMinutesConfigConfirm) {
-    btnMinutesConfigConfirm.addEventListener("click", () => {
-      buildMinutesEditorHtml();
-      closeMinutesConfig();
-    });
+    if (btnMinutesConfigConfirm) {
+      btnMinutesConfigConfirm.addEventListener("click", () => {
+        buildMinutesEditorHtml();
+        closeMinutesConfig();
+      });
+    }
   }
 
   /* ---------- 초기 렌더링 ---------- */
   function initMinutesEditor() {
-  const hasAnySection =
-    minutesEditor.querySelector("[data-minutes-section]") != null;
+    const hasAnySection =
+      minutesEditor.querySelector("[data-minutes-section]") != null;
 
-  if (!hasAnySection) {
-    // 저장된 섹션이 전혀 없으면: 체크박스 기본값으로 구성
-    buildMinutesEditorHtml();
+    if (!hasAnySection && isHost) {
+      // host가 처음 진입 시에는 구성 선택 후 렌더링하도록 팝업을 연다.
+      return;
     }
   }
+
+  initMinutesEditor();
+  syncMinutesEditboxesEditable();
 
 
   /* ---------- 회의록 저장 ---------- */
@@ -325,6 +359,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await res.json();
         if (data.ok) {
           alert("회의록이 저장되었습니다.");
+          hideMinutesEmptyMessage();
+          minutesEditor.dataset.hasMinutes = "true";
+          setDownloadButtonsVisibility(true);
         } else {
           alert("회의록 저장에 실패했습니다.");
         }
@@ -335,3 +372,4 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+

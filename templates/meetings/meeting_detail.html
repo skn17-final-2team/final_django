@@ -1,4 +1,4 @@
-{% extends "core/base.html" %}
+﻿{% extends "core/base.html" %}
 {% load static %}
 
 
@@ -7,7 +7,12 @@
 {% endblock %}
 
 {% block content %}
-<div id="meeting-detail-root" class="meeting-detail-page" data-meeting-id="{{ meeting.meeting_id }}">
+<div
+  id="meeting-detail-root"
+  class="meeting-detail-page"
+  data-meeting-id="{{ meeting.meeting_id }}"
+  data-is-host="{{ is_host|yesno:'true,false' }}"
+>
   <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
   <!-- 상단 제목 + 우측 라인 + 화살표 버튼 -->
   <div class="detail-header-row">
@@ -211,11 +216,16 @@
         >
           <div class="detail-minutes-wrapper">
             <div class="detail-minutes-box">
-              {# 웹에서 수정 가능한 편집 영역 #}
+              {% if not meeting.meeting_notes %}
+                <p class="detail-empty-text detail-minutes-empty" id="detail-minutes-empty-msg">
+                  아직 회의록이 생성되지 않았습니다.
+                </p>
+              {% endif %}
+              {# 직접 편집기로 작성된 HTML을 그대로 담을 영역 #}
               <div
                 id="minutes-editor"
                 class="minutes-editor"
-                contenteditable="true"
+                data-has-minutes="{{ meeting.meeting_notes|yesno:'true,false' }}"
               >
                 {% if meeting.meeting_notes %}
                   {{ meeting.meeting_notes|safe }}
@@ -225,23 +235,29 @@
 
             <div class="detail-minutes-actions">
 
-              <button
-                type="button"
-                class="detail-minutes-btn"
-                id="btn-minutes-save"
-              >
-                회의록 저장
-              </button>
+              {% if is_host %}
+                <button
+                  type="button"
+                  class="detail-minutes-btn"
+                  id="btn-minutes-save"
+                >
+                  회의록 저장
+                </button>
+              {% endif %}
 
               <a
                 href="{% url 'meetings:minutes_download' meeting.meeting_id 'pdf' %}"
                 class="detail-minutes-btn"
+                id="btn-minutes-download-pdf"
+                {% if not meeting.meeting_notes %}style="display: none;"{% endif %}
               >
                 pdf 다운로드
               </a>
               <a
                 href="{% url 'meetings:minutes_download' meeting.meeting_id 'docx' %}"
                 class="detail-minutes-btn"
+                id="btn-minutes-download-word"
+                {% if not meeting.meeting_notes %}style="display: none;"{% endif %}
               >
                 word 다운로드
               </a>
@@ -251,6 +267,7 @@
 
   {# ====== 회의록 섹션 템플릿 (화면에는 보이지 않음) ====== #}
   <div id="minutes-templates" style="display: none;">
+  <div id="minutes-root" data-is-host="{{ is_host|yesno:'true,false' }}">
 
     {# base: 기본정보(안건/일시/장소/참석인원) + 주요안건 #}
     <div id="minutes-template-base">
@@ -373,8 +390,10 @@
       </table>
     </div>
 
+  </div>  {# minutes-root 끝 #}
   </div>  {# minutes-templates 끝 #}
 
+{% if is_host %}
   {# ====== 회의록 구성 선택 팝업 ====== #}
   <div class="minutes-config-overlay" id="minutes-config-overlay" style="display:none;">
     <div class="minutes-config-modal">
@@ -449,8 +468,10 @@
       </div>
     </div>
   </div>
+{% endif %}
 {% endblock %}
 
 {% block extra_script %}
 <script src="{% static 'js/meeting_detail.js' %}"></script>
 {% endblock %}
+

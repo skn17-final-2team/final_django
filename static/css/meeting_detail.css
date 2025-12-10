@@ -455,7 +455,7 @@
 }
 
 /* 템플릿 안에서 내용 입력하는 박스 */
-.minutes-editbox[contenteditable="true"] {
+.minutes-editbox {
   min-height: 80px;
   padding: 8px 10px;
   border-radius: 6px;
