@@ -5,6 +5,7 @@
 <head>
     <meta charset="UTF-8" />
     <title>말하는대로 - 로그인</title>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
 <body>
@@ -49,6 +50,51 @@
                 <button type="submit" class="btn-primary">로그인</button>
             </form>
         </main>
+    </div>
+
+    <!-- 초기 비밀번호 변경 모달 -->
+    <div id="init-pw-modal" class="modal-overlay hidden">
+      <div class="modal-box pw-modal-box">
+        <form id="init-pw-form" method="POST" action="{% url 'accounts:modify_pw_initial' %}">
+          {% csrf_token %}
+          <h2 class="pw-title">초기 비밀번호 변경</h2>
+
+          <section class="pw-section">
+            <p id="init-pw-message" class="pw-hint">초기 비밀번호를 변경해 주세요.</p>
+
+            <div class="pw-input-group">
+              <input
+                type="password"
+                id="init_new_pw"
+                name="new_password"
+                class="pw-input"
+                placeholder="영문+숫자 8~15자"
+              />
+              <span id="init_new_pw_ok" class="pw-info-text">올바른 형식입니다.</span>
+              <span id="init_new_pw_error" class="pw-error-text">비밀번호 형식을 맞추어주세요.</span>
+            </div>
+
+            <div class="pw-input-group">
+              <input
+                type="password"
+                id="init_new_pw2"
+                name="new_password2"
+                class="pw-input"
+                placeholder="비밀번호를 다시 입력하세요"
+              />
+              <span id="init_new_pw2_ok" class="pw-info-text">비밀번호가 일치합니다.</span>
+              <span id="init_new_pw2_error" class="pw-error-text">비밀번호를 확인해주세요.</span>
+            </div>
+          </section>
+
+          <p id="init-pw-error" class="pw-error-text"></p>
+
+          <div class="pw-actions">
+            <button type="button" id="init-pw-cancel" class="btn-modal btn-secondary">취소</button>
+            <button type="submit" class="btn-modal btn-primary">변경</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <script src="{% static 'js/login.js' %}"></script>
