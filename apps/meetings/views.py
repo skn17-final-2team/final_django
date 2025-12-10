@@ -378,6 +378,20 @@ class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
                    .all()
         )
 
+        # 주최자인지 여부 판단 (세션 기반)
+        session_user_id = self.request.session.get("login_user_id")
+        is_host = False
+
+        if session_user_id and meeting.host_id:
+            is_host = str(meeting.host_id) == str(session_user_id)
+        elif hasattr(self.request, "user") and self.request.user.is_authenticated:
+            # Django 기본 User를 통해 접근 가능한 경우까지 보조 처리
+            request_user_id = getattr(self.request.user, "user_id", None) or self.request.user.id
+            if request_user_id:
+                is_host = str(meeting.host_id) == str(request_user_id)
+
+        context["is_host"] = is_host          # 템플릿에서 사용
+        context["can_edit_minutes"] = is_host # 이름 하나 더 두고 싶으면
         return context
 
 def meeting_record_upload(request, meeting_id):
@@ -503,19 +517,37 @@ def today_meetings(request):
 
 def minutes_save(request, meeting_id):
     """
-    회의록 HTML(meeting_notes)을 저장하는 용도
+    회의록 HTML(meeting_notes)을 저장하는 용도 : 주최자만 저장가능
     """
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid method"}, status=405)
-
     meeting = get_object_or_404(Meeting, pk=meeting_id)
+
+    session_user_id = request.session.get("login_user_id")
+    request_user_id = None
+
+    if hasattr(request, "user") and request.user.is_authenticated:
+        request_user_id = getattr(request.user, "user_id", None) or request.user.id
+
+    host_user_id = str(meeting.host_id) if meeting.host_id else None
+
+    has_permission = False
+    if host_user_id:
+        if session_user_id and str(session_user_id) == host_user_id:
+            has_permission = True
+        elif request_user_id and str(request_user_id) == host_user_id:
+            has_permission = True
+
+    if not getattr(meeting, "host", None) or not has_permission:
+        return JsonResponse(
+            {"ok": False, "error": "회의록을 수정할 권한이 없습니다."},
+            status=403,
+        )
 
     try:
         data = json.loads(request.body.decode("utf-8"))
     except json.JSONDecodeError:
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
+        return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
 
-    content = data.get("content", "")
+    content = (data.get("content") or "").strip()
 
     meeting.meeting_notes = content
     meeting.save(update_fields=["meeting_notes"])
@@ -1012,5 +1044,3 @@ def minutes_download(request, meeting_id, fmt):
         return response
 
     return HttpResponse("invalid format", status=400)
-
-
