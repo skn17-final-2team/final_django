@@ -120,7 +120,8 @@
         select.addEventListener("change", e => {
           speakerMap[e.target.id] = e.target.options[e.target.selectedIndex].text;
           console.log(speakerMap);
-          transcript.textContent = transcript_parse(transcript_data, speakerMap).join("\n")
+          transcript_data = transcript_parse(transcript_data, speakerMap)
+          transcript.textContent = transcript_data.join("\n")
         });
 
         row.appendChild(label);
