@@ -88,8 +88,8 @@
       });
       console.log(speakerMap)
       recordTitle.textContent = data.meeting_title;
-      transcript_data = JSON.parse(data.transcript.replaceAll("'", '"'));
-      transcript.textContent = transcript_parse(transcript_data).join("\n")
+      const rawTranscriptData = JSON.parse(data.transcript.replaceAll("'", '"'));
+      transcript.textContent = transcript_parse(rawTranscriptData, speakerMap).join("\n")
       
 
       speakers.forEach(speaker => {
@@ -120,8 +120,8 @@
         select.addEventListener("change", e => {
           speakerMap[e.target.id] = e.target.options[e.target.selectedIndex].text;
           console.log(speakerMap);
-          transcript_data = transcript_parse(transcript_data, speakerMap)
-          transcript.textContent = transcript_data.join("\n")
+          const parsedTranscript = transcript_parse(rawTranscriptData, speakerMap)
+          transcript.textContent = parsedTranscript.join("\n")
         });
 
         row.appendChild(label);
@@ -133,11 +133,10 @@
   
   function transcript_parse(data, setkeys=false) {
     const resultList = [];
-    const keys = new Set();
 
     for (const f of data) {
       for (let [key, value] of Object.entries(f)) {
-        if (setkeys) {
+        if (setkeys && setkeys[key]) {
           key = setkeys[key];
         }
         resultList.push(`${key}: ${value}`);

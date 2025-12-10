@@ -321,26 +321,43 @@ class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
         context["meeting_id"] = meeting_id
         return context
 
-# @require_GET  
+@require_GET
 def meeting_transcript_api(request, meeting_id):
     meeting = get_object_or_404(Meeting, pk=meeting_id)
-    meeting = Meeting.objects.get(pk=meeting_id)
-    attendees_qs = (meeting.attendees.select_related("user", "user__dept").all())
+    attendees_qs = (
+        meeting.attendees.select_related("user", "user__dept").all()
+    )
 
-    keys = set()
-    for f in ast.literal_eval(meeting.transcript):
-        for key, _ in f.items():
-            keys.add(key)
-    speakers = sorted(keys)
-    speakers = sorted(keys)
+    try:
+        transcript_rows = ast.literal_eval(meeting.transcript or "[]")
+    except (ValueError, SyntaxError):
+        transcript_rows = []
 
-    return JsonResponse({
-        "meeting_title": meeting.title,
-        "transcript": meeting.transcript,
-        "record_url": meeting.record_url,
-        "attendees": [{"user_id": a.user_id,"name": a.user.name, "dept_name": a.user.dept.dept_name} for a in attendees_qs],
-        "speakers": speakers
-    })
+    speaker_keys = set()
+    for row in transcript_rows:
+        for speaker in row.keys():
+            speaker_keys.add(speaker)
+
+    attendees = [
+        {
+            "user_id": a.user_id,
+            "name": a.user.name,
+            "dept_name": a.user.dept.dept_name if a.user.dept else "",
+        }
+        for a in attendees_qs
+    ]
+
+    record_url = str(meeting.record_url) if meeting.record_url else None
+
+    return JsonResponse(
+        {
+            "meeting_title": meeting.title,
+            "transcript": meeting.transcript,
+            "record_url": record_url,
+            "attendees": attendees,
+            "speakers": sorted(speaker_keys),
+        }
+    )
 
 
 
