@@ -19,7 +19,7 @@
     {# ========== 왼쪽: 부서원 목록 ========== #}
     <section class="admin-panel admin-panel-left">
       <header class="admin-panel-header">
-        <h2 class="admin-panel-title" id="admin-dept-title">전체 부서</h2>
+        <h2 class="admin-panel-title" id="admin-dept-title"></h2>
       </header>
 
       <div class="admin-table-card">
@@ -34,11 +34,23 @@
             </tr>
           </thead>
           <tbody id="admin-member-tbody">
-            <tr>
-              <td colspan="5" class="admin-table-empty">
-                현재 표시할 부서원이 없습니다.
-              </td>
-            </tr>
+            {% if members %}
+              {% for member in members %}
+                <tr class="admin-member-row" data-dept-id="{{ member.dept.dept_id }}" data-work-part="{{ member.work_part }}" data-admin-yn="{{ member.admin_yn }}">
+                  <td class="col-no">{{ forloop.counter }}</td>
+                  <td class="col-name">{{ member.name }}</td>
+                  <td class="col-id">{{ member.user_id }}</td>
+                  <td class="col-dept">{{ member.dept.dept_name }}</td>
+                  <td class="col-birth">{{ member.birth_date|date:"Y.m.d" }}</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="5" class="admin-table-empty">
+                  현재 표시할 부서원이 없습니다.
+                </td>
+              </tr>
+            {% endif %}
           </tbody>
         </table>
       </div>
@@ -54,55 +66,91 @@
     {# ========== 오른쪽: 등록/수정 폼(열고 닫는 영역) ========== #}
     {# ★ 반드시 이 id 사용 ★ #}
     <section class="admin-panel admin-panel-right" id="admin-panel-right">
-      <form id="admin-employee-form" class="admin-form">
+      <button type="button" class="admin-panel-toggle" id="btn-panel-toggle">
+        <span id="toggle-icon">◀</span>
+      </button>
 
-        <div class="admin-form-icon-box">
-          <span class="admin-form-icon">▢</span>
-        </div>
+      <form id="admin-employee-form" class="admin-form">
+        <input type="hidden" id="form-mode" value="create">
+        <input type="hidden" id="form-user-id" value="">
+
+        <h3 id="form-title" class="admin-form-title" style="display:none;"></h3>
 
         <div class="admin-form-field-group">
-          <div class="admin-form-field">
-            <label for="emp-name" class="admin-form-label">이름</label>
-            <input
-              type="text"
-              id="emp-name"
-              name="name"
-              class="admin-form-input"
-              placeholder="이름을 입력해 주세요"
-            />
+          {# 이름과 ID를 같은 줄에 배치 #}
+          <div class="admin-form-row">
+            <div class="admin-form-field admin-form-field-half">
+              <label for="emp-name" class="admin-form-label">이름</label>
+              <input
+                type="text"
+                id="emp-name"
+                name="name"
+                class="admin-form-input"
+                placeholder="김대로"
+                pattern="^[가-힣]{1,32}$"
+                title="한글만 입력 가능합니다 (1~32자)"
+                required
+              />
+            </div>
+
+            <div class="admin-form-field admin-form-field-half">
+              <label for="emp-id" class="admin-form-label">ID</label>
+              <input
+                type="text"
+                id="emp-id"
+                name="user_id"
+                class="admin-form-input"
+                placeholder="horse0219"
+                pattern="^[a-z0-9]{6,20}$"
+                title="영소문자와 숫자만 입력 가능합니다 (6~20자)"
+                required
+              />
+            </div>
           </div>
 
-          <div class="admin-form-field">
-            <label for="emp-id" class="admin-form-label">ID</label>
-            <input
-              type="text"
-              id="emp-id"
-              name="user_id"
-              class="admin-form-input"
-              placeholder="사번 또는 ID를 입력해 주세요"
-            />
-          </div>
+          {# 생년월일과 관리자 권한을 같은 줄에 배치 #}
+          <div class="admin-form-row">
+            <div class="admin-form-field admin-form-field-half">
+              <label for="emp-birth" class="admin-form-label">생년월일</label>
+              <input
+                type="text"
+                id="emp-birth"
+                name="birth_date"
+                class="admin-form-input"
+                placeholder="1990.02.19"
+                pattern="^\d{8}$"
+                title="8자리 숫자로 입력해주세요 (예: 19900101)"
+                maxlength="8"
+                required
+              />
+            </div>
 
-          <div class="admin-form-field">
-            <label for="emp-birth" class="admin-form-label">생년월일</label>
-            <input
-              type="text"
-              id="emp-birth"
-              name="birthdate"
-              class="admin-form-input"
-              placeholder="YYYY.MM.DD"
-            />
+            <div class="admin-form-field admin-form-field-half admin-form-checkbox-wrapper">
+              <label class="admin-form-checkbox-label">
+                <input
+                  type="checkbox"
+                  id="emp-admin"
+                  name="admin_yn"
+                  class="admin-form-checkbox"
+                />
+                <span>관리자 권한 부여</span>
+              </label>
+            </div>
           </div>
 
           <div class="admin-form-field">
             <label for="emp-dept" class="admin-form-label">부서</label>
-            <input
-              type="text"
+            <select
               id="emp-dept"
-              name="dept"
+              name="dept_id"
               class="admin-form-input"
-              placeholder="IT 본부 - 개발 부서"
-            />
+              required
+            >
+              <option value="">IT 본부 - 개발부서</option>
+              {% for dept in departments %}
+                <option value="{{ dept.dept_id }}">{{ dept.dept_name }}</option>
+              {% endfor %}
+            </select>
           </div>
 
           <div class="admin-form-field">
@@ -110,15 +158,19 @@
             <input
               type="text"
               id="emp-role"
-              name="role"
+              name="work_part"
               class="admin-form-input"
-              placeholder="업무를 입력해 주세요"
+              placeholder="백엔드지 개발"
+              pattern="^[가-힣a-zA-Z\s]{1,15}$"
+              title="한글 또는 영어만 입력 가능합니다 (1~15자)"
+              maxlength="15"
+              required
             />
           </div>
         </div>
 
         <div class="admin-form-actions">
-          <button type="submit" class="btn-admin-primary">
+          <button type="submit" class="btn-admin-primary" id="btn-admin-submit">
             등록
           </button>
           <button
@@ -126,7 +178,15 @@
             class="btn-admin-secondary"
             id="btn-admin-close"
           >
-            닫기
+            취소
+          </button>
+          <button
+            type="button"
+            class="btn-admin-warning"
+            id="btn-admin-reset-pw"
+            style="display:none;"
+          >
+            비밀번호 초기화
           </button>
         </div>
       </form>
