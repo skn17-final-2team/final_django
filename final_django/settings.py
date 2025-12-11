@@ -18,7 +18,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    # os.getenv("AWS_ELASTIC_IP") or '',
+    os.getenv("AWS_ELASTIC_IP") or '',
     # os.getenv("DOMAIN_URL") or '',
 ]
 
