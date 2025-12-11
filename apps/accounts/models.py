@@ -43,7 +43,7 @@ class User(models.Model):
         # ✅ DB 레벨 CHECK 제약 조건
         constraints = [
             CheckConstraint(
-                check=Q(status__in=["A", "I", "D"]),
+                condition=Q(status__in=["A", "I", "D"]),
                 name="user_status_valid",
             )
         ]

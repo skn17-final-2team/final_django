@@ -47,6 +47,21 @@ def login_api(request):
             status=400
         )
 
+    # 비밀번호 정책(8~15자, 영문+숫자) 미충족 시 로그인 막고 변경 플래그 반환
+    pw_pattern = re.compile(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,15}$")
+    if not pw_pattern.match(password):
+        request.session["login_user_id"] = user.user_id
+        request.session["login_user_name"] = user.name
+        request.session["login_user_admin"] = user.admin_yn
+        return JsonResponse(
+            {
+                "ok": False,
+                "force_change": True,
+                "message": "초기 비밀번호를 변경해 주세요.",
+            },
+            status=400,
+        )
+
     # 세션 설정
     request.session["login_user_id"] = user.user_id
     request.session["login_user_name"] = user.name
@@ -161,3 +176,53 @@ def modify_pw_view(request):
     user.save()
 
     return JsonResponse({"ok": True})
+
+
+@require_POST
+def modify_pw_initial(request):
+    """
+    로그인 시 비밀번호 정책이 맞지 않아 막힌 경우,
+    기존 비밀번호 입력 없이 새 비밀번호로만 변경
+    """
+    login_user_id = request.session.get("login_user_id")
+    if not login_user_id:
+        return JsonResponse(
+            {"ok": False, "field": "common", "message": "로그인이 필요합니다."},
+            status=401,
+        )
+
+    user = get_object_or_404(User, user_id=login_user_id)
+
+    new_password = request.POST.get("new_password", "").strip()
+    new_password2 = request.POST.get("new_password2", "").strip()
+
+    if not new_password or not new_password2:
+        return JsonResponse(
+            {"ok": False, "field": "common", "message": "모든 항목을 입력해 주세요."},
+            status=400,
+        )
+
+    pw_pattern = re.compile(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,15}$")
+    if not pw_pattern.match(new_password):
+        return JsonResponse(
+            {"ok": False, "field": "new_password", "message": "비밀번호 형식을 맞추어주세요."},
+            status=400,
+        )
+
+    if new_password != new_password2:
+        return JsonResponse(
+            {"ok": False, "field": "new_password2", "message": "비밀번호를 확인해주세요."},
+            status=400,
+        )
+
+    # 기존 비밀번호와 동일한지 체크 (평문/해시 모두 대응)
+    if check_password(new_password, user.password) or user.password == new_password:
+        return JsonResponse(
+            {"ok": False, "field": "new_password", "message": "이전에 사용한 비밀번호와 다른 비밀번호를 입력해 주세요."},
+            status=400,
+        )
+
+    user.password = make_password(new_password)
+    user.save()
+
+    return JsonResponse({"ok": True, "redirect_url": "/"})

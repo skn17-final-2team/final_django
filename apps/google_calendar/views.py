@@ -103,8 +103,8 @@ def google_events(request):
                 "title": e.get("summary", ""),
                 "start": e["start"].get("dateTime") or e["start"].get("date"),
                 "end": e["end"].get("dateTime") or e["end"].get("date"),
-                # 필요하면 description도 내려줄 수 있음
-                # "description": e.get("description", ""),
+                # 모달에 설명을 표시할 수 있도록 description도 전달
+                "description": e.get("description", ""),
             }
         )
 

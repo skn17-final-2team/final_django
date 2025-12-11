@@ -6,22 +6,22 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   const currentDateEl = document.getElementById("home-current-date");
+  const formatMonthLabel = (dateObj) =>
+    new Intl.DateTimeFormat("ko-KR", {
+      year: "numeric",
+      month: "long",
+    }).format(dateObj);
 
   // 상단 현재 날짜 표시
   if (currentDateEl) {
     const now = new Date();
-    const formatter = new Intl.DateTimeFormat("ko-KR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      weekday: "long",
-    });
-    currentDateEl.textContent = formatter.format(now);
+    currentDateEl.textContent = formatMonthLabel(now);
 
-      // 오늘 날짜 텍스트 클릭 시 달력을 오늘로 이동
+    // 오늘 날짜 텍스트 클릭 시 달력을 오늘로 이동
     currentDateEl.style.cursor = "pointer";
     currentDateEl.addEventListener("click", function () {
       calendar.today();
+      currentDateEl.textContent = formatMonthLabel(calendar.getDate());
     });
   }
 
@@ -119,6 +119,17 @@ document.addEventListener("DOMContentLoaded", function () {
       li.appendChild(dateSpan);
       li.appendChild(textSpan);
 
+      // 리스트 클릭 시 상세 모달 노출
+      li.addEventListener("click", () => {
+        openEventModal({
+          id: e.id,
+          title: e.title,
+          start: e.start,
+          end: e.end,
+          description: e.description,
+        });
+      });
+
       todayListEl.appendChild(li);
     });
   }
@@ -173,6 +184,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
       li.appendChild(dateSpan);
       li.appendChild(textSpan);
+
+      // 리스트 클릭 시 상세 모달 노출
+      li.addEventListener("click", () => {
+        openEventModal({
+          id: e.id,
+          title: e.title,
+          start: e.start,
+          end: e.end,
+          description: e.description,
+        });
+      });
 
       monthListEl.appendChild(li);
     });
@@ -262,13 +284,20 @@ document.addEventListener("DOMContentLoaded", function () {
     ? eventModal.querySelector(".event-modal-backdrop")
     : null;
 
-    function openEventModal(fcEvent) {
+  function openEventModal(eventLike) {
     if (!eventModal) return;
 
-    const start = fcEvent.start;
-    if (!start) return;
+    const startValue = eventLike.start || eventLike.startStr;
+    const start =
+      startValue instanceof Date ? startValue : startValue ? new Date(startValue) : null;
+    if (!start || isNaN(start.getTime())) return;
 
-    selectedEvent = fcEvent;  // 현재 열린 이벤트를 저장
+    selectedEvent = {
+      id: eventLike.id,
+      title: eventLike.title || "",
+      start,
+      extendedProps: eventLike.extendedProps || { description: eventLike.description || "" },
+    };
 
     const pad = (n) => String(n).padStart(2, "0");
     const yyyy = start.getFullYear();
@@ -277,9 +306,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const dateText = `${yyyy}.${mm}.${dd}`;
 
     if (eventDateEl) eventDateEl.textContent = dateText;
-    if (eventTitleEl) eventTitleEl.textContent = fcEvent.title || "";
+    if (eventTitleEl) eventTitleEl.textContent = selectedEvent.title;
 
-    const desc = fcEvent.extendedProps?.description || "";
+    const desc =
+      selectedEvent.extendedProps?.description || eventLike.description || "";
     if (eventDescEl) {
       eventDescEl.textContent = desc;
       eventDescEl.style.display = desc ? "block" : "none";
@@ -357,6 +387,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
     locale: "ko",
+    fixedWeekCount: false,
     height: "100%",
     contentHeight: "auto",
     expandRows: true,
@@ -444,6 +475,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const monthIndex = Number(btn.dataset.month); // 0~11
         const targetDate = new Date(popoverYear, monthIndex, 1);
         calendar.gotoDate(targetDate);
+        if (currentDateEl) {
+          currentDateEl.textContent = formatMonthLabel(calendar.getDate());
+        }
         monthPopoverEl.classList.add("hidden");
       });
     });

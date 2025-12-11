@@ -20,5 +20,9 @@ google-api-python-client>=2.187.0
 google-auth-httplib2>=0.2.1
 google-auth-oauthlib>=1.2.3
 
+# === 문서 ===
+python-docx
+reportlab
+
 # === 기타 ===
 python-dotenv>=1.0

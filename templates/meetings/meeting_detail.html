@@ -1,4 +1,4 @@
-{% extends "core/base.html" %}
+﻿{% extends "core/base.html" %}
 {% load static %}
 
 
@@ -7,17 +7,69 @@
 {% endblock %}
 
 {% block content %}
-<div class="meeting-detail-page">
-  <!-- 상단 제목 + 우측 라인 -->
+<div
+  id="meeting-detail-root"
+  class="meeting-detail-page"
+  data-meeting-id="{{ meeting.meeting_id }}"
+  data-is-host="{{ is_host|yesno:'true,false' }}"
+>
+  <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+  <!-- 상단 제목 + 우측 라인 + 화살표 버튼 -->
   <div class="detail-header-row">
-    <h2 class="detail-page-title">{{ meeting.title }}</h2>
+    <div class="detail-meeting-title-container">
+      <h2 class="detail-page-title">{{ meeting.title }}</h2>
+      <button
+        type="button"
+        class="meeting-info-toggle"
+        id="meeting-info-toggle"
+        aria-expanded="false"
+      >
+        <span class="meeting-info-arrow"></span>
+      </button>
+    </div>
     <div class="detail-page-title-line"></div>
   </div>
 
-  <!-- 회의 제목 -->
-  <div class="detail-meeting-title-row">
+  <!--회의 정보 팝업 오버레이 -->
+  <div class="meeting-info-overlay" id="meeting-info-overlay">
+    <div class="meeting-info-modal">
+      <div class="meeting-info-header">
+        <button type="button" class="meeting-info-close" id="meeting-info-close">
+          ✕
+        </button>
+      </div>
 
-    <!-- 필요하다면 드롭다운 / 아이콘 영역 추가 -->
+      <div class="meeting-info-body">
+        <p class="meeting-info-line">
+          <span class="meeting-info-label">일시 :</span>
+          <span class="meeting-info-value">
+            {{ meeting.meet_date_time|date:"Y.m.d  H:i" }}
+          </span>
+        </p>
+
+        <p class="meeting-info-line">
+          <span class="meeting-info-label">장소 :</span>
+          <span class="meeting-info-value">
+            {{ meeting.place }}
+          </span>
+        </p>
+
+        <p class="meeting-info-line meeting-info-line-attendees-label">
+          <span class="meeting-info-label">참여자 :</span>
+        </p>
+
+        <ul class="meeting-info-attendee-list">
+          {% for att in attendees %}
+            <li>
+              {{ att.user.name }}
+              {% if att.user.dept %}
+                ({{ att.user.dept.dept_name }})
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
   </div>
 
   <!-- 좌우 2컬럼 레이아웃 -->
@@ -164,63 +216,262 @@
         >
           <div class="detail-minutes-wrapper">
             <div class="detail-minutes-box">
-              {% if meeting.meeting_notes %}
-                {{ meeting.meeting_notes|safe }}
-              {% else %}
-                {# 기본 회의록 서식 (이미지 대신 테이블 형태로 구현) #}
-                <table class="minutes-table">
-                  <colgroup>
-                    <col style="width: 20%;">
-                    <col style="width: 80%;">
-                  </colgroup>
-                  <tbody>
-                    <tr>
-                      <th>일 시</th>
-                      <td>{{ meeting.meet_date_time|date:"Y.m.d H:i" }}</td>
-                    </tr>
-                    <tr>
-                      <th>장 소</th>
-                      <td>{{ meeting.place }}</td>
-                    </tr>
-                    <tr>
-                      <th>참석자</th>
-                      <td>
-                        {% for att in attendees %}
-                          {{ att.user.name }}{% if not forloop.last %}, {% endif %}
-                        {% endfor %}
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>회의 안건</th>
-                      <td>{{ meeting.title }}</td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                <div class="minutes-section-title">회의 내용</div>
-                <div class="minutes-section-box"></div>
-
-                <div class="minutes-section-title">추가 메모</div>
-                <div class="minutes-section-box"></div>
+              {% if not meeting.meeting_notes %}
+                <p class="detail-empty-text detail-minutes-empty" id="detail-minutes-empty-msg">
+                  아직 회의록이 생성되지 않았습니다.
+                </p>
               {% endif %}
+              {# 직접 편집기로 작성된 HTML을 그대로 담을 영역 #}
+              <div
+                id="minutes-editor"
+                class="minutes-editor"
+                data-has-minutes="{{ meeting.meeting_notes|yesno:'true,false' }}"
+              >
+                {% if meeting.meeting_notes %}
+                  {{ meeting.meeting_notes|safe }}
+                {% endif %}
+              </div>
             </div>
 
             <div class="detail-minutes-actions">
-              <button type="button" class="detail-minutes-btn">
+
+              {% if is_host %}
+                <button
+                  type="button"
+                  class="detail-minutes-btn"
+                  id="btn-minutes-save"
+                >
+                  회의록 저장
+                </button>
+              {% endif %}
+
+              <a
+                href="{% url 'meetings:minutes_download' meeting.meeting_id 'pdf' %}"
+                class="detail-minutes-btn"
+                id="btn-minutes-download-pdf"
+                {% if not meeting.meeting_notes %}style="display: none;"{% endif %}
+              >
                 pdf 다운로드
-              </button>
-              <button type="button" class="detail-minutes-btn">
-                docx 다운로드
-              </button>
+              </a>
+              <a
+                href="{% url 'meetings:minutes_download' meeting.meeting_id 'docx' %}"
+                class="detail-minutes-btn"
+                id="btn-minutes-download-word"
+                {% if not meeting.meeting_notes %}style="display: none;"{% endif %}
+              >
+                word 다운로드
+              </a>
             </div>
           </div>
         </div>
+
+  {# ====== 회의록 섹션 템플릿 (화면에는 보이지 않음) ====== #}
+  <div id="minutes-templates" style="display: none;">
+  <div id="minutes-root" data-is-host="{{ is_host|yesno:'true,false' }}">
+
+    {# base: 기본정보(안건/일시/장소/참석인원) + 주요안건 #}
+    <div id="minutes-template-base">
+      <table class="minutes-table">
+        <colgroup>
+          <col style="width: 20%;">
+          <col style="width: 80%;">
+        </colgroup>
+        <tbody>
+          <tr>
+            <th>안 건</th>
+            <td>
+              {{ meeting.title }}
+            </td>
+          </tr>
+          <tr>
+            <th>일 시</th>
+            <td>{{ meeting.meet_date_time|date:"Y.m.d H:i" }}</td>
+          </tr>
+          <tr>
+            <th>장 소</th>
+            <td>{{ meeting.place }}</td>
+          </tr>
+          <tr>
+            <th>참석인원</th>
+            <td>{{ meeting.attendees.count }}</td>
+          </tr>
+          <tr>
+            <th>주요안건</th>
+            <td>
+              <div class="minutes-editbox" contenteditable="true">
+                {# 필요하다면 서버에서 기본값을 넣을 수도 있음 #}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {# contents: 회의 내용 #}
+    <div id="minutes-template-contents">
+      <table class="minutes-table">
+        <colgroup>
+          <col style="width: 20%;">
+          <col style="width: 80%;">
+        </colgroup>
+        <tbody>
+          <tr>
+            <th>회의 내용</th>
+            <td>
+              <div class="minutes-editbox" contenteditable="true"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {# results: 회의 결과 #}
+    <div id="minutes-template-results">
+      <table class="minutes-table">
+        <colgroup>
+          <col style="width: 20%;">
+          <col style="width: 80%;">
+        </colgroup>
+        <tbody>
+          <tr>
+            <th>회의 결과</th>
+            <td>
+              <div class="minutes-editbox" contenteditable="true"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {# todos: 해야 할 일 #}
+    <div id="minutes-template-todos">
+      <table class="minutes-table">
+        <colgroup>
+          <col style="width: 20%;">
+          <col style="width: 80%;">
+        </colgroup>
+        <tbody>
+          <tr>
+            <th>해야 할 일</th>
+            <td>
+              <div class="minutes-editbox" contenteditable="true"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {# 참석자 표 (PDF 양식의 하단 표와 맞추기 위한 용도, 웹에서는 읽기 전용으로만 표시해도 됨) #}
+    <div id="minutes-template-attendees">
+      <table class="minutes-table">
+        <thead>
+          <tr>
+            <th colspan="3">참 석 자</th>
+          </tr>
+          <tr>
+            <th style="width: 33%;">소 속</th>
+            <th style="width: 33%;">성 명</th>
+            <th style="width: 34%;">서 명</th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for att in meeting.attendees.all %}
+              <tr>
+                <td>
+                  {% if att.user.dept %}
+                    {{ att.user.dept.dept_name }}
+                  {% endif %}
+                </td>
+                <td>{{ att.user.name }}</td>
+                <td>(인)</td>
+              </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>  {# minutes-root 끝 #}
+  </div>  {# minutes-templates 끝 #}
+
+{% if is_host %}
+  {# ====== 회의록 구성 선택 팝업 ====== #}
+  <div class="minutes-config-overlay" id="minutes-config-overlay" style="display:none;">
+    <div class="minutes-config-modal">
+      <div class="minutes-config-header">
+        <h3>회의록 구성 선택</h3>
+        <button type="button" class="minutes-config-close" id="minutes-config-close">
+          ✕
+        </button>
       </div>
-    </section>
+
+      <div class="minutes-config-body">
+        <form id="minutes-config-form">
+          <label class="minutes-config-item">
+            <input
+              type="checkbox"
+              name="minutes_section"
+              value="base"
+              checked
+            />
+            기본 정보 / 주요안건
+          </label>
+
+          <label class="minutes-config-item">
+            <input
+              type="checkbox"
+              name="minutes_section"
+              value="contents"
+              checked
+            />
+            회의 내용
+          </label>
+
+          <label class="minutes-config-item">
+            <input
+              type="checkbox"
+              name="minutes_section"
+              value="results"
+              checked
+            />
+            회의 결과
+          </label>
+
+          <label class="minutes-config-item">
+            <input
+              type="checkbox"
+              name="minutes_section"
+              value="todos"
+              checked
+            />
+            해야 할 일
+          </label>
+
+          <label class="minutes-config-item">
+            <input
+              type="checkbox"
+              name="minutes_section"
+              value="attendees"
+              checked
+            />
+            참석자 명단
+          </label>
+        </form>
+      </div>
+
+      <div class="minutes-config-footer">
+        <button type="button" class="minutes-config-btn" id="minutes-config-confirm">
+          확인
+        </button>
+        <button type="button" class="minutes-config-btn" id="minutes-config-cancel">
+          취소
+        </button>
+      </div>
+    </div>
   </div>
-</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_script %}
 <script src="{% static 'js/meeting_detail.js' %}"></script>
 {% endblock %}
+

@@ -11,7 +11,7 @@
 <div class="meeting-transcript-page">
   <!-- 상단 제목 + 우측 라인 -->
   <div class="transcript-header-row">
-    <h2 class="record-title">{{ meeting.title }}</h2>
+    <h2 class="record-title" id="recordTitle"></h2>
     <div class="record-title-line"></div>
   </div>
 
@@ -23,9 +23,7 @@
 
       <div class="assign-transcript-box">
         <!-- 실제 스크롤 영역 -->
-        <div class="assign-transcript-scroll" id="assign-transcript-scroll">
-          {{ transcript_html|safe }}
-        </div>
+        <div class="assign-transcript-scroll" id="assign-transcript-scroll" style="white-space: pre-line;"></div>
       </div>
 
       <div class="assign-transcript-actions">
@@ -51,7 +49,7 @@
         >
           전문 전체 복사
         </button>
-      </div>
+      </div> 
     </section>
 
     <!-- ========== 오른쪽 : 발화자 지정 + 전문 미리보기 ========== -->
@@ -61,75 +59,7 @@
         <div class="section-label">발화자 지정</div>
 
         <div class="speaker-assign-grid">
-          <div class="speaker-assign-column">
-            <div class="speaker-row">
-              <span class="speaker-label">발화자 1</span>
-              <select class="speaker-select" name="speaker1" id="speaker1">
-                {% for att in attendees %}
-                  <option value="{{ att.user.user_id }}">
-                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div class="speaker-row">
-              <span class="speaker-label">발화자 2</span>
-              <select class="speaker-select" name="speaker2" id="speaker2">
-                {% for att in attendees %}
-                  <option value="{{ att.user.user_id }}">
-                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div class="speaker-row">
-              <span class="speaker-label">발화자 3</span>
-              <select class="speaker-select" name="speaker3" id="speaker3">
-                {% for att in attendees %}
-                  <option value="{{ att.user.user_id }}">
-                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-
-          <div class="speaker-assign-column">
-            <div class="speaker-row">
-              <span class="speaker-label">발화자 4</span>
-              <select class="speaker-select" name="speaker4" id="speaker4">
-                {% for att in attendees %}
-                  <option value="{{ att.user.user_id }}">
-                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div class="speaker-row">
-              <span class="speaker-label">발화자 5</span>
-              <select class="speaker-select" name="speaker5" id="speaker5">
-                {% for att in attendees %}
-                  <option value="{{ att.user.user_id }}">
-                    {{ att.user.name }} ({{ att.user.dept.dept_name }})
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 전문 미리보기 -->
-      <div class="preview-header-row">
-        <div class="section-label">전문 미리보기</div>
-      </div>
-
-      <div class="preview-box">
-        <div class="preview-scroll" id="preview-scroll">
-          {{ preview_html|safe }}
+          <div class="speaker-assign-column" id="speakerAssignColumn"></div>
         </div>
       </div>
 
@@ -141,9 +71,81 @@
     </section>
   </div>
 </div>
-{% endblock %}
+<script>
+  const meetingId = "{{ meeting_id }}";
+  const recordTitle = document.getElementById("recordTitle")
+  const transcript = document.getElementById("assign-transcript-scroll")
+  const container = document.getElementById("speakerAssignColumn");
 
+  fetch(`/meetings/${meetingId}/transcript_api/`)
+    .then(response => response.json())
+    .then(data => {
+      const speakers = data.speakers
+      
+      const speakerMap = {};
+      speakers.forEach(sp => {
+        speakerMap[sp] = sp;
+      });
+      console.log(speakerMap)
+      recordTitle.textContent = data.meeting_title;
+      const rawTranscriptData = JSON.parse(data.transcript.replaceAll("'", '"'));
+      transcript.textContent = transcript_parse(rawTranscriptData, speakerMap).join("\n")
+      
+
+      speakers.forEach(speaker => {
+        const row = document.createElement("div");
+        row.className = "speaker-row";
+        const label = document.createElement("span");
+
+        label.className = "speaker-label";
+        label.textContent = speaker;
+
+        const select = document.createElement("select");
+        select.className = "speaker-select";
+        select.name = speaker;
+        select.id = speaker;
+
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = speaker;
+        select.appendChild(emptyOption);
+
+        data.attendees.forEach(att => {
+          const option = document.createElement("option");
+          option.value = att.user_id;
+          option.textContent = `${att.name} (${att.dept_name})`;
+          select.appendChild(option);
+        });
+
+        select.addEventListener("change", e => {
+          speakerMap[e.target.id] = e.target.options[e.target.selectedIndex].text;
+          console.log(speakerMap);
+          const parsedTranscript = transcript_parse(rawTranscriptData, speakerMap)
+          transcript.textContent = parsedTranscript.join("\n")
+        });
+
+        row.appendChild(label);
+        row.appendChild(select);
+        container.appendChild(row);
+      })
+    })
+    .catch(err => console.error("API 호출 실패:", err));
+  
+  function transcript_parse(data, setkeys=false) {
+    const resultList = [];
+
+    for (const f of data) {
+      for (let [key, value] of Object.entries(f)) {
+        if (setkeys && setkeys[key]) {
+          key = setkeys[key];
+        }
+        resultList.push(`${key}: ${value}`);
+      }
+    }
+    return resultList;
+  }
+</script>
+{% endblock %}
 {% block extra_script %}
 <script src="{% static 'js/meeting_common.js' %}"></script>
-<script src="{% static 'js/meeting_transcript.js' %}"></script>
 {% endblock %}

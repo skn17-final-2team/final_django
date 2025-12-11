@@ -1,4 +1,4 @@
-import os, json, requests
+import requests
 from django.conf import settings
 
 
@@ -13,4 +13,4 @@ def get_stt(presigned_url):
         url + "stt",
         json={'audio_url': presigned_url}
     )
-    return res.json()
+    return res

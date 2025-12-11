@@ -4,7 +4,7 @@
   display: flex;
   width: 100%;
   min-height: 100vh;
-  background-color: #ffffff;
+  background: linear-gradient(135deg, #eef2ff 0%, #fdf2f8 100%);
 }
 
 .app-main {
@@ -27,8 +27,9 @@
 .sidebar {
   width: 260px;
   flex: 0 0 260px;  /* ← 이 줄 추가: flex-basis + shrink 방지 */
-  background-color: var(--color-sidebar-bg);
+  background: linear-gradient(180deg, #ffffff 0%, #eef2ff 65%, #fdf2f8 100%);
   border-right: 1px solid var(--color-sidebar-border);
+  box-shadow: 6px 0 18px rgba(99, 102, 241, 0.08);
   color: var(--color-text);
   display: flex;
   flex-direction: column;
@@ -87,7 +88,7 @@
   padding: 0.45rem 0.75rem;
   border-radius: 8px;
   font-size: 0.875rem;
-  color: #5A5A5A;              /* 기본 글자 색 */
+  color: #374151;              /* 기본 글자 색 */
   font-weight: 500;            /* 기본은 보통 굵기 */
   text-decoration: none;
   transition: background-color 0.15s ease, color 0.15s ease;
@@ -95,8 +96,8 @@
 
 /* 새 회의 포함: 모든 사이드바 링크 hover 시 */
 .sidebar-link:hover {
-  background-color: #dadbdf;   /* 홈 active와 동일 */
-  color: #5A5A5A;              /* 글씨 색 동일 */
+  background-color: rgba(99, 102, 241, 0.12);
+  color: #1f2937;
   font-weight: 600;            /* ★ hover 시 굵게 */
   text-decoration: none;
 }
@@ -111,23 +112,30 @@
 
 /* 활성 메뉴 (홈 등) */
 .sidebar-item-active .sidebar-link {
-  background-color: #dadbdf;
-  color: #5A5A5A;              /* var(--color-text) 대신 고정 */
+  background-color: rgba(99, 102, 241, 0.18);
+  color: #312e81;              /* var(--color-text) 대신 고정 */
   font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.25);
 }
 
 /* 회의 목록 접기/펼치기 버튼 */
 
 .sidebar-collapse {
   width: 100%;
-  border: none;
-  background: transparent;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.45);
   padding: 0.4rem 0.75rem;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.sidebar-collapse:hover {
+  background-color: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.2);
 }
 
 .sidebar-collapse-left {
@@ -138,7 +146,7 @@
 
 .sidebar-collapse-icon {
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: #818cf8;
   transition: transform 0.15s ease;
 }
 
@@ -193,18 +201,19 @@
   gap: 0.6rem;
   padding: 0.6rem 0.75rem;
   border-radius: 10px;
-  background-color: #ffffff;
-  border: 1px solid #e0e0e0;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.95), rgba(236, 247, 255, 0.9));
+  border: 1px solid rgba(99, 102, 241, 0.15);
   text-decoration: none;
   color: var(--color-text);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  box-shadow: var(--shadow-soft);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
 .meeting-card:hover {
-  border-color: #d0d0d0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
-  background-color: #ffffff;
+  border-color: rgba(79, 70, 229, 0.4);
+  box-shadow: 0 16px 35px rgba(79, 70, 229, 0.15);
+  background: linear-gradient(120deg, rgba(255, 255, 255, 1), rgba(230, 246, 255, 0.95));
+  transform: translateY(-2px);
 }
 
 .meeting-card-icon {
@@ -266,8 +275,9 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  background: #f9fafb;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--color-header-bg);
+  border-bottom: 1px solid var(--color-header-border);
+  box-shadow: 0 12px 30px rgba(148, 163, 184, 0.2);
 }
 
 /* 왼쪽 타이틀 영역 */
@@ -275,7 +285,7 @@
   font-size: 1.25rem;
   font-weight: 600;
   margin: 0;
-  color: #5A5A5A;
+  color: #1f2933;
 }
 
 /* 오른쪽 유저 정보 */
@@ -296,7 +306,7 @@
 .header-user-info .user-name {
   font-size: 0.95rem;
   font-weight: 500;
-  color: #5a5a5a;
+  color: #1f2937;
 }
 
 .admin-dept-tree {

@@ -39,12 +39,12 @@ function handleFiles(fileList) {
     if (!fileList || fileList.length === 0) return;
 
     const file = fileList[0];      // 한 개만 사용
-    const allowed = ["png", "wav"];
+    const allowed = ["wav"];
 
     // 확장자 체크
     const ext = file.name.split(".").pop().toLowerCase();
     if (!allowed.includes(ext)) {
-        alert("png 또는 wav 파일만 업로드할 수 있습니다.");
+        alert("wav 파일만 업로드할 수 있습니다.");
         // 선택 초기화
         selectedFiles = [];
         preview.innerHTML = '';
@@ -98,7 +98,7 @@ uploadBtn.addEventListener('click', async (e) => {
             selectedFiles = [];
             preview.innerHTML = '';
             if (hiddenInput) hiddenInput.value = "";
-            window.location.href = `/meetings/${meetingId}/transcript/`;
+            window.location.href = `/meetings/${meetingId}/rendering/`;
         } else {
             const data = await res.json().catch(() => ({}));
             alert(`업로드 실패: ${data.error ?? '알 수 없는 오류'}`);
