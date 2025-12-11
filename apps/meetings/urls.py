@@ -11,6 +11,7 @@ from .views import (
     meeting_summary,
     MeetingRenderingView,
     meeting_transcript_prepare,
+    meeting_transcript_save,
     minutes_download,
     minutes_save,
     meeting_transcript_api,
@@ -28,6 +29,7 @@ urlpatterns = [
 
     path("<int:meeting_id>/transcript/", MeetingTranscriptView.as_view(), name="meeting_transcript"),
     path("<int:meeting_id>/transcript_api/", meeting_transcript_api, name="meeting_transcript_api"),
+    path("<int:meeting_id>/transcript/save/", meeting_transcript_save, name="meeting_transcript_save"),
 
     path("<int:meeting_id>/detail", MeetingDetailView.as_view(), name="meeting_detail"),
 

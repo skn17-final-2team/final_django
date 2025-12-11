@@ -9,6 +9,7 @@
 
 {% block content %}
 <div class="meeting-transcript-page">
+  <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
   <!-- 상단 제목 + 우측 라인 -->
   <div class="transcript-header-row">
     <h2 class="record-title" id="recordTitle"></h2>
@@ -60,11 +61,14 @@
 
         <div class="speaker-assign-grid">
           <div class="speaker-assign-column" id="speakerAssignColumn"></div>
+          <p class="speaker-empty-text" id="speakerAssignEmpty" style="display: none;">
+            발화자 매핑이 필요한 데이터가 없습니다.
+          </p>
         </div>
       </div>
 
       <div class="meeting-transcript-actions">
-        <button type="button" class="btn-transcript-save">
+        <button type="button" class="btn-transcript-save" id="btn-transcript-save">
           저장
         </button>
       </div>
@@ -73,77 +77,250 @@
 </div>
 <script>
   const meetingId = "{{ meeting_id }}";
-  const recordTitle = document.getElementById("recordTitle")
-  const transcript = document.getElementById("assign-transcript-scroll")
+  const recordTitle = document.getElementById("recordTitle");
+  const transcript = document.getElementById("assign-transcript-scroll");
   const container = document.getElementById("speakerAssignColumn");
+  const containerEmpty = document.getElementById("speakerAssignEmpty");
+  const saveButton = document.getElementById("btn-transcript-save");
+  const csrfInput = document.getElementById("csrf-token");
+  const csrftoken = csrfInput ? csrfInput.value : "";
+
+  let originalTranscriptData = [];
+  let currentSpeakerMap = {};
+  let hasStructuredTranscript = false;
 
   fetch(`/meetings/${meetingId}/transcript_api/`)
     .then(response => response.json())
     .then(data => {
-      const speakers = data.speakers
-      
-      const speakerMap = {};
-      speakers.forEach(sp => {
-        speakerMap[sp] = sp;
-      });
-      console.log(speakerMap)
-      recordTitle.textContent = data.meeting_title;
-      transcript_data = JSON.parse(data.transcript.replaceAll("'", '"'));
-      transcript.textContent = transcript_parse(transcript_data).join("\n")
-      
+      recordTitle.textContent = data.meeting_title || "";
 
-      speakers.forEach(speaker => {
-        const row = document.createElement("div");
-        row.className = "speaker-row";
-        const label = document.createElement("span");
+      let structured = Array.isArray(data.transcript_structured)
+        ? data.transcript_structured
+        : [];
+      const initialPlain = data.transcript_plain || data.transcript || "";
 
-        label.className = "speaker-label";
-        label.textContent = speaker;
+      if (!structured.length) {
+        const fallbackStructured = tryParseStructuredFromRaw(data.transcript);
+        if (fallbackStructured) {
+          structured = fallbackStructured;
+        }
+      }
 
-        const select = document.createElement("select");
-        select.className = "speaker-select";
-        select.name = speaker;
-        select.id = speaker;
-
-        const emptyOption = document.createElement("option");
-        emptyOption.value = "";
-        emptyOption.textContent = speaker;
-        select.appendChild(emptyOption);
-
-        data.attendees.forEach(att => {
-          const option = document.createElement("option");
-          option.value = att.user_id;
-          option.textContent = `${att.name} (${att.dept_name})`;
-          select.appendChild(option);
-        });
-
-        select.addEventListener("change", e => {
-          speakerMap[e.target.id] = e.target.options[e.target.selectedIndex].text;
-          console.log(speakerMap);
-          transcript_data = transcript_parse(transcript_data, speakerMap)
-          transcript.textContent = transcript_data.join("\n")
-        });
-
-        row.appendChild(label);
-        row.appendChild(select);
-        container.appendChild(row);
-      })
+      if (structured.length) {
+        hasStructuredTranscript = true;
+        originalTranscriptData = structured;
+        const speakers = extractSpeakers(
+          Array.isArray(data.speakers) && data.speakers.length ? data.speakers : null,
+          structured,
+        );
+        buildSpeakerAssignRows(speakers, data.attendees || []);
+        renderTranscriptText();
+      } else {
+        hasStructuredTranscript = false;
+        if (container) {
+          container.innerHTML = "";
+        }
+        if (containerEmpty) {
+          containerEmpty.style.display = "block";
+        }
+        transcript.textContent = initialPlain;
+      }
     })
     .catch(err => console.error("API 호출 실패:", err));
-  
-  function transcript_parse(data, setkeys=false) {
-    const resultList = [];
-    const keys = new Set();
 
-    for (const f of data) {
-      for (let [key, value] of Object.entries(f)) {
-        if (setkeys) {
-          key = setkeys[key];
-        }
-        resultList.push(`${key}: ${value}`);
-      }
+  function tryParseStructuredFromRaw(raw) {
+    if (!raw || typeof raw !== "string") {
+      return null;
     }
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    } catch (err) {}
+    try {
+      // 마지막 수단: eval 대신 new Function 사용으로 JSON 유사 포맷 지원
+      // eslint-disable-next-line no-new-func
+      const evaluated = new Function(`return (${raw});`)();
+      if (Array.isArray(evaluated)) {
+        return evaluated;
+      }
+    } catch (err) {}
+    return null;
+  }
+
+  function extractSpeakers(speakersFromApi, structuredData) {
+    if (Array.isArray(speakersFromApi) && speakersFromApi.length) {
+      return speakersFromApi;
+    }
+    const set = new Set();
+    structuredData.forEach(item => {
+      if (item && typeof item === "object") {
+        Object.keys(item).forEach(key => set.add(key));
+      }
+    });
+    return Array.from(set);
+  }
+
+  function buildSpeakerAssignRows(speakers, attendees) {
+    if (!container) return;
+    container.innerHTML = "";
+    if (!Array.isArray(speakers) || !speakers.length) {
+      if (containerEmpty) containerEmpty.style.display = "block";
+      hasStructuredTranscript = false;
+      transcript.textContent = "";
+      return;
+    }
+
+    if (containerEmpty) containerEmpty.style.display = "none";
+
+    speakers.forEach((speaker) => {
+      currentSpeakerMap[speaker] = currentSpeakerMap[speaker] || speaker;
+      const row = document.createElement("div");
+      row.className = "speaker-row";
+
+      const label = document.createElement("span");
+      label.className = "speaker-label";
+      label.textContent = speaker;
+
+      const select = document.createElement("select");
+      select.className = "speaker-select";
+      select.name = speaker;
+      select.dataset.speakerKey = speaker;
+
+      const emptyOption = document.createElement("option");
+      emptyOption.value = "";
+      emptyOption.textContent = speaker;
+      select.appendChild(emptyOption);
+
+      attendees.forEach(att => {
+        const option = document.createElement("option");
+        option.value = att.user_id;
+        option.textContent = att.dept_name ? `${att.name} (${att.dept_name})` : att.name;
+        select.appendChild(option);
+      });
+
+      const currentLabel = currentSpeakerMap[speaker];
+      if (currentLabel && currentLabel !== speaker) {
+        const match = Array.from(select.options).find(
+          (opt) => opt.textContent === currentLabel || opt.value === currentLabel
+        );
+        if (match) {
+          match.selected = true;
+        }
+      }
+
+      select.addEventListener("change", (e) => {
+        const key = e.target.dataset.speakerKey;
+        const selectedOption = e.target.options[e.target.selectedIndex];
+        currentSpeakerMap[key] = e.target.value
+          ? selectedOption.textContent
+          : key;
+        renderTranscriptText();
+      });
+
+      row.appendChild(label);
+      row.appendChild(select);
+      container.appendChild(row);
+    });
+  }
+
+  function transcript_parse(data, speakerMap) {
+    const resultList = [];
+    if (!Array.isArray(data)) return resultList;
+
+    data.forEach(segment => {
+      if (!segment || typeof segment !== "object") {
+        return;
+      }
+      Object.entries(segment).forEach(([rawKey, value]) => {
+        if (typeof value !== "string") return;
+        const mappedKey =
+          speakerMap && speakerMap[rawKey] ? speakerMap[rawKey] : rawKey;
+        resultList.push(`${mappedKey}: ${value}`);
+      });
+    });
     return resultList;
+  }
+
+  function renderTranscriptText(returnPlain = true) {
+    if (!hasStructuredTranscript) {
+      return transcript.textContent || "";
+    }
+    const lines = transcript_parse(originalTranscriptData, currentSpeakerMap);
+    const joined = lines.join("\n");
+    transcript.textContent = joined;
+    if (returnPlain) {
+      return joined;
+    }
+    return originalTranscriptData.map((segment) => {
+      if (!segment || typeof segment !== "object") {
+        return segment;
+      }
+      const cloned = {};
+      Object.entries(segment).forEach(([key, value]) => {
+        const mappedKey = currentSpeakerMap[key] || key;
+        cloned[mappedKey] = value;
+      });
+      return cloned;
+    });
+  }
+
+  if (saveButton) {
+    saveButton.addEventListener("click", async () => {
+      const payload = {};
+      if (hasStructuredTranscript) {
+        const structuredData = renderTranscriptText(false);
+        if (!Array.isArray(structuredData) || !structuredData.length) {
+          alert("저장할 전문 내용이 없습니다.");
+          return;
+        }
+        payload.transcript_structured = structuredData;
+      } else {
+        const plainText = (transcript.textContent || "").trim();
+        if (!plainText) {
+          alert("저장할 전문 내용이 없습니다.");
+          return;
+        }
+        payload.transcript_text = plainText;
+      }
+      if (!csrftoken) {
+        alert("CSRF 토큰을 찾을 수 없어 저장할 수 없습니다.");
+        return;
+      }
+
+      saveButton.disabled = true;
+      const originalLabel = saveButton.textContent;
+      saveButton.textContent = "저장 중...";
+
+      try {
+        const res = await fetch(`/meetings/${meetingId}/transcript/save/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          const msg = data && data.error ? data.error : "전문 저장 중 오류가 발생했습니다.";
+          alert(msg);
+          return;
+        }
+        alert("전문이 저장되었습니다.");
+        if (data.redirect_url) {
+          window.location.href = data.redirect_url;
+        }
+      } catch (error) {
+        console.error("전문 저장 실패:", error);
+        alert("전문 저장 중 네트워크 오류가 발생했습니다.");
+      } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = originalLabel;
+      }
+    });
   }
 </script>
 {% endblock %}

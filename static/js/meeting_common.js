@@ -6,28 +6,28 @@ document.addEventListener("DOMContentLoaded", function () {
   copyBtn.addEventListener("click", function () {
     const scrollEl = document.getElementById("assign-transcript-scroll");
     if (!scrollEl) {
-      alert("ë³µì‚¬í•  ì „ë¬¸ ì˜ì—­ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
+      alert("?îõ?????? ??????Ïï? ??????æÀ?.");
       return;
     }
 
     const text = (scrollEl.innerText || scrollEl.textContent || "").trim();
     if (!text) {
-      alert("ë³µì‚¬í•  ë‚´ìš©ì´ ì¡´ì¬í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.");
+      alert("?îõ????ñ©????ñ©???? ????æÀ?.");
       return;
     }
 
-    // ìµœì‹  ë¸Œë¼ìš°ì €: Clipboard API
+    // ?ô¯? ??????: Clipboard API
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard
         .writeText(text)
-        .then(() => alert("ì „ë¬¸ ì „ì²´ê°€ í´ë¦½ë³´ë“œì— ë³µì‚¬ë˜ì—ˆìŠµë‹ˆë‹¤."))
+        .then(() => alert("??? ?ı³ÚÕíõ¢æ ?ğÂ??ğÂ????îõ?????????"))
         .catch(() => fallbackCopy(text));
     } else {
       fallbackCopy(text);
     }
   });
 
-  // êµ¬í˜• ë¸Œë¼ìš°ì €ìš© ë³µì‚¬ ë°©ì‹
+  // ñ÷?? ?????????îõ? ?¦â?
   function fallbackCopy(text) {
     const textarea = document.createElement("textarea");
     textarea.value = text;
@@ -42,12 +42,12 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       const successful = document.execCommand("copy");
       if (successful) {
-        alert("ì „ë¬¸ ì „ì²´ê°€ í´ë¦½ë³´ë“œì— ë³µì‚¬ë˜ì—ˆìŠµë‹ˆë‹¤.");
+        alert("??? ?ı³ÚÕíõ¢æ ?ğÂ??ğÂ????îõ?????????");
       } else {
-        alert("ë³µì‚¬ ì‹¤íŒ¨. ë‹¤ë¥¸ ë¸Œë¼ìš°ì €ì—ì„œ ì‹œë„í•´ì£¼ì„¸ìš”.");
+        alert("?îõ? ?ªí?. ?ªë«¸ ????????? ????ñ©£¼???.");
       }
     } catch (err) {
-      alert("ë³µì‚¬ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.");
+      alert("?îõ? ???ªë?íõ¢æ ?ô¯?????æÀ?.");
     }
 
     document.body.removeChild(textarea);
@@ -58,18 +58,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const saveBtn = document.getElementById("btn-transcript-save");
   if (!saveBtn) return;
 
-  saveBtn.addEventListener("click", function () {
-    const summaryUrl = saveBtn.dataset.summaryUrl;
-    if (!summaryUrl) {
-      alert("ìš”ì•½ í˜ì´ì§€ URLì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
-      return;
-    }
+  const summaryUrl = saveBtn.dataset.summaryUrl;
+  if (!summaryUrl) {
+    return;
+  }
 
+  saveBtn.addEventListener("click", function (event) {
+    event.preventDefault();
     window.location.href = summaryUrl;
   });
-});
-
-document.getElementById("btn-transcript-save").addEventListener("click", function () {
-    const url = this.dataset.summaryUrl;
-    window.location.href = url;
 });

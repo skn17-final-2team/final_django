@@ -1,26 +1,26 @@
-/* ========= 공통 기본 스타일 ========= */
+/* ========= 공�?기본 ?��???========= */
 
 :root {
-  /* 라이트 테마 사이드바/헤더/배경 */
-  --color-bg: #e0e0e0;                 /* 전체 배경 */
-  --color-bg-alt: #ffffff;             /* 콘텐츠 영역 연회색 */
-  --color-sidebar-bg: #F9FAFB;         /* 아주 밝은 회색 사이드바 */
-  --color-sidebar-border: #e0e0e0;     /* 연한 보더 */
-  --color-header-bg: #F9FAFB;          /* 헤더 흰색 */
-  --color-header-border: #e0e0e0;      /* 얇은 연회색 보더 */
+  /* ?��???�마 ?��?�바/?�더/배경 */
+  --color-bg: #f6f8fb;                 /* ?��?배경 */
+  --color-bg-alt: rgba(255, 255, 255, 0.92);             /* �?��?????�회??*/
+  --color-sidebar-bg: rgba(255, 255, 255, 0.94);         /* ?��?�? ????��?�바 */
+  --color-sidebar-border: rgba(255, 255, 255, 0.4);     /* ?�한 보더 */
+  --color-header-bg: rgba(255, 255, 255, 0.9);          /* ?�더 ?�색 */
+  --color-header-border: rgba(255, 255, 255, 0.5);      /* ?? ?�회??보더 */
 
-  /* 텍스트 */
-  --color-text: #212121;               /* 본문 텍스트 (짙은 회색) */
-  --color-text-muted: #757575;         /* 설명용 텍스트 */
+  /* ????*/
+  --color-text: #1f2933;               /* 본문 ????(�? ??? */
+  --color-text-muted: #6b7280;         /* ?��???????*/
 
-  /* 포커스/강조(구글 머티리얼 블루) */
-  --color-primary: #2962ff;            /* Material Blue */
-  --color-primary-hover: #0039cb;
+  /* ?�커??강�?구�? 머티�??블�? */
+  --color-primary: #6573ff;            /* Material Blue */
+  --color-primary-hover: #4f58d9;
 
-  /* 버튼/보더 */
-  --color-border-subtle: #e0e0e0;
+  /* �??보더 */
+  --color-border-subtle: rgba(255, 255, 255, 0.45);
 
-  /* 애니메이션 변수 */
+  /* ??�메???변??*/
   --animate-spin: spin 1s linear infinite;
   --shimmer-width: 160px;
   --gap: 2rem;
@@ -43,20 +43,20 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
   color: var(--color-text);
-  background-color: var(--color-bg);
+  background: var(--gradient-bg), #f6f8fd;
 }
 
-/* Tailwind의 .all-\[unset\] 유틸리티를 그대로 구현 */
+/* Tailwind??.all-\[unset\] ??�리?��?그�?�?구현 */
 .all-\[unset\] {
   all: unset;
 }
 
-/* 배경 색 유틸리티 비슷한 느낌 */
+/* 배경 ????�리??�??????*/
 .bg-body {
-  background-color: var(--color-bg);
+  background: var(--gradient-bg), #f6f8fd;
 }
 
-/* 버튼 공통 스타일 */
+/* �??공�??��???*/
 .btn {
   display: inline-flex;
   align-items: center;
@@ -91,7 +91,7 @@ body {
   background-color: #f9fafb;
 }
 
-/* ========= tailwind.css에서 가져온 애니메이션 구현 ========= */
+/* ========= tailwind.css???가?��???�메???구현 ========= */
 
 .animate-fade-in {
   animation: fade-in 1s var(--animation-delay, 0s) ease forwards;
@@ -196,13 +196,13 @@ body {
   }
 }
 
-/* ===== 비밀번호 변경 모달 공통 ===== */
+/* ===== �?�??변�?모�?공�?===== */
 
 .hidden {
   display: none;
 }
 
-/* 전체 오버레이 */
+/* ?��??��????*/
 .modal-overlay {
   position: fixed;
   inset: 0; /* top, right, bottom, left */
@@ -217,7 +217,7 @@ body {
   display: none;
 }
 
-/* 모달 박스 */
+/* 모�?�??*/
 .modal-box.pw-modal-box {
   background: #ffffff;
   border-radius: 24px;
@@ -226,10 +226,10 @@ body {
   max-width: calc(100% - 40px);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
   box-sizing: border-box;
-  text-align: left; /* 입력/안내 문구를 왼쪽 정렬 */
+  text-align: left; /* ??????문구�??�쪽 ???*/
 }
 
-/* 제목 */
+/* ?��?*/
 .pw-title {
   font-size: 28px;
   font-weight: 700;
@@ -237,7 +237,7 @@ body {
   margin: 0 0 32px 0;
 }
 
-/* 섹션 */
+/* ?�션 */
 .pw-section {
   margin-bottom: 28px;
 }
@@ -249,19 +249,19 @@ body {
   margin: 0 0 12px 0;
 }
 
-/* 안내 문구 */
+/* ???문구 */
 .pw-hint {
   margin: 0 0 12px 0;
   font-size: 13px;
   color: #4c66d6;
 }
 
-/* 입력 그룹 */
+/* ???그룹 */
 .pw-input-group {
   margin-bottom: 10px;
 }
 
-/* 입력창 */
+/* ??��?*/
 .pw-input {
   width: 100%;
   height: 52px;
@@ -283,7 +283,7 @@ body {
   background: #ffffff;
 }
 
-/* 에러 텍스트 */
+/* ???????*/
 .pw-error-text {
   display: none;
   margin-top: 6px;
@@ -292,24 +292,24 @@ body {
   text-align: left;
 }
 
-/* JS에서 이 클래스를 붙이면 나타나게 */
+/* JS??????�래?��? �?��????�게 */
 .pw-error-text.visible {
   display: block;
 }
 
-/* 파란 안내 텍스트 (비밀번호가 일치합니다.) */
+/* ?? ???????(�?�?��? ?��??�니??) */
 .pw-info-text {
   display: none;
   margin-top: 6px;
   font-size: 12px;
-  color: #4c66d6;  /* 파란색 */
+  color: #4c66d6;  /* ????*/
   text-align: left;
 }
 .pw-info-text.visible {
   display: block;
 }
 
-/* 버튼 영역 */
+/* �?????*/
 .pw-actions {
   display: flex;
   justify-content: center;
@@ -317,7 +317,7 @@ body {
   margin-top: 28px;
 }
 
-/* 모달 버튼 */
+/* 모�?�??*/
 .btn-modal {
   min-width: 120px;
   height: 44px;
@@ -327,13 +327,13 @@ body {
   cursor: pointer;
 }
 
-/* 변경 버튼 */
+/* 변�?�??*/
 .btn-primary {
   background: #b5b5b5;
   color: #ffffff;
 }
 
-/* 취소 버튼 */
+/* 취소 �??*/
 .btn-secondary {
   background: #ffffff;
   color: #555555;
@@ -347,4 +347,6 @@ body {
 .btn-secondary:hover {
   background: #f5f5f5;
 }
+
+
 

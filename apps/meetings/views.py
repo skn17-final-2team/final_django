@@ -6,6 +6,7 @@ from django.db.models import Prefetch, Q
 
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponse
+from django.urls import reverse
 
 from .models import Meeting, Attendee, Domain
 from django.contrib import messages
@@ -16,7 +17,7 @@ from apps.meetings.utils.s3_upload import upload_raw_file_bytes, get_presigned_u
 from apps.meetings.utils.runpod import get_stt, runpod_health
 
 from apps.meetings.models import S3File
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_POST
 from datetime import date
 
 from django.template.loader import render_to_string  
@@ -321,25 +322,128 @@ class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
         context["meeting_id"] = meeting_id
         return context
 
-# @require_GET  
+@require_GET
 def meeting_transcript_api(request, meeting_id):
     meeting = get_object_or_404(Meeting, pk=meeting_id)
-    meeting = Meeting.objects.get(pk=meeting_id)
-    attendees_qs = (meeting.attendees.select_related("user", "user__dept").all())
+    attendees_qs = meeting.attendees.select_related("user", "user__dept").all()
 
-    keys = set()
-    for f in ast.literal_eval(meeting.transcript):
-        for key, _ in f.items():
-            keys.add(key)
-    speakers = sorted(keys)
+    raw_transcript = meeting.transcript or ""
+    structured_transcript = []
+    speakers = []
+    transcript_plain = raw_transcript.replace("\r\n", "\n")
 
-    return JsonResponse({
-        "meeting_title": meeting.title,
-        "transcript": meeting.transcript,
-        "record_url": meeting.record_url,
-        "attendees": [{"user_id": a.user_id,"name": a.user.name, "dept_name": a.user.dept.dept_name} for a in attendees_qs],
-        "speakers": speakers
-    })
+    if raw_transcript:
+        parsed = None
+        try:
+            parsed = json.loads(raw_transcript)
+        except (ValueError, TypeError):
+            try:
+                parsed = ast.literal_eval(raw_transcript)
+            except (ValueError, SyntaxError):
+                parsed = None
+
+        if isinstance(parsed, list):
+            speaker_keys = set()
+            plain_lines = []
+            normalized_segments = []
+
+            for segment in parsed:
+                if not isinstance(segment, dict):
+                    continue
+                normalized_segment = {}
+                for key, value in segment.items():
+                    key_str = str(key)
+                    value_str = str(value)
+                    normalized_segment[key_str] = value_str
+                    speaker_keys.add(key_str)
+                    plain_lines.append(f"{key_str}: {value_str}")
+                if normalized_segment:
+                    normalized_segments.append(normalized_segment)
+
+            if normalized_segments:
+                structured_transcript = normalized_segments
+                speakers = sorted(speaker_keys)
+                transcript_plain = "\n".join(plain_lines)
+        # else: keep defaults (plain text only)
+
+    attendees_payload = [
+        {
+            "user_id": attendee.user_id,
+            "name": attendee.user.name,
+            "dept_name": attendee.user.dept.dept_name if attendee.user.dept else "",
+        }
+        for attendee in attendees_qs
+    ]
+
+    return JsonResponse(
+        {
+            "meeting_title": meeting.title,
+            "transcript": raw_transcript,
+            "transcript_plain": transcript_plain,
+            "transcript_structured": structured_transcript,
+            "record_url": str(meeting.record_url) if meeting.record_url else "",
+            "attendees": attendees_payload,
+            "speakers": speakers,
+        }
+    )
+
+
+@require_POST
+def meeting_transcript_save(request, meeting_id):
+    meeting = get_object_or_404(Meeting, pk=meeting_id)
+
+    session_user_id = request.session.get("login_user_id")
+    request_user_id = None
+    if hasattr(request, "user") and request.user.is_authenticated:
+        request_user_id = getattr(request.user, "user_id", None) or request.user.id
+
+    host_user_id = str(meeting.host_id) if meeting.host_id else None
+    has_permission = False
+    if host_user_id:
+        if session_user_id and str(session_user_id) == host_user_id:
+            has_permission = True
+        elif request_user_id and str(request_user_id) == host_user_id:
+            has_permission = True
+
+    if not has_permission:
+        return JsonResponse(
+            {"ok": False, "error": "전문을 저장할 권한이 없습니다."},
+            status=403,
+        )
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
+
+    transcript_text = (payload.get("transcript_text") or "").strip()
+    transcript_structured = payload.get("transcript_structured")
+
+    if transcript_structured:
+        if not isinstance(transcript_structured, list):
+            return JsonResponse(
+                {"ok": False, "error": "잘못된 전문 형식입니다."},
+                status=400,
+            )
+        try:
+            meeting.transcript = json.dumps(transcript_structured, ensure_ascii=False)
+        except (TypeError, ValueError):
+            return JsonResponse(
+                {"ok": False, "error": "전문 데이터를 처리할 수 없습니다."},
+                status=400,
+            )
+    elif transcript_text:
+        meeting.transcript = transcript_text
+    else:
+        return JsonResponse(
+            {"ok": False, "error": "저장할 전문 내용이 없습니다."},
+            status=400,
+        )
+
+    meeting.save(update_fields=["transcript"])
+
+    redirect_url = reverse("meetings:rendering", args=[meeting_id])
+    return JsonResponse({"ok": True, "redirect_url": redirect_url})
 
 
 
@@ -423,14 +527,11 @@ def meeting_record_upload(request, meeting_id):
     })
 
 def meeting_summary(request, meeting_id):
-    meeting = get_object_or_404(Meeting, pk=meeting_id)
-
-    return render(request, "meetings/meeting_summary.html", {
-        "meeting": meeting,
-    })
+    # 별도 요약 화면 대신 상세 페이지로 이동
+    return redirect("meetings:meeting_detail", meeting_id=meeting_id)
 
 class MeetingRenderingView(LoginRequiredSessionMixin, TemplateView):
-    template_name = "meetings/rendering.html"
+    template_name = "meetings/rending_stt.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

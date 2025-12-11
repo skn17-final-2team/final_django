@@ -199,6 +199,13 @@
   border-color: #b3b3b3;
 }
 
+.speaker-empty-text {
+  font-size: 13px;
+  color: #999999;
+  margin: 8px 0 0;
+  grid-column: 1 / -1;
+}
+
 /* 오른쪽 회색 기둥 데코 */
 .speaker-scroll-deco {
   position: absolute;
