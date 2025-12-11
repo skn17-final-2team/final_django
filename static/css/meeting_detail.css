@@ -1,11 +1,12 @@
 /* 페이지 전체 컨테이너 */
 .meeting-detail-page {
   background: #ffffff;
-  border-radius: 10px;
-  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  border: 1px solid #e0f2fe;
   padding: 24px 32px;
   box-sizing: border-box;
   min-height: calc(100vh - 120px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.06);
 }
 
 /* 상단 제목 + 라인 */
@@ -20,13 +21,13 @@
   margin: 0;
   font-size: 20px;
   font-weight: 700;
-  color: #5a5a5a;
+  color: #1e40af;
 }
 
 .detail-page-title-line {
   flex: 1 1 auto;
   height: 1px;
-  background-color: #e5e5e5;
+  background-color: #e0f2fe;
 }
 
 /* 회의 제목 행 */
@@ -38,7 +39,7 @@
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #333333;
+  color: #1e293b;
 }
 
 /* 좌우 2컬럼 */
@@ -52,7 +53,7 @@
 /* 공통 라벨 */
 .section-label {
   font-size: 14px;
-  color: #5a5a5a;
+  color: #475569;
   margin-bottom: 8px;
 }
 
@@ -67,9 +68,9 @@
 .detail-transcript-box {
   position: relative;
   display: flex;
-  background-color: #ffffff;
+  background-color: #fafeff;
   border-radius: 10px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid #e0f2fe;
   padding: 10px 12px;
   box-sizing: border-box;
   min-height: 420px;
@@ -81,7 +82,7 @@
   overflow-y: auto;
   font-size: 14px;
   line-height: 1.6;
-  color: #000000;
+  color: #1e293b;
 }
 
 /* 하단 텍스트 버튼들 */
@@ -97,7 +98,7 @@
   background: none;
   padding: 0;
   cursor: pointer;
-  color: #5a5a5a;
+  color: #475569;
 }
 
 .text-link-button:hover:not(.text-link-disabled) {
@@ -122,7 +123,7 @@
 /* 탭 헤더 */
 .detail-tabs {
   display: inline-flex;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e0f2fe;
   margin-bottom: 12px;
   gap: 4px;
 }
@@ -133,12 +134,12 @@
   background-color: transparent;
   padding: 6px 16px;
   font-size: 14px;
-  color: #777777;
+  color: #64748b;
   cursor: pointer;
 }
 
 .detail-tab-active {
-  color: #333333;
+  color: #1e293b;
   font-weight: 600;
 }
 
@@ -149,7 +150,7 @@
   right: 0;
   bottom: -1px;
   height: 2px;
-  background-color: #b3b3b3;
+  background-color: #3b82f6;
 }
 
 /* 탭 패널 컨테이너 */
@@ -170,7 +171,7 @@
 .detail-summary-box {
   background-color: #ffffff;
   border-radius: 10px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid #e0f2fe;
   padding: 14px 16px;
   box-sizing: border-box;
   min-height: 260px;
@@ -178,14 +179,14 @@
   overflow-y: auto;
   font-size: 14px;
   line-height: 1.6;
-  color: #333333;
+  color: #334155;
 }
 
 /* 태스크 박스 */
 .detail-task-box {
   background-color: #ffffff;
   border-radius: 10px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid #e0f2fe;
   box-sizing: border-box;
   padding: 12px 14px;
   min-height: 260px;
@@ -204,11 +205,11 @@
 }
 
 .detail-task-header {
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid #e0f2fe;
   padding-bottom: 8px;
   margin-bottom: 8px;
   font-weight: 600;
-  color: #5a5a5a;
+  color: #475569;
 }
 
 .detail-task-body {
@@ -218,7 +219,8 @@
 
 .detail-task-row {
   padding: 6px 0;
-  border-bottom: 1px solid #f3f3f3;
+  border-bottom: 1px solid #f0f9ff;
+  color: #475569;
 }
 
 .detail-task-col {
@@ -229,14 +231,15 @@
   min-width: 52px;
   height: 28px;
   border-radius: 8px;
-  border: 1px solid #d0d0d0;
-  background-color: #f5f5f5;
+  border: 1px solid #cbd5e1;
+  background-color: #f0f9ff;
   font-size: 12px;
+  color: #475569;
   cursor: pointer;
 }
 
 .detail-task-add-btn:hover {
-  background-color: #ececec;
+  background-color: #e0f2fe;
 }
 
 /* 회의록 박스 */
@@ -249,7 +252,7 @@
 .detail-minutes-box {
   background-color: #ffffff;
   border-radius: 10px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid #e0f2fe;
   padding: 16px;
   box-sizing: border-box;
   min-height: 260px;
@@ -267,14 +270,17 @@
 
 .minutes-table th,
 .minutes-table td {
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e0f2fe;
   padding: 6px 8px;
   text-align: left;
+  color: #475569;
 }
 
 .minutes-table th {
-  background-color: #fafafa;
+  background-color: #f0f9ff;
   width: 20%;
+  color: #1e40af;
+  font-weight: 600;
 }
 
 /* 회의록 섹션 */
@@ -285,7 +291,7 @@
 }
 
 .minutes-section-box {
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e0f2fe;
   border-radius: 4px;
   height: 80px;
   margin-bottom: 12px;
@@ -302,20 +308,21 @@
   min-width: 110px;
   height: 32px;
   border-radius: 8px;
-  border: 1px solid #d0d0d0;
-  background-color: #f5f5f5;
+  border: 1px solid #cbd5e1;
+  background-color: #f0f9ff;
   font-size: 13px;
+  color: #475569;
   cursor: pointer;
 }
 
 .detail-minutes-btn:hover {
-  background-color: #ececec;
+  background-color: #e0f2fe;
 }
 
 /* 공통 빈 상태 텍스트 */
 .detail-empty-text {
   font-size: 13px;
-  color: #999999;
+  color: #94a3b8;
   padding: 4px 2px;
 }
 
@@ -345,8 +352,8 @@
   display: inline-block;
   width: 8px;
   height: 8px;
-  border-right: 2px solid #555555;
-  border-bottom: 2px solid #555555;
+  border-right: 2px solid #475569;
+  border-bottom: 2px solid #475569;
   transform: rotate(45deg); /* 기본: 아래쪽 화살표 */
   transition: transform 0.18s ease-out;
 }
@@ -398,13 +405,13 @@
   cursor: pointer;
   font-size: 16px;
   line-height: 1;
-  color: #777777;
+  color: #64748b;
 }
 
 /* 팝업 본문 */
 .meeting-info-body {
   font-size: 14px;
-  color: #4b5563;
+  color: #475569;
 }
 
 .meeting-info-line {
@@ -467,7 +474,7 @@
 /* contenteditable 포커스 시 스타일 */
 .minutes-editbox[contenteditable="true"]:focus {
   outline: none;
-  border-color: #4f46e5;
+  border-color: #3b82f6;
   background: #ffffff;
 }
 
@@ -532,7 +539,7 @@
   cursor: pointer;
   font-size: 16px;
   line-height: 1;
-  color: #777777;
+  color: #64748b;
 }
 
 /* 본문 (체크박스 리스트) */

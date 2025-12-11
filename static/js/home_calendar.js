@@ -485,6 +485,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     eventTextColor: "#5a5a5a",
 
+    // 날짜 셀 내용 커스터마이징 (숫자만 표시)
+    dayCellContent: function(arg) {
+      return { html: arg.dayNumberText.replace('일', '') };
+    },
+
     events: function (info, successCallback, failureCallback) {
       fetch("/api/google-events/")
         .then((res) => res.json())

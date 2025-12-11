@@ -20,6 +20,7 @@
   padding: 1.5rem 2rem;
   height: calc(100vh - 70px);
   overflow: auto;
+  background: linear-gradient(135deg, #f8fafc 0%, #f0f9ff 50%, #e0f2fe 100%);
 }
 
 /* ========= 사이드바 레이아웃 ========= */
@@ -29,7 +30,7 @@
   flex: 0 0 260px;  /* ← 이 줄 추가: flex-basis + shrink 방지 */
   background: linear-gradient(180deg, #ffffff 0%, #f0f9ff 50%, #e0f2fe 100%);
   border-right: 1px solid var(--color-sidebar-border);
-  box-shadow: 6px 0 18px rgba(59, 130, 246, 0.08);
+  box-shadow: 6px 0 18px rgba(0, 0, 0, 0.04);
   color: var(--color-text);
   display: flex;
   flex-direction: column;
@@ -64,9 +65,11 @@
 /* 섹션 타이틀 (회의 목록 / 오늘의 회의) */
 .sidebar-section-title {
   font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--color-text-muted);
+  font-weight: 600;
+  color: #64748b;
   margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* 기본 메뉴 리스트 */
@@ -85,13 +88,16 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.45rem 0.75rem;
+  padding: 0.45rem 1.2rem;      /* 오른쪽 여백을 조금 늘림 */
   border-radius: 8px;
   font-size: 0.875rem;
-  color: #374151;              /* 기본 글자 색 */
-  font-weight: 500;            /* 기본은 보통 굵기 */
+  color: #374151;
+  font-weight: 500;
   text-decoration: none;
   transition: background-color 0.15s ease, color 0.15s ease;
+  
+  width: 100%;                  /* ★ li 전체 폭을 채우도록 */
+  box-sizing: border-box;       /* padding 포함해서 100%로 계산 */
 }
 
 /* 새 회의 포함: 모든 사이드바 링크 hover 시 */
@@ -201,7 +207,7 @@
   gap: 0.6rem;
   padding: 0.6rem 0.75rem;
   border-radius: 10px;
-  background: linear-gradient(120deg, rgba(255, 255, 255, 0.95), rgba(224, 242, 254, 0.9));
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(59, 130, 246, 0.2);
   text-decoration: none;
   color: var(--color-text);
@@ -212,7 +218,7 @@
 .meeting-card:hover {
   border-color: rgba(59, 130, 246, 0.5);
   box-shadow: 0 16px 35px rgba(59, 130, 246, 0.18);
-  background: linear-gradient(120deg, rgba(255, 255, 255, 1), rgba(186, 230, 253, 0.95));
+  background: rgba(255, 255, 255, 1);
   transform: translateY(-2px);
 }
 
@@ -236,6 +242,7 @@
   margin: 0 0 0.25rem 0;
   font-size: 0.8rem;
   font-weight: 500;
+  color: #334155;
 }
 
 .meeting-card-meta {
@@ -249,7 +256,7 @@
 .sidebar-footer {
   margin-top: auto;
   padding-top: 1rem;
-  border-top: none; /* 위 선 제거 */
+  border-top: 1px solid #e0f2fe;
 }
 
 .sidebar-footer .sidebar-menu {
@@ -275,17 +282,18 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  background: var(--color-header-bg);
-  border-bottom: 1px solid var(--color-header-border);
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  border-bottom: 1px solid #e0f2fe;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
 }
 
 /* 왼쪽 타이틀 영역 */
 .header-title {
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
-  color: #1e40af;
+  color: #0c4a6e;
+  letter-spacing: -0.02em;
 }
 
 /* 오른쪽 유저 정보 */
@@ -297,8 +305,8 @@
 
 /* 이미지 아이콘 */
 .user-icon {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
 }
 
@@ -418,7 +426,7 @@
 .admin-header-title {
   font-size: 26px;
   font-weight: 700;
-  color: #1f2937;
+  color: #1e40af;
 }
 
 .admin-body {
@@ -433,9 +441,11 @@
 /* 왼쪽: 부서원 목록, 오른쪽: 상세 영역 */
 .admin-panel {
   background: #ffffff;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 28px;
   box-sizing: border-box;
+  border: 1px solid #e0f2fe;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.06);
 }
 
 .admin-panel-left {
@@ -507,14 +517,15 @@
 .admin-panel-title {
   font-size: 20px;
   font-weight: 700;
-  color: #1f2937;
+  color: #1e40af;
 }
 
 /* 테이블 기본 틀 */
 .admin-table-card {
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid #e0f2fe;
+  border-radius: 8px;
   overflow: hidden;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.04);
 }
 
 .admin-table {
@@ -577,9 +588,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #aaa;
-  border: 1px dashed #ddd;
-  border-radius: 4px;
+  color: #94a3b8;
+  border: 1px dashed #bae6fd;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(224, 242, 254, 0.3) 0%, rgba(186, 230, 253, 0.2) 100%);
 }
 
 /* ========= 관리자 폼 스타일 ========= */
@@ -595,7 +607,7 @@
   font-weight: 600;
   margin: 0 0 20px 0;
   text-align: left;
-  color: #333;
+  color: #1e40af;
 }
 
 .admin-form-field-group {
@@ -642,7 +654,7 @@
   font-size: 13px;
   font-weight: 600;
   margin-bottom: 8px;
-  color: #555;
+  color: #334155;
 }
 
 .admin-form-label .required {
@@ -653,11 +665,11 @@
 
 .admin-form-input {
   padding: 10px 14px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border: 1px solid #e0f2fe;
+  border-radius: 8px;
   font-size: 14px;
   transition: all 0.2s;
-  background-color: #f9fafb;
+  background-color: #fafeff;
 }
 
 .admin-form-input:focus {
@@ -832,10 +844,11 @@
 .admin-search-input {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  border: 1px solid #e0f2fe;
+  border-radius: 8px;
   font-size: 0.875rem;
   transition: border-color 0.15s;
+  background-color: #fafeff;
 }
 
 .admin-search-input:focus {

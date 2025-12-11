@@ -20,24 +20,26 @@
   min-width: 72px;
   padding: 0.35rem 0.9rem;
   border-radius: 999px;
-  border: 1px solid #d1d5db;
-  background-color: #f9fafb;
+  border: 1px solid #bae6fd;
+  background-color: #f0f9ff;
   font-size: 0.85rem;
-  color: #4b5563;
+  color: #334155;
   text-decoration: none;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .summary-tab:hover {
-  background-color: #e5e7eb;
+  background-color: #e0f2fe;
+  border-color: #93c5fd;
 }
 
 /* 선택된 탭 */
 .summary-tab-active {
-  background-color: #5a5a5a;
-  border-color: #5a5a5a;
+  background-color: #3b82f6;
+  border-color: #3b82f6;
   color: #ffffff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
 }
 
 /* 오른쪽 내용 박스 */
@@ -45,8 +47,9 @@
   flex: 1 1 auto;
   background-color: #ffffff;
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e0f2fe;
   padding: 1rem;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.04);
 }
 
 .summary-placeholder {

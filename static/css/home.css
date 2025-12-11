@@ -74,7 +74,7 @@
   background: none;
   cursor: pointer;
   font-size: 1rem;
-  color: #5a5a5a;
+  color: #334155;
 }
 
 /* 연도 텍스트 */
@@ -95,7 +95,8 @@
   border-radius: 8px;
   padding: 4px 0;
   cursor: pointer;
-  color: #5a5a5a;
+  color: #0f172a;
+  font-weight: 600;
 }
 
 .month-btn:hover {
@@ -118,8 +119,8 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 1.1rem;
-  font-weight: 600;
-  color: #5a5a5a;
+  font-weight: 700;
+  color: #0c4a6e;
   margin-left: 12px;
   padding: 8px 10px;
   border-radius: 18px;
@@ -144,8 +145,8 @@
   padding: 8px 10px;
   cursor: pointer;
   font-size: 1rem;
-  font-weight: 600;
-  color: #555555;
+  font-weight: 700;
+  color: #0369a1;
   border-radius: 18px;
   transition: background 0.2s ease;
 }
@@ -175,7 +176,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background-color: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #fafeff 100%);
   border-radius: 10px;
   border: 1px solid #dbeafe;
   padding: 0.9rem 1rem;
@@ -213,21 +214,22 @@
     flex: 1 1 0;
     min-height: 0;
     overflow: hidden;
-    background-color: #ffffff;
+    background: linear-gradient(135deg, #ffffff 0%, #fafeff 100%);
     border-radius: 10px;
     border: 1px solid #dbeafe;
     padding: 0.9rem 1rem;
     display: flex;
     flex-direction: column;
     margin-bottom: 0.8rem;
-    color: #5a5a5a;
+    color: #334155;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.06);
 }
 
 .schedule-card-title {
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 0.7rem;
+  color: #0c4a6e;
 }
 
 /* 일정 리스트 */
@@ -245,13 +247,13 @@
 }
 
 .schedule-date {
-  font-weight: 600;
-  color: #4b5563;
+  font-weight: 700;
+  color: #0369a1;
   white-space: nowrap;
 }
 
 .schedule-text {
-  color: #4b5563;
+  color: #334155;
 }
 
 /* 비어 있을 때 안내문 */
@@ -314,7 +316,7 @@
   margin: 0 0 24px;
   font-size: 22px;
   font-weight: 700;
-  color: #333333;
+  color: #0c4a6e;
 }
 
 /* 필드 그룹 */
@@ -327,7 +329,7 @@
   margin-bottom: 6px;
   font-size: 14px;
   font-weight: 600;
-  color: #555555;
+  color: #0f172a;
 }
 
 /* 텍스트/날짜 입력 공통 */
@@ -340,7 +342,7 @@
   border: 1px solid #e0f2fe;
   background-color: #ffffff;
   font-size: 14px;
-  color: #333333;
+  color: #0f172a;
 }
 
 .schedule-input::placeholder {
@@ -390,12 +392,11 @@
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  color: #4d4457;
+  color: #334155;
 }
 
 .schedule-checkbox-label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
+  accent-color: #3b82f6;
 }
 
 /* 설명 박스 */
@@ -409,7 +410,7 @@
   background-color: #ffffff;
   font-size: 14px;
   resize: vertical;
-  color: #333333;
+  color: #0f172a;
 }
 
 /* 버튼 영역 */
@@ -445,7 +446,7 @@
 /* 오른쪽 흰색 "취소" 버튼 */
 .schedule-btn-secondary {
   background-color: #ffffff;
-  color: #555555;
+  color: #334155;
   border-color: #e0f2fe;
 }
 
@@ -490,8 +491,8 @@
 }
 
 .color-option input[type="radio"]:checked + .color-box {
-  border-color: #555555;
-  box-shadow: 0 0 0 2px rgba(85, 85, 85, 0.2);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
   transform: scale(1.1);
 }
 
@@ -547,7 +548,7 @@
 .event-modal-date {
   font-size: 20px;
   font-weight: 700;
-  color: #111111;
+  color: #0c4a6e;
 }
 
 .event-modal-body {
@@ -559,7 +560,7 @@
   font-size: 16px;
   font-weight: 700;
   line-height: 1.4;
-  color: #111111;
+  color: #0f172a;
   display: flex;
   align-items: flex-start;
   gap: 6px;
@@ -573,7 +574,7 @@
 .event-modal-desc {
   margin: 8px 0 0;
   font-size: 14px;
-  color: #222222;
+  color: #1e293b;
   white-space: pre-wrap;
 }
 
@@ -590,7 +591,7 @@
   height: 32px;
   padding: 0 12px;
   border-radius: 16px;
-  border: 1px solid #b3b3b3;
+  border: 1px solid #cbd5e1;
   background: #ffffff;
   font-size: 13px;
   font-weight: 500;
@@ -632,14 +633,15 @@
   height: 32px;
   padding: 0 12px;
   border-radius: 16px;
-  border: 1px solid #b3b3b3;
+  border: 1px solid #cbd5e1;
   background: #ffffff;
   font-size: 13px;
+  color: #334155;
   cursor: pointer;
 }
 
 .event-modal-close-btn:hover {
-  background: #f2f2f2;
+  background: #e0f2fe;
 }
 
 #home-calendar .fc-daygrid-event {
@@ -647,7 +649,7 @@
   padding: 2px 8px;
   border-radius: 999px;
   border: none;
-  color: #5a5a5a !important;           /* 글씨는 검정이 더 잘 보임 */
+  color: #334155 !important;
   font-size: 0.75rem;
   font-weight: 500;
 }
@@ -659,34 +661,52 @@
 /* 오늘 날짜 칸 - 연한 스카이블루 */
 #home-calendar .fc-day-today {
   background-color: #dbeafe !important;
-  color: #1e40af !important;
+  color: #0c4a6e !important;
 }
 
 /* 오늘 날짜 숫자 */
 #home-calendar .fc-day-today .fc-daygrid-day-number {
-  color: #1e40af !important;
+  color: #0c4a6e !important;
   font-weight: 700;
 }
 
 .fc .fc-daygrid-event,
 .fc .fc-daygrid-event .fc-event-title,
 .fc .fc-daygrid-event .fc-event-time {
-  color: #5a5a5a !important;
+  color: #334155 !important;
 }
 
-/* 캘린더 모든 텍스트를 #5a5a5a로 통일 */
+/* 캘린더 모든 텍스트를 파란색 톤으로 통일 */
 #home-calendar .fc-col-header-cell-cushion,
 #home-calendar .fc-daygrid-day-number,
 #home-calendar .fc-daygrid-day-top {
-  color: #5a5a5a !important;
+  color: #334155 !important;
 }
 
 /* 요일 헤더 */
 #home-calendar .fc-col-header-cell {
-  color: #5a5a5a !important;
+  color: #0c4a6e !important;
+  font-weight: 700;
+}
+
+/* 일요일 요일 헤더 빨간색 */
+#home-calendar .fc-day-sun .fc-col-header-cell-cushion {
+  color: #dc2626 !important;
+}
+
+/* 일요일 날짜 빨간색 */
+#home-calendar .fc-day-sun .fc-daygrid-day-number {
+  color: #dc2626 !important;
+  font-weight: 700;
+}
+
+/* 토요일 날짜 파란색 */
+#home-calendar .fc-day-sat .fc-daygrid-day-number {
+  color: #0369a1 !important;
+  font-weight: 600;
 }
 
 /* 전체 캘린더 텍스트 일괄 적용 */
 #home-calendar .fc {
-  color: #5a5a5a !important;
+  color: #334155 !important;
 }
