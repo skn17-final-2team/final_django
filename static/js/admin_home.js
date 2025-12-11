@@ -1,5 +1,27 @@
 // static/js/admin_home.js
 
+// ========== 부서 검색 기능 ==========
+document.addEventListener("DOMContentLoaded", function () {
+  const searchInput = document.getElementById("admin-user-search");
+  const deptItems = document.querySelectorAll(".dept-item");
+
+  if (searchInput && deptItems.length > 0) {
+    searchInput.addEventListener("input", function () {
+      const searchTerm = this.value.toLowerCase().trim();
+
+      deptItems.forEach(function (item) {
+        const deptName = item.textContent.toLowerCase();
+        if (deptName.includes(searchTerm)) {
+          item.style.display = "";
+        } else {
+          item.style.display = "none";
+        }
+      });
+    });
+  }
+});
+
+// ========== 부서 클릭 및 필터링 ==========
 document.addEventListener("DOMContentLoaded", function () {
   // 1) 사이드바 부서 노드들(앞에서 dept-item 클래스 붙여둔 것)
   const deptItems = document.querySelectorAll(".dept-item");
@@ -50,9 +72,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // 필터링된 행들을 tbody에 다시 붙인다.
-    rowsToRender.forEach(function (row) {
+    rowsToRender.forEach(function (row, index) {
       // 동일한 tr을 여러 번 이동시키면 allRows에서 사라지므로, clone해서 사용
       const clone = row.cloneNode(true);
+      // 번호 컬럼 업데이트 (1부터 시작)
+      const noCell = clone.querySelector(".col-no");
+      if (noCell) {
+        noCell.textContent = index + 1;
+      }
       memberTbody.appendChild(clone);
     });
   }
@@ -180,7 +207,6 @@ document.addEventListener("DOMContentLoaded", function () {
     resetPwBtn.style.display = "none";
     closeBtn.onclick = function() {
       rightPanel.classList.add("collapsed");
-      rightPanel.classList.remove("open");
       resetForm();
     };
     empIdField.readOnly = false;
@@ -196,17 +222,9 @@ document.addEventListener("DOMContentLoaded", function () {
   addBtn.addEventListener("click", function () {
     resetForm();
     rightPanel.classList.remove("collapsed");
-    rightPanel.classList.add("open");
   });
 
-  // 닫기 버튼 클릭
-  if (closeBtn) {
-    closeBtn.addEventListener("click", function () {
-      rightPanel.classList.add("collapsed");
-      rightPanel.classList.remove("open");
-      resetForm();
-    });
-  }
+  // 닫기 버튼은 onclick으로만 제어 (addEventListener 제거)
 
   // 폼 제출
   form.addEventListener("submit", async function (e) {
@@ -255,7 +273,6 @@ document.addEventListener("DOMContentLoaded", function () {
       if (result.success) {
         alert(result.message);
         rightPanel.classList.add("collapsed");
-        rightPanel.classList.remove("open");
         resetForm();
         // 페이지 새로고침하여 목록 갱신
         window.location.reload();
@@ -301,6 +318,13 @@ document.addEventListener("DOMContentLoaded", function () {
   document.addEventListener("click", function (e) {
     const row = e.target.closest(".admin-member-row");
     if (row) {
+      // 🔥 [추가됨] 기존 모든 행의 선택 제거
+      document.querySelectorAll(".admin-member-row").forEach(r => {
+      r.classList.remove("selected");
+    });
+
+    // 🔥 [추가됨] 현재 클릭한 행 선택 스타일 적용
+    row.classList.add("selected");
       // 행 데이터 추출
       const cells = row.querySelectorAll("td");
       const userId = cells[2].textContent.trim(); // ID 컬럼
@@ -317,7 +341,7 @@ document.addEventListener("DOMContentLoaded", function () {
       formTitle.textContent = name;  // 사용자 이름을 제목으로
       submitBtn.textContent = "수정";
       closeBtn.textContent = "삭제";
-      resetPwBtn.style.display = "inline-block";
+      resetPwBtn.style.display = "block";
 
       // 닫기 버튼을 삭제 기능으로 변경
       closeBtn.onclick = async function() {
@@ -347,7 +371,6 @@ document.addEventListener("DOMContentLoaded", function () {
           if (result.success) {
             alert(result.message);
             rightPanel.classList.add("collapsed");
-            rightPanel.classList.remove("open");
             resetForm();
             window.location.reload();
           } else {
@@ -357,6 +380,8 @@ document.addEventListener("DOMContentLoaded", function () {
           console.error("Error:", error);
           alert("서버와 통신 중 오류가 발생했습니다.");
         }
+
+        
       };
 
       empIdField.readOnly = true;
@@ -375,7 +400,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // 오른쪽 패널 열기
       rightPanel.classList.remove("collapsed");
-      rightPanel.classList.add("open");
     }
   });
 

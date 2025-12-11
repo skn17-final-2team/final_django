@@ -87,12 +87,14 @@
     </section>
   </aside>
 
-  <!-- 일정 추가 모달 -->
+  <!-- 일정 추가/수정 모달 -->
   <div id="schedule-modal" class="schedule-modal hidden">
     <div class="schedule-modal-backdrop"></div>
 
     <div class="schedule-modal-dialog">
-      <h2 class="schedule-modal-title">일정 추가</h2>
+      <h2 class="schedule-modal-title" id="schedule-modal-title">일정 추가</h2>
+      <input type="hidden" id="schedule-mode" value="create">
+      <input type="hidden" id="schedule-event-id" value="">
 
       <div class="schedule-field">
         <label for="schedule-title">일정 제목</label>
@@ -125,6 +127,17 @@
           <input type="checkbox" id="schedule-all-day" />
           <span>종일</span>
         </label>
+      </div>
+
+      <div class="schedule-field">
+        <label for="schedule-repeat">반복</label>
+        <select id="schedule-repeat" class="schedule-input">
+          <option value="none">안함</option>
+          <option value="daily">매일</option>
+          <option value="weekly">매주</option>
+          <option value="monthly">매월</option>
+          <option value="yearly">매년</option>
+        </select>
       </div>
 
       <div class="schedule-field">
@@ -177,10 +190,12 @@
         <p id="event-detail-description" class="event-modal-desc"></p>
       </div>
 
-      <!-- 하단 삭제 버튼 -->
+      <!-- 하단 버튼들 -->
       <div class="event-modal-actions">
+        <button id="event-detail-edit" class="event-modal-edit-btn" type="button">
+          <span>수정</span>
+        </button>
         <button id="event-detail-delete" class="event-modal-delete-btn" type="button">
-          <span class="event-modal-trash-icon"></span>
           <span>삭제</span>
         </button>
       </div>

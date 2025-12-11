@@ -46,7 +46,7 @@
 /* 비주얼 영역 */
 .processing-visual {
   border-radius: 16px;
-  background: linear-gradient(135deg, #e0f2fe, #d9f99d);
+  background: linear-gradient(135deg, #dbeafe 0%, #bae6fd 100%);
   padding: 36px 28px;
   margin-bottom: 24px;
   display: flex;
@@ -72,13 +72,13 @@
   width: 24px;
   height: 24px;
   border-radius: 999px;
-  background: #e5e7eb;
+  background: #cbd5e1;
 }
 
 .visual-dot-center {
   width: 52px;
   height: 52px;
-  background: #ef4444;
+  background: #3b82f6;
 }
 
 /* 프로그레스 바 */
@@ -103,7 +103,7 @@
   bottom: 0;
   width: 40%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #4f46e5, #10b981);
+  background: linear-gradient(90deg, #3b82f6, #60a5fa, #38bdf8);
   animation: processing-progress 1.4s ease-in-out infinite;
 }
 
@@ -133,23 +133,24 @@
 }
 
 .processing-step {
-  background: #f9fafb;
+  background: #f8fafc;
   border-radius: 14px;
   padding: 14px 16px;
   box-sizing: border-box;
+  border: 1px solid #e0f2fe;
 }
 
 .processing-step-number {
   width: 22px;
   height: 22px;
   border-radius: 999px;
-  background: #e5e7eb;
+  background: #dbeafe;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 600;
-  color: #374151;
+  color: #1e40af;
   margin-bottom: 8px;
 }
 
