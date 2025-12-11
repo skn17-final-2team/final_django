@@ -70,7 +70,7 @@ class Task(models.Model):
         related_name="tasks",
     )
 
-    task_content = models.CharField(max_length=90)
+    task_content = models.TextField(null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
 
     class Meta:

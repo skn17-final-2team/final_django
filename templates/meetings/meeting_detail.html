@@ -80,8 +80,9 @@
 
       <div class="detail-transcript-box">
         <div class="detail-transcript-scroll" id="detail-transcript-scroll">
-          {# transcript_html이 이미 있는 경우 우선 사용, 없으면 meeting.transcript #}
-          {% if transcript_html %}
+          {% if transcript_display_html %}
+            {{ transcript_display_html|safe }}
+          {% elif transcript_html %}
             {{ transcript_html|safe }}
           {% else %}
             {{ meeting.transcript|linebreaksbr }}
@@ -174,25 +175,17 @@
             </div>
 
             <div class="detail-task-body">
-              {% if tasks %}
-                {% for task in tasks %}
+              {% if tasks_display %}
+                {% for task in tasks_display %}
                   <div class="detail-task-row">
                     <div class="detail-task-col detail-task-col-who">
-                      {% if task.assignee %}
-                        {{ task.assignee.name }}{% if task.assignee.dept %}, {{ task.assignee.dept.dept_name }}{% endif %}
-                      {% else %}
-                        -
-                      {% endif %}
+                      <textarea class="task-edit-field" rows="2">{{ task.who }}</textarea>
                     </div>
                     <div class="detail-task-col detail-task-col-what">
-                      {{ task.task_content }}
+                      <textarea class="task-edit-field" rows="2">{{ task.what }}</textarea>
                     </div>
                     <div class="detail-task-col detail-task-col-when">
-                      {% if task.due_date %}
-                        {{ task.due_date|date:"Y.m.d" }}
-                      {% else %}
-                        -
-                      {% endif %}
+                      <textarea class="task-edit-field" rows="2">{{ task.when }}</textarea>
                     </div>
                     <div class="detail-task-col detail-task-col-add">
                       <button type="button" class="detail-task-add-btn">

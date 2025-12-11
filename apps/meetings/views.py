@@ -8,17 +8,17 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 
-from .models import Meeting, Attendee, Domain
+from .models import Meeting, Attendee, Domain, Task
 from django.contrib import messages
 from django.db import transaction
 
 
 from apps.meetings.utils.s3_upload import upload_raw_file_bytes, get_presigned_url
-from apps.meetings.utils.runpod import get_stt, runpod_health
+from apps.meetings.utils.runpod import get_stt, get_sllm, runpod_health
 
 from apps.meetings.models import S3File
 from django.views.decorators.http import require_GET, require_POST
-from datetime import date
+from datetime import date, datetime
 
 from django.template.loader import render_to_string  
 from io import BytesIO
@@ -27,12 +27,13 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from django.utils.html import strip_tags
+from django.utils.html import strip_tags, escape
 import json
 import math
 import re
 import ast
 from typing import Dict
+import requests
 
 # 한글 폰트 등록 (맑은 고딕 사용)
 KOREAN_FONT_NAME = "MalgunGothic"
@@ -52,6 +53,265 @@ def _register_korean_font():
 
 # 모듈 import 시 한 번 호출
 _register_korean_font()
+
+
+def _transcript_to_plain_text(raw_transcript: str) -> str:
+    """
+    DB에 저장된 transcript(plain 문자열 혹은 JSON 리스트 형태)를
+    모델에 넘길 수 있는 평문으로 변환한다.
+    """
+    if not raw_transcript:
+        return ""
+
+    parsed = None
+    try:
+        parsed = json.loads(raw_transcript)
+    except (ValueError, TypeError):
+        try:
+            parsed = ast.literal_eval(raw_transcript)
+        except (ValueError, SyntaxError):
+            parsed = None
+
+    if isinstance(parsed, list):
+        lines = []
+        for segment in parsed:
+            if isinstance(segment, dict):
+                for speaker, text in segment.items():
+                    lines.append(f"{speaker}: {text}")
+        return "\n".join(lines)
+
+    return str(raw_transcript)
+
+
+def _normalize_tasks(full_tasks):
+    """
+    모델에서 내려준 태스크를 Task 모델에 저장할 수 있는 간단한 문자열 리스트로 정규화.
+    """
+    results = []
+    if isinstance(full_tasks, str):
+        for line in full_tasks.splitlines():
+            line = line.strip(" -•\t")
+            if line:
+                results.append(line)
+        return results
+
+    if isinstance(full_tasks, list):
+        for item in full_tasks:
+            text = ""
+            if isinstance(item, dict):
+                who = item.get("who") or item.get("owner") or item.get("speaker")
+                what = (
+                    item.get("what")
+                    or item.get("task")
+                    or item.get("content")
+                    or item.get("task_content")
+                )
+                when = item.get("when") or item.get("due_date")
+                parts = [p for p in [who, what, when] if p]
+                text = " - ".join(parts)
+            elif isinstance(item, str):
+                text = item.strip()
+            if text:
+                results.append(text)
+    return results
+
+
+def _parse_due_date(due_str: str):
+    """
+    문자열로 내려온 기한을 DateField에 맞게 파싱. 실패 시 None.
+    """
+    if not due_str or not isinstance(due_str, str):
+        return None
+    due_str = due_str.strip()
+    # ISO 형태 우선
+    try:
+        return date.fromisoformat(due_str)
+    except Exception:
+        pass
+    # yyyy.mm.dd 형태
+    try:
+        return datetime.strptime(due_str, "%Y.%m.%d").date()
+    except Exception:
+        pass
+    # yyyy-mm-dd 형태
+    try:
+        return datetime.strptime(due_str, "%Y-%m-%d").date()
+    except Exception:
+        pass
+    return None
+
+
+def _extract_structured_tasks(full_tasks):
+    """
+    full_tasks(list/dict/str)에서 description/assignee/due를 뽑아낸 리스트 반환.
+    """
+    tasks = []
+    # 문자열 JSON이면 파싱
+    if isinstance(full_tasks, str):
+        try:
+            full_tasks = json.loads(full_tasks)
+        except Exception:
+            pass
+    # {"tasks": [...]} 형태 처리
+    if isinstance(full_tasks, dict) and "tasks" in full_tasks:
+        full_tasks = full_tasks.get("tasks")
+    if isinstance(full_tasks, list):
+        for item in full_tasks:
+            if isinstance(item, dict):
+                desc = (
+                    item.get("description")
+                    or item.get("what")
+                    or item.get("task")
+                    or item.get("content")
+                    or item.get("task_content")
+                )
+                assignee_name = (
+                    item.get("assignee")
+                    or item.get("who")
+                    or item.get("owner")
+                    or item.get("speaker")
+                )
+                # due/due_text 우선, due_date는 별도 보존
+                due_raw = (
+                    item.get("due")
+                    or item.get("when")
+                    or item.get("due_text")
+                )
+                due_date_val = item.get("due_date")
+                parsed_due_date = None
+                if due_raw:
+                    parsed_due_date = _parse_due_date(due_raw)
+                elif due_date_val and str(due_date_val).lower() not in ("null", "none"):
+                    parsed_due_date = _parse_due_date(str(due_date_val))
+                tasks.append(
+                    {
+                        "description": desc if desc is not None else "",
+                        "assignee_name": assignee_name if assignee_name else "",
+                        "due_date": parsed_due_date,
+                        "due_raw": due_raw or "",
+                        "due_date_raw": "" if due_date_val in (None, "", "null", "none", "None") else str(due_date_val),
+                    }
+                )
+            elif isinstance(item, str):
+                tasks.append(
+                    {
+                        "description": item,
+                        "assignee_name": "",
+                        "due_date": None,
+                        "due_raw": "",
+                        "due_date_raw": "",
+                    }
+                )
+    elif isinstance(full_tasks, str) and full_tasks.strip():
+        tasks.append(
+            {
+                "description": full_tasks.strip(),
+                "assignee_name": "",
+                "due_date": None,
+                "due_raw": "",
+                "due_date_raw": "",
+            }
+        )
+    return tasks
+
+
+def _task_to_display(task):
+    """
+    Task 객체에서 화면에 표시할 who/what/when 정보를 추출.
+    task_content 이 JSON(dict) 형태이면 description/due_text/assignee 사용, 아니면 문자열 그대로.
+    """
+    what = task.task_content or ""
+    when_text = ""
+    who_text_from_json = ""
+    try:
+        parsed = json.loads(task.task_content)
+        if isinstance(parsed, dict):
+            if "tasks" in parsed and isinstance(parsed["tasks"], list) and parsed["tasks"]:
+                first = parsed["tasks"][0]
+                what = first.get("description") or what
+                when_text = first.get("due") or first.get("due_text") or ""
+                who_text_from_json = first.get("assignee") or ""
+            else:
+                what = parsed.get("description") or what
+                when_text = parsed.get("due") or parsed.get("due_text") or ""
+                who_text_from_json = parsed.get("assignee") or ""
+    except Exception:
+        pass
+
+    who_text = "-"
+    if task.assignee:
+        who_text = task.assignee.name
+        if getattr(task.assignee, "dept", None):
+            who_text += f", {task.assignee.dept.dept_name}"
+    elif who_text_from_json:
+        who_text = who_text_from_json
+
+    return {
+        "who": who_text,
+        "what": what,
+        "when": when_text or "-",
+    }
+
+
+def _plain_text_to_structured(text: str):
+    """
+    '발화자: 내용' 형태의 평문을 구조화 목록으로 변환한다.
+    """
+    segments = []
+    speakers = set()
+    if not text:
+        return segments, speakers
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or ":" not in line:
+            continue
+        speaker, value = line.split(":", 1)
+        speaker = speaker.strip()
+        value = value.strip()
+        if speaker and value:
+            segments.append({speaker: value})
+            speakers.add(speaker)
+    return segments, speakers
+
+
+def _render_transcript_html(raw_transcript: str) -> str:
+    """
+    상세 화면에서 쓸 전문 HTML을 생성한다.
+    - 리스트(JSON/리터럴)인 경우: 각 발화자:내용을 굵게 표시
+    - 평문에서도 '화자: 내용' 패턴이면 굵게 표시
+    """
+    if not raw_transcript:
+        return ""
+
+    html_lines = []
+    parsed = None
+    try:
+        parsed = json.loads(raw_transcript)
+    except (ValueError, TypeError):
+        try:
+            parsed = ast.literal_eval(raw_transcript)
+        except (ValueError, SyntaxError):
+            parsed = None
+
+    def add_line(speaker, text):
+        html_lines.append(f"<div><strong>{escape(str(speaker))}</strong>: {escape(str(text))}</div>")
+
+    if isinstance(parsed, list):
+        for segment in parsed:
+            if not isinstance(segment, dict):
+                continue
+            for speaker, text in segment.items():
+                add_line(speaker, text)
+        return "".join(html_lines)
+
+    # 평문 처리
+    for line in raw_transcript.splitlines():
+        if ":" in line:
+            sp, txt = line.split(":", 1)
+            add_line(sp.strip(), txt.strip())
+        else:
+            html_lines.append(f"<div>{escape(line)}</div>")
+    return "".join(html_lines)
 
 
 # 회의 목록에서 쓸 데이터 생성하는 함수
@@ -320,6 +580,7 @@ class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         meeting_id = self.kwargs.get("meeting_id")
         context["meeting_id"] = meeting_id
+        context["meeting"] = get_object_or_404(Meeting, pk=meeting_id)
         return context
 
 @require_GET
@@ -442,7 +703,7 @@ def meeting_transcript_save(request, meeting_id):
 
     meeting.save(update_fields=["transcript"])
 
-    redirect_url = reverse("meetings:rendering", args=[meeting_id])
+    redirect_url = reverse("meetings:rendering_sllm", args=[meeting_id])
     return JsonResponse({"ok": True, "redirect_url": redirect_url})
 
 
@@ -463,6 +724,13 @@ class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
                    .select_related("user", "user__dept")
                    .all()
         )
+        context["tasks"] = (
+            meeting.tasks
+                   .select_related("assignee", "assignee__dept")
+                   .all()
+        )
+        context["tasks_display"] = [_task_to_display(t) for t in context["tasks"]]
+        context["transcript_display_html"] = _render_transcript_html(meeting.transcript)
 
         # 주최자인지 여부 판단 (세션 기반)
         session_user_id = self.request.session.get("login_user_id")
@@ -530,8 +798,26 @@ def meeting_summary(request, meeting_id):
     # 별도 요약 화면 대신 상세 페이지로 이동
     return redirect("meetings:meeting_detail", meeting_id=meeting_id)
 
-class MeetingRenderingView(LoginRequiredSessionMixin, TemplateView):
+class MeetingSttRenderingView(LoginRequiredSessionMixin, TemplateView):
+    """
+    STT 대기 화면
+    """
     template_name = "meetings/rending_stt.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        meeting_id = self.kwargs.get("meeting_id")
+        meeting = get_object_or_404(Meeting, pk=meeting_id)
+        context["meeting"] = meeting
+        context["meeting_id"] = meeting_id
+        return context
+
+
+class MeetingSllmRenderingView(LoginRequiredSessionMixin, TemplateView):
+    """
+    SLLM 대기 화면
+    """
+    template_name = "meetings/rending_sllm.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -542,7 +828,6 @@ class MeetingRenderingView(LoginRequiredSessionMixin, TemplateView):
         context["meeting"] = meeting
         context["meeting_id"] = meeting_id
         return context
-    
 
 @require_GET
 def meeting_transcript_prepare(request, meeting_id):
@@ -577,6 +862,107 @@ def meeting_transcript_prepare(request, meeting_id):
         meeting.save(update_fields=["transcript"])
 
     # 여기까지 왔다면 transcript 는 채워진 상태
+    return JsonResponse({"status": "done"})
+
+
+@require_GET
+def meeting_sllm_prepare(request, meeting_id):
+    """
+    전문(화자 매핑 완료본)을 SLLM에 전달해 요약/태스크를 생성한다.
+    렌딩 페이지에서 호출하며, 완료 시 detail 화면으로 넘어간다.
+    """
+    meeting = get_object_or_404(Meeting, pk=meeting_id)
+
+    transcript_plain = _transcript_to_plain_text(meeting.transcript)
+    if not transcript_plain.strip():
+        return JsonResponse(
+            {"status": "error", "message": "분석할 전문이 없습니다."},
+            status=400,
+        )
+
+    try:
+        res = get_sllm(transcript_plain, domain=[])
+    except requests.RequestException as e:
+        return JsonResponse(
+            {"status": "error", "message": f"SLLM 호출 중 통신 오류가 발생했습니다: {e}"},
+            status=500,
+        )
+    print("1번")
+    print(res)
+    try:
+        res_json = res.json()
+    except Exception:
+        res_json = {}
+    print("2번")
+    print(res_json)
+
+    payload = res_json.get("data") or res_json
+    print("3번")
+    print(payload)
+    # 일부 응답은 success 필드를 포함하지 않을 수 있으므로, 실패 명시(false)인 경우만 실패로 간주
+    if res.status_code != 200 or res_json.get("success") is False or not payload:
+        message = res_json.get("message") or res_json.get("error") or res.text or "SLLM 호출 중 오류가 발생했습니다."
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": message,
+            },
+            status=500,
+        )
+
+    full_summary = payload.get("full_summary") or payload.get("summary") or ""
+    full_tasks = payload.get("full_tasks") or []
+    tasks_structured = _extract_structured_tasks(full_tasks)
+    # 태스크 로그 찍기
+    try:
+        print(f"[SLLM] meeting_id={meeting_id} full_tasks={full_tasks}")
+        print(f"[SLLM] meeting_id={meeting_id} tasks_structured={tasks_structured}")
+    except Exception:
+        pass
+
+    with transaction.atomic():
+        update_fields = []
+        if full_summary is not None:
+            meeting.summary = full_summary
+            update_fields.append("summary")
+        if update_fields:
+            meeting.save(update_fields=update_fields)
+        meeting.tasks.all().delete()
+        if tasks_structured:
+            task_objs = []
+            for t in tasks_structured:
+                desc = (t.get("description") or "")
+                assignee_name = (t.get("assignee_name") or "").strip()
+                due_date = t.get("due_date")
+                due_raw = t.get("due_raw") or ""
+                due_date_raw = t.get("due_date_raw") or ""
+
+                assignee_obj = None
+                if assignee_name:
+                    try:
+                        assignee_obj = User.objects.filter(name=assignee_name).first()
+                    except Exception:
+                        assignee_obj = None
+
+                content_payload = {"description": desc}
+                if assignee_name:
+                    content_payload["assignee"] = assignee_name
+                if due_raw:
+                    content_payload["due"] = due_raw
+                    content_payload["due_text"] = due_raw
+                if due_date_raw:
+                    content_payload["due_date"] = due_date_raw
+
+                task_objs.append(
+                    Task(
+                        meeting=meeting,
+                        task_content=json.dumps(content_payload, ensure_ascii=False),
+                        assignee=assignee_obj,
+                        due_date=due_date,
+                    )
+                )
+            Task.objects.bulk_create(task_objs)
+
     return JsonResponse({"status": "done"})
 
 

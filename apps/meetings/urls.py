@@ -9,8 +9,10 @@ from .views import (
     MeetingDetailView,
     meeting_record_upload,
     meeting_summary,
-    MeetingRenderingView,
+    MeetingSttRenderingView,
+    MeetingSllmRenderingView,
     meeting_transcript_prepare,
+    meeting_sllm_prepare,
     meeting_transcript_save,
     minutes_download,
     minutes_save,
@@ -24,8 +26,10 @@ urlpatterns = [
     path("<int:meeting_id>/record/", MeetingRecordView.as_view(), name="meeting_record"),
     path("<int:meeting_id>/upload/", meeting_record_upload, name="meeting_upload"),
 
-    path("<int:meeting_id>/rendering/", MeetingRenderingView.as_view(), name="rendering"),
+    path("<int:meeting_id>/rendering/stt/", MeetingSttRenderingView.as_view(), name="rendering_stt"),
+    path("<int:meeting_id>/rendering/sllm/", MeetingSllmRenderingView.as_view(), name="rendering_sllm"),
     path("<int:meeting_id>/transcript/prepare/", meeting_transcript_prepare, name="meeting_transcript_prepare"),
+    path("<int:meeting_id>/sllm/prepare/", meeting_sllm_prepare, name="meeting_sllm_prepare"),
 
     path("<int:meeting_id>/transcript/", MeetingTranscriptView.as_view(), name="meeting_transcript"),
     path("<int:meeting_id>/transcript_api/", meeting_transcript_api, name="meeting_transcript_api"),
