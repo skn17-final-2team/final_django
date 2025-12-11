@@ -387,6 +387,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
     locale: "ko",
+    fixedWeekCount: false,
     height: "100%",
     contentHeight: "auto",
     expandRows: true,
