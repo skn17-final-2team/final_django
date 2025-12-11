@@ -92,7 +92,17 @@
   fetch(`/meetings/${meetingId}/transcript_api/`)
     .then(response => response.json())
     .then(data => {
-      recordTitle.textContent = data.meeting_title || "";
+      const speakers = data.speakers
+      
+      const speakerMap = {};
+      speakers.forEach(sp => {
+        speakerMap[sp] = sp;
+      });
+      console.log(speakerMap)
+      recordTitle.textContent = data.meeting_title;
+      const rawTranscriptData = JSON.parse(data.transcript.replaceAll("'", '"'));
+      transcript.textContent = transcript_parse(rawTranscriptData, speakerMap).join("\n")
+      
 
       let structured = Array.isArray(data.transcript_structured)
         ? data.transcript_structured
@@ -106,31 +116,47 @@
         }
       }
 
-      if (structured.length) {
-        hasStructuredTranscript = true;
-        originalTranscriptData = structured;
-        const speakers = extractSpeakers(
-          Array.isArray(data.speakers) && data.speakers.length ? data.speakers : null,
-          structured,
-        );
-        buildSpeakerAssignRows(speakers, data.attendees || []);
-        renderTranscriptText();
-      } else {
-        hasStructuredTranscript = false;
-        if (container) {
-          container.innerHTML = "";
-        }
-        if (containerEmpty) {
-          containerEmpty.style.display = "block";
-        }
-        transcript.textContent = initialPlain;
-      }
+        const select = document.createElement("select");
+        select.className = "speaker-select";
+        select.name = speaker;
+        select.id = speaker;
+
+        const emptyOption = document.createElement("option");
+        emptyOption.value = "";
+        emptyOption.textContent = speaker;
+        select.appendChild(emptyOption);
+
+        data.attendees.forEach(att => {
+          const option = document.createElement("option");
+          option.value = att.user_id;
+          option.textContent = `${att.name} (${att.dept_name})`;
+          select.appendChild(option);
+        });
+
+        select.addEventListener("change", e => {
+          speakerMap[e.target.id] = e.target.options[e.target.selectedIndex].text;
+          console.log(speakerMap);
+          const parsedTranscript = transcript_parse(rawTranscriptData, speakerMap)
+          transcript.textContent = parsedTranscript.join("\n")
+        });
+
+        row.appendChild(label);
+        row.appendChild(select);
+        container.appendChild(row);
+      })
     })
     .catch(err => console.error("API 호출 실패:", err));
+  
+  function transcript_parse(data, setkeys=false) {
+    const resultList = [];
 
-  function tryParseStructuredFromRaw(raw) {
-    if (!raw || typeof raw !== "string") {
-      return null;
+    for (const f of data) {
+      for (let [key, value] of Object.entries(f)) {
+        if (setkeys && setkeys[key]) {
+          key = setkeys[key];
+        }
+        resultList.push(`${key}: ${value}`);
+      }
     }
     try {
       const parsed = JSON.parse(raw);

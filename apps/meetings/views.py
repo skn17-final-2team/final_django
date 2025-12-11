@@ -325,125 +325,40 @@ class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
 @require_GET
 def meeting_transcript_api(request, meeting_id):
     meeting = get_object_or_404(Meeting, pk=meeting_id)
-    attendees_qs = meeting.attendees.select_related("user", "user__dept").all()
+    attendees_qs = (
+        meeting.attendees.select_related("user", "user__dept").all()
+    )
 
-    raw_transcript = meeting.transcript or ""
-    structured_transcript = []
-    speakers = []
-    transcript_plain = raw_transcript.replace("\r\n", "\n")
+    try:
+        transcript_rows = ast.literal_eval(meeting.transcript or "[]")
+    except (ValueError, SyntaxError):
+        transcript_rows = []
 
-    if raw_transcript:
-        parsed = None
-        try:
-            parsed = json.loads(raw_transcript)
-        except (ValueError, TypeError):
-            try:
-                parsed = ast.literal_eval(raw_transcript)
-            except (ValueError, SyntaxError):
-                parsed = None
+    speaker_keys = set()
+    for row in transcript_rows:
+        for speaker in row.keys():
+            speaker_keys.add(speaker)
 
-        if isinstance(parsed, list):
-            speaker_keys = set()
-            plain_lines = []
-            normalized_segments = []
-
-            for segment in parsed:
-                if not isinstance(segment, dict):
-                    continue
-                normalized_segment = {}
-                for key, value in segment.items():
-                    key_str = str(key)
-                    value_str = str(value)
-                    normalized_segment[key_str] = value_str
-                    speaker_keys.add(key_str)
-                    plain_lines.append(f"{key_str}: {value_str}")
-                if normalized_segment:
-                    normalized_segments.append(normalized_segment)
-
-            if normalized_segments:
-                structured_transcript = normalized_segments
-                speakers = sorted(speaker_keys)
-                transcript_plain = "\n".join(plain_lines)
-        # else: keep defaults (plain text only)
-
-    attendees_payload = [
+    attendees = [
         {
-            "user_id": attendee.user_id,
-            "name": attendee.user.name,
-            "dept_name": attendee.user.dept.dept_name if attendee.user.dept else "",
+            "user_id": a.user_id,
+            "name": a.user.name,
+            "dept_name": a.user.dept.dept_name if a.user.dept else "",
         }
-        for attendee in attendees_qs
+        for a in attendees_qs
     ]
+
+    record_url = str(meeting.record_url) if meeting.record_url else None
 
     return JsonResponse(
         {
             "meeting_title": meeting.title,
-            "transcript": raw_transcript,
-            "transcript_plain": transcript_plain,
-            "transcript_structured": structured_transcript,
-            "record_url": str(meeting.record_url) if meeting.record_url else "",
-            "attendees": attendees_payload,
-            "speakers": speakers,
+            "transcript": meeting.transcript,
+            "record_url": record_url,
+            "attendees": attendees,
+            "speakers": sorted(speaker_keys),
         }
     )
-
-
-@require_POST
-def meeting_transcript_save(request, meeting_id):
-    meeting = get_object_or_404(Meeting, pk=meeting_id)
-
-    session_user_id = request.session.get("login_user_id")
-    request_user_id = None
-    if hasattr(request, "user") and request.user.is_authenticated:
-        request_user_id = getattr(request.user, "user_id", None) or request.user.id
-
-    host_user_id = str(meeting.host_id) if meeting.host_id else None
-    has_permission = False
-    if host_user_id:
-        if session_user_id and str(session_user_id) == host_user_id:
-            has_permission = True
-        elif request_user_id and str(request_user_id) == host_user_id:
-            has_permission = True
-
-    if not has_permission:
-        return JsonResponse(
-            {"ok": False, "error": "전문을 저장할 권한이 없습니다."},
-            status=403,
-        )
-
-    try:
-        payload = json.loads(request.body.decode("utf-8"))
-    except json.JSONDecodeError:
-        return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
-
-    transcript_text = (payload.get("transcript_text") or "").strip()
-    transcript_structured = payload.get("transcript_structured")
-
-    if transcript_structured:
-        if not isinstance(transcript_structured, list):
-            return JsonResponse(
-                {"ok": False, "error": "잘못된 전문 형식입니다."},
-                status=400,
-            )
-        try:
-            meeting.transcript = json.dumps(transcript_structured, ensure_ascii=False)
-        except (TypeError, ValueError):
-            return JsonResponse(
-                {"ok": False, "error": "전문 데이터를 처리할 수 없습니다."},
-                status=400,
-            )
-    elif transcript_text:
-        meeting.transcript = transcript_text
-    else:
-        return JsonResponse(
-            {"ok": False, "error": "저장할 전문 내용이 없습니다."},
-            status=400,
-        )
-
-    meeting.save(update_fields=["transcript"])
-
-    redirect_url = reverse("meetings:rendering", args=[meeting_id])
-    return JsonResponse({"ok": True, "redirect_url": redirect_url})
 
 
 
