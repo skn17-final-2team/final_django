@@ -6,28 +6,28 @@ document.addEventListener("DOMContentLoaded", function () {
   copyBtn.addEventListener("click", function () {
     const scrollEl = document.getElementById("assign-transcript-scroll");
     if (!scrollEl) {
-      alert("?îõ?????? ??????Ïï? ??????æÀ?.");
+      alert("ë³µì‚¬í•  ì „ë¬¸ ì˜ì—­ì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
       return;
     }
 
     const text = (scrollEl.innerText || scrollEl.textContent || "").trim();
     if (!text) {
-      alert("?îõ????ñ©????ñ©???? ????æÀ?.");
+      alert("ë³µì‚¬í•  ë‚´ìš©ì´ ì¡´ì¬í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤.");
       return;
     }
 
-    // ?ô¯? ??????: Clipboard API
+    // ìµœì‹  ë¸Œë¼ìš°ì €: Clipboard API
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard
         .writeText(text)
-        .then(() => alert("??? ?ı³ÚÕíõ¢æ ?ğÂ??ğÂ????îõ?????????"))
+        .then(() => alert("ì „ë¬¸ ì „ì²´ê°€ í´ë¦½ë³´ë“œì— ë³µì‚¬ë˜ì—ˆìŠµë‹ˆë‹¤."))
         .catch(() => fallbackCopy(text));
     } else {
       fallbackCopy(text);
     }
   });
 
-  // ñ÷?? ?????????îõ? ?¦â?
+  // êµ¬í˜• ë¸Œë¼ìš°ì €ìš© ë³µì‚¬ ë°©ì‹
   function fallbackCopy(text) {
     const textarea = document.createElement("textarea");
     textarea.value = text;
@@ -42,12 +42,12 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       const successful = document.execCommand("copy");
       if (successful) {
-        alert("??? ?ı³ÚÕíõ¢æ ?ğÂ??ğÂ????îõ?????????");
+        alert("ì „ë¬¸ ì „ì²´ê°€ í´ë¦½ë³´ë“œì— ë³µì‚¬ë˜ì—ˆìŠµë‹ˆë‹¤.");
       } else {
-        alert("?îõ? ?ªí?. ?ªë«¸ ????????? ????ñ©£¼???.");
+        alert("ë³µì‚¬ ì‹¤íŒ¨. ë‹¤ë¥¸ ë¸Œë¼ìš°ì €ì—ì„œ ì‹œë„í•´ì£¼ì„¸ìš”.");
       }
     } catch (err) {
-      alert("?îõ? ???ªë?íõ¢æ ?ô¯?????æÀ?.");
+      alert("ë³µì‚¬ ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.");
     }
 
     document.body.removeChild(textarea);
@@ -60,6 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const summaryUrl = saveBtn.dataset.summaryUrl;
   if (!summaryUrl) {
+    alert("ìš”ì•½ í˜ì´ì§€ URLì„ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");    
     return;
   }
 
