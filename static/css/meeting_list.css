@@ -35,16 +35,26 @@ body {
   width: 460px;
   height: 40px;
   border-radius: 10px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid #e0f2fe;
   background-color: #ffffff;
   display: flex;
   align-items: center;
-  padding: 7px 40px 7px 32px;
+  /* 왼쪽(필터 + 라벨), 오른쪽(돋보기)을 고려한 패딩 */
+  padding: 7px 40px 7px 40px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  gap: 0.5rem;
+}
+
+.meeting-search-box:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
 }
 
 .search-icon {
   position: absolute;
-  left: 14px;
+  right: 14px;
+  left: auto;
   width: 14px;
   height: 14px;
 }
@@ -55,17 +65,18 @@ body {
   border: none;
   outline: none;
   font-size: 14px;
-  color: #333333;
+  color: #334155;
 }
 
 .search-input::placeholder {
-  color: #b3b3b3;
+  color: #94a3b8;
 }
 
 /* 검색 조건 버튼 */
 .search-filter-button {
   position: absolute;
-  right: 12px;
+  left: 12px;
+  right: auto;
   width: 28px;
   height: 28px;
   border-radius: 6px;
@@ -86,8 +97,8 @@ body {
 /* 검색 조건 라벨 */
 .search-current-label {
   font-size: 14px;
-  color: #767676;
-  opacity: 0.7;
+  color: #64748b;
+  opacity: 0.85;
 }
 
 /* 검색 조건 드롭다운 */
@@ -116,18 +127,39 @@ body {
   border: none;
   background: transparent;
   font-size: 14px;
-  color: #555555;
+  color: #475569;
   cursor: pointer;
 }
 
 .search-filter-option:hover {
-  background-color: #f5f5f5;
+  background-color: #e0f2fe;
 }
 
 .search-filter-option.is-active {
   font-weight: 600;
-  color: #5b3fd1;
+  color: #3b82f6;
 }
+
+.search-filter-label {
+  margin-left: 36px;          /* 왼쪽 필터 아이콘과 겹치지 않게 */
+  margin-right: 8px;
+  font-size: 14px;
+  color: #64748b;
+  white-space: nowrap;
+  pointer-events: none;       /* 클릭 포커스 안 받도록 */
+}
+
+/* 입력창은 남은 공간을 채우게 */
+.search-input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #334155;
+  background: transparent;
+}
+
 
 /* 테이블 래퍼 */
 .meeting-list-table-wrapper {
@@ -137,7 +169,7 @@ body {
   border-radius: 0;
   box-shadow: none;
   border: none;
-}
+} 
 
 /* 테이블 */
 .meeting-table {
@@ -149,23 +181,53 @@ body {
 }
 
 .meeting-table thead {
-  background-color: #f7f7f7;
+  background-color: #dbeafe;
 }
 
 .meeting-table th,
 .meeting-table td {
   padding: 14px 12px;
   font-size: 14px;
-  color: #5a5a5a;
-  border-bottom: 1px solid #eeeeee;
+  color: #475569;
+  border-bottom: 1px solid #e0f2fe;
   text-align: left;
   white-space: nowrap;
 }
 
+.meeting-table th {
+  color: #1E3A8A;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+/* 정렬 버튼(일시/제목)도 헤더 스타일을 상속만 받게 */
+.meeting-table th .sort-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;         /* th의 폰트/굵기/크기 상속 */
+  color: inherit;        /* th의 색상 상속 */
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+/* 버튼 안의 텍스트(span)도 th 스타일 그대로 사용 */
+.meeting-table th .sort-button span {
+  font: inherit;
+  color: inherit;
+}
+
+
 .meeting-table th.col-no,
 .meeting-table td.col-no {
   width: 60px;
+  padding-left: 20px;
+  
 }
+
 
 .meeting-table th.col-datetime,
 .meeting-table td.col-datetime {
@@ -202,11 +264,14 @@ body {
 
 /* 제목 링크 */
 .title-link {
-  color: #333333;
+  color: #0369A1;
   text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
 }
 
 .title-link:hover {
+  color: #0369A1;
   text-decoration: underline;
 }
 
@@ -219,7 +284,7 @@ body {
   background: transparent;
   padding: 0;
   font-size: 14px;
-  color: #5a5a5a;
+  color: #475569;
   cursor: pointer;
 }
 
@@ -237,18 +302,20 @@ body {
 }
 
 .sort-icon-down {
-  border-top: 6px solid #b3b3b3;
+  border-top: 6px solid #3b82f6;
 }
 
 .sort-icon-up {
-  border-bottom: 6px solid #b3b3b3;
+  border-bottom: 6px solid #3b82f6;
 }
+
+
 
 /* 데이터 없음 */
 .meeting-row-empty .no-data-cell {
   text-align: center;
   padding: 32px 0;
-  color: #999999;
+  color: #94a3b8;
 }
 
 /* ===== 페이지네이션 ===== */
@@ -265,10 +332,10 @@ body {
   height: 32px;
   padding: 0 10px;
   border-radius: 8px;
-  border: 1px solid #d0d0d0;
+  border: 1px solid #cbd5e1;
   background-color: #ffffff;
   font-size: 13px;
-  color: #5a5a5a;
+  color: #475569;
   cursor: pointer;
 }
 
@@ -290,13 +357,13 @@ body {
   margin: 0 4px;
   font-size: 14px;
   font-weight: 400;
-  color: #555;
+  color: #64748b;
   cursor: pointer;
 }
 
 .page-number.is-active {
   font-weight: 700 !important;
-  color: #222 !important;
+  color: #3b82f6 !important;
 }
 
 /* 이전 / 다음 화살표 */
@@ -306,5 +373,5 @@ body {
   padding: 0 !important;
   font-size: 18px;
   cursor: pointer;
-  color: #777;
+  color: #64748b;
 }

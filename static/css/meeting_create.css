@@ -1,7 +1,7 @@
 /* ===== 페이지 전체 컨테이너 ===== */
 .meeting-create-page {
-  padding: 32px 40px;
-  background-color: #f9fafb;
+  padding: 20px 32px;
+  background-color: transparent;
   box-sizing: border-box;
 }
 
@@ -15,7 +15,7 @@
 .meeting-columns {
   display: grid;
   grid-template-columns: 1.05fr 1.05fr;
-  column-gap: 40px;
+  column-gap: 24px;
 }
 
 /* 각 컬럼 */
@@ -23,14 +23,19 @@
 .meeting-right {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
+  padding: 24px 24px;
+  border-radius: 16px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 4px #00000040;
 }
 
 /* ========== 공통 필드 ========== */
 .field-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .field-row-2 {
@@ -47,36 +52,39 @@
 
 .field-label {
   font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  color: #5a5a5a;
+  font-size: 16px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 4px;
 }
 
 .field-input {
-  height: 48px;
+  height: 44px;
   border-radius: 10px;
-  border: 1px solid #d9d9d9;
+  border: 1px solid #e0f2fe;
   background-color: #ffffff;
-  box-shadow: 0 4px 4px #00000020;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.04);
   padding: 0 14px;
   font-size: 15px;
-  color: #5a5a5a;
+  color: #334155;
   outline: none;
+  transition: all 0.2s ease;
 }
 
 .field-input::placeholder {
-  color: #b3b3b3;
+  color: #94a3b8;
 }
 
 .field-input:focus {
-  border-color: #6750a4;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* ========== 도메인 영역 ========== */
 .domain-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .domain-header {
@@ -87,35 +95,35 @@
 
 .domain-title {
   margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: #5a5a5a;
+  font-size: 16px;
+  font-weight: 600;
+  color: #334155;
 }
 
 .domain-sub {
   margin: 0;
   font-size: 14px;
-  color: #767676;
+  color: #64748b;
 }
 
 .domain-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 /* 업로드 카드 */
 .domain-upload-card {
-  width: 320px;
-  height: 150px;
-  border-radius: 18px;
+  width: 280px;
+  height: 110px;
+  border-radius: 16px;
   background-color: #ffffff;
   box-shadow: 0 4px 4px #00000040;
   border: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
 }
 
@@ -124,15 +132,15 @@
 }
 
 .domain-upload-icon {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
-  border: 1px solid #d1d5db;
+  border: 1px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
-  color: #5a5a5a;
+  font-size: 18px;
+  color: #475569;
 }
 
 .domain-upload-texts {
@@ -142,14 +150,14 @@
 }
 
 .domain-upload-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #5a5a5a;
+  color: #475569;
 }
 
 .domain-upload-sub {
-  font-size: 12px;
-  color: #b3b3b3;
+  font-size: 11px;
+  color: #94a3b8;
 }
 
 /* 도메인 토글 + 모달 */
@@ -184,7 +192,7 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background-color: #5a5a5a;
+  background-color: #475569;
   top: 1px;
   left: 2px;
   transition: transform 0.15s ease;
@@ -201,7 +209,7 @@
 
 .domain-toggle-text {
   font-size: 14px;
-  color: #5a5a5a;
+  color: #475569;
 }
 
 /* 모달 카드 */
@@ -228,8 +236,9 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #5a5a5a;
+  color: #475569;
   margin-bottom: 6px;
+  cursor: pointer;
 }
 
 .domain-modal-item:last-child {
@@ -239,37 +248,33 @@
 .domain-modal-item input {
   width: 16px;
   height: 16px;
+  cursor: pointer;
 }
 
 /* ========== 참석자 영역 ========== */
 .attendee-section {
-  padding: 12px 14px;
-  border-radius: 16px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 4px #00000040;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .attendee-header {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .attendee-title {
   margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: #5a5a5a;
+  font-size: 16px;
+  font-weight: 600;
+  color: #334155;
 }
 
 .attendee-sub {
   margin: 0;
   font-size: 14px;
-  color: #767676;
+  color: #64748b;
 }
 
 .attendee-layout {
@@ -277,16 +282,18 @@
   grid-template-columns: 1.2fr 0.4fr 1.2fr;
   column-gap: 12px;
   align-items: stretch;
+  height: 260px;
 }
 
 /* 조직도 */
 .attendee-tree {
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  background-color: #f9fafb;
-  padding: 8px 10px;
+  border: 1px solid #e0f2fe;
+  background-color: #f0f9ff;
+  padding: 12px 14px;
   font-size: 13px;
-  color: #5a5a5a;
+  color: #475569;
+  overflow-y: auto;
 }
 
 /* 간단 트리 스타일 */
@@ -307,14 +314,14 @@
 }
 
 .tree-user {
-  margin: 2px 0;
-  padding: 3px 4px;
+  margin: 4px 0;
+  padding: 6px 8px;
   border-radius: 6px;
   cursor: pointer;
 }
 
 .tree-user:hover {
-  background-color: #e5e7eb;
+  background-color: #e0f2fe;
 }
 
 /*로그인 유저는 참석자로 선택불가(이미 선택되어있음)*/
@@ -333,22 +340,23 @@
 .btn-reset-attendee {
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid #d4d4d4;
+  border: 1px solid #cbd5e1;
   background-color: #ffffff;
   font-size: 12px;
-  color: #5a5a5a;
+  color: #475569;
   cursor: pointer;
 }
 
 /* 선택된 참석자 */
 .attendee-selected {
   border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  background-color: #f9fafb;
-  padding: 8px 10px;
+  border: 1px solid #e0f2fe;
+  background-color: #f0f9ff;
+  padding: 12px 14px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  overflow-y: auto;
 }
 
 .attendee-selected-header {
@@ -359,7 +367,7 @@
 
 .attendee-selected-title {
   font-size: 13px;
-  color: #5a5a5a;
+  color: #475569;
 }
 
 .attendee-count-badge {
@@ -378,19 +386,25 @@
   list-style: none;
   margin: 4px 0 0;
   padding: 0;
+  overflow-y: auto;
 }
 
 .attendee-list-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 6px;
+  padding: 6px 8px;
   border-radius: 6px;
   font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.attendee-list-item:last-child {
+  margin-bottom: 0;
 }
 
 .attendee-list-item:nth-child(odd) {
-  background-color: #e5e7eb;
+  background-color: #e0f2fe;
 }
 
 .attendee-remove-btn {
@@ -418,40 +432,43 @@
 }
 
 /* ========== 오른쪽 하단: 비공개 + 버튼 ========== */
-.meeting-right-bottom {
+.right-bottom {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-top: 10px;
-  gap: 16px;
+  flex-direction: column;
+  gap: 0;
 }
 
 .private-block {
-  max-width: 380px;
+  max-width: 100%;
+  margin-bottom: 24px;
 }
 
 .private-label {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     cursor: pointer;
+    font-size: 15px;
+    color: #334155;
 }
 
 .private-icon-wrapper {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  background-color: #5a5a5a;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #cbd5e1;
+  background-color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .private-icon {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-  background-color: #ffffff;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  transition: all 0.2s ease;
 }
 
 .private-checkbox {
@@ -462,27 +479,62 @@
 }
 
 /* 체크 상태 표시 */
+.private-checkbox:checked ~ .private-icon-wrapper {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
 .private-checkbox:checked ~ .private-icon-wrapper .private-icon {
-    background-color: #d93025;
+    width: 12px;
+    height: 12px;
+    opacity: 1;
+    background-color: #ffffff;
+    border-radius: 2px;
+    position: relative;
+}
+
+.private-checkbox:checked ~ .private-icon-wrapper .private-icon::before {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #3b82f6;
+    font-size: 14px;
+    font-weight: bold;
 }
 
 .private-desc {
-  margin: 4px 0 0;
+  margin: 6px 0 0;
   font-size: 12px;
-  color: #5a5a5a;
-  white-space: nowrap;
+  color: #64748b;
+  line-height: 1.5;
 }
 
 .btn-start-meeting {
+  align-self: flex-end;
   width: 200px;
-  height: 46px;
+  height: 44px;
   border-radius: 10px;
-  background-color: #c1c1c1;
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
   border: none;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
-  color: #5a5a5a;
+  color: #ffffff;
   cursor: pointer;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  transition: all 0.2s ease;
+}
+
+.btn-start-meeting:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);
+  transform: translateY(-2px);
+}
+
+.btn-start-meeting:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 

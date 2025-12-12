@@ -25,12 +25,16 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // 일정 추가 모달 관련 요소
+  // 일정 추가/수정 모달 관련 요소
   const modal = document.getElementById("schedule-modal");
+  const modalTitleEl = document.getElementById("schedule-modal-title");
+  const modeInput = document.getElementById("schedule-mode");
+  const eventIdInput = document.getElementById("schedule-event-id");
   const titleInput = document.getElementById("schedule-title");
   const startInput = document.getElementById("schedule-start");
   const endInput = document.getElementById("schedule-end");
   const allDayInput = document.getElementById("schedule-all-day");
+  const repeatSelect = document.getElementById("schedule-repeat");
   const descInput = document.getElementById("schedule-description");
   const submitBtn = document.getElementById("schedule-submit");
   const cancelBtn = document.getElementById("schedule-cancel");
@@ -134,11 +138,12 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // 이번 달 일정 렌더링
+  // 이번 달 일정 렌더링 (오늘 이후만)
   function renderMonthSchedules(eventsData) {
     if (!monthListEl || !monthEmptyEl) return;
 
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // 오늘 00:00:00으로 설정
 
     const isSameMonth = (d1, d2) =>
       d1.getFullYear() === d2.getFullYear() &&
@@ -148,7 +153,9 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!e.start) return false;
       const start = new Date(e.start);
       if (isNaN(start.getTime())) return false;
-      return isSameMonth(start, today);
+
+      // 이번 달이면서 오늘 날짜 이후인 일정만 필터링
+      return isSameMonth(start, today) && start >= today;
     });
 
     monthListEl.innerHTML = "";
@@ -222,10 +229,22 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
+      // 이벤트 데이터에 반복 정보를 extendedProps에 포함
+      const eventsWithExtendedProps = data.map(event => ({
+        id: event.id,
+        title: event.title,
+        start: event.start,
+        end: event.end,
+        extendedProps: {
+          description: event.description || "",
+          repeat: event.repeat || "none",
+        }
+      }));
+
       // 캘린더 이벤트 전체 갈아끼우기
       if (calendar) {
         calendar.removeAllEvents();
-        calendar.addEventSource(data);
+        calendar.addEventSource(eventsWithExtendedProps);
       }
 
       // 오른쪽 카드 갱신
@@ -242,30 +261,77 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let selectedEvent = null;
 
-  function openModal(defaultDate) {
+  function openModal(defaultDate, editEvent = null) {
     if (!modal) return;
 
-    // 기본값: 선택한 날짜 또는 오늘
-    const base = defaultDate ? new Date(defaultDate) : new Date();
-
     const pad = (n) => String(n).padStart(2, "0");
-    const yyyy = base.getFullYear();
-    const mm = pad(base.getMonth() + 1);
-    const dd = pad(base.getDate());
-    const hh = pad(base.getHours());
-    const mi = pad(base.getMinutes());
 
-    const startValue = `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
-    const endDate = new Date(base.getTime() + 60 * 60 * 1000);
-    const ehh = pad(endDate.getHours());
-    const emi = pad(endDate.getMinutes());
-    const endValue = `${yyyy}-${mm}-${dd}T${ehh}:${emi}`;
+    if (editEvent) {
+      // 수정 모드
+      if (modalTitleEl) modalTitleEl.textContent = "일정 수정";
+      if (modeInput) modeInput.value = "edit";
+      if (eventIdInput) eventIdInput.value = editEvent.id || "";
+      if (submitBtn) submitBtn.textContent = "수정";
 
-    if (titleInput) titleInput.value = "";
-    if (startInput) startInput.value = startValue;
-    if (endInput) endInput.value = endValue;
-    if (allDayInput) allDayInput.checked = false;
-    if (descInput) descInput.value = "";
+      // 기존 일정 정보로 채우기
+      if (titleInput) titleInput.value = editEvent.title || "";
+
+      // 시작/종료 시간 설정
+      const start = editEvent.start instanceof Date ? editEvent.start : new Date(editEvent.start);
+      const end = editEvent.end ? (editEvent.end instanceof Date ? editEvent.end : new Date(editEvent.end)) : new Date(start.getTime() + 60 * 60 * 1000);
+
+      const yyyy = start.getFullYear();
+      const mm = pad(start.getMonth() + 1);
+      const dd = pad(start.getDate());
+      const hh = pad(start.getHours());
+      const mi = pad(start.getMinutes());
+
+      const eyyyy = end.getFullYear();
+      const emm = pad(end.getMonth() + 1);
+      const edd = pad(end.getDate());
+      const ehh = pad(end.getHours());
+      const emi = pad(end.getMinutes());
+
+      if (startInput) startInput.value = `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+      if (endInput) endInput.value = `${eyyyy}-${emm}-${edd}T${ehh}:${emi}`;
+      if (allDayInput) allDayInput.checked = false;
+      if (descInput) descInput.value = editEvent.extendedProps?.description || editEvent.description || "";
+
+      // 반복 설정 (있으면)
+      if (repeatSelect) {
+        repeatSelect.value = editEvent.extendedProps?.repeat || "none";
+      }
+    } else {
+      // 추가 모드
+      if (modalTitleEl) modalTitleEl.textContent = "일정 추가";
+      if (modeInput) modeInput.value = "create";
+      if (eventIdInput) eventIdInput.value = "";
+      if (submitBtn) submitBtn.textContent = "추가";
+
+      // 기본값: 선택한 날짜 또는 오늘
+      const base = defaultDate ? new Date(defaultDate) : new Date();
+
+      const yyyy = base.getFullYear();
+      const mm = pad(base.getMonth() + 1);
+      const dd = pad(base.getDate());
+      const hh = pad(base.getHours());
+      const mi = pad(base.getMinutes());
+
+      const startValue = `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+      const endDate = new Date(base.getTime() + 60 * 60 * 1000);
+      const ehh = pad(endDate.getHours());
+      const emi = pad(endDate.getMinutes());
+      const endValue = `${yyyy}-${mm}-${dd}T${ehh}:${emi}`;
+
+      if (titleInput) titleInput.value = "";
+      if (startInput) startInput.value = startValue;
+      if (endInput) endInput.value = endValue;
+      if (allDayInput) allDayInput.checked = false;
+      if (descInput) descInput.value = "";
+
+      // 반복 초기화
+      if (repeatSelect) repeatSelect.value = "none";
+    }
 
     modal.classList.remove("hidden");
   }
@@ -279,6 +345,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const eventDateEl = document.getElementById("event-detail-date");
   const eventTitleEl = document.getElementById("event-detail-title");
   const eventDescEl = document.getElementById("event-detail-description");
+  const eventEditBtn = document.getElementById("event-detail-edit");
   const eventDeleteBtn = document.getElementById("event-detail-delete");
   const eventBackdrop = eventModal
     ? eventModal.querySelector(".event-modal-backdrop")
@@ -292,11 +359,18 @@ document.addEventListener("DOMContentLoaded", function () {
       startValue instanceof Date ? startValue : startValue ? new Date(startValue) : null;
     if (!start || isNaN(start.getTime())) return;
 
+    const endValue = eventLike.end || eventLike.endStr;
+    const end = endValue instanceof Date ? endValue : endValue ? new Date(endValue) : null;
+
     selectedEvent = {
       id: eventLike.id,
       title: eventLike.title || "",
       start,
-      extendedProps: eventLike.extendedProps || { description: eventLike.description || "" },
+      end,
+      extendedProps: eventLike.extendedProps || {
+        description: eventLike.description || "",
+        repeat: eventLike.repeat || "none",
+      },
     };
 
     const pad = (n) => String(n).padStart(2, "0");
@@ -327,6 +401,22 @@ document.addEventListener("DOMContentLoaded", function () {
   if (eventBackdrop) {
     eventBackdrop.addEventListener("click", function () {
       closeEventModal();
+    });
+  }
+
+  // 수정 버튼 클릭 이벤트
+  if (eventEditBtn) {
+    eventEditBtn.addEventListener("click", function () {
+      if (!selectedEvent) {
+        closeEventModal();
+        return;
+      }
+
+      // 상세 모달 닫기
+      closeEventModal();
+
+      // 일정 추가 모달을 수정 모드로 열기
+      openModal(null, selectedEvent);
     });
   }
 
@@ -375,7 +465,7 @@ document.addEventListener("DOMContentLoaded", function () {
         closeEventModal();
 
         reloadAllSchedules();
-        
+
       } catch (err) {
         console.error("일정 삭제 실패:", err);
         alert("일정 삭제 중 오류가 발생했습니다.");
@@ -395,6 +485,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     eventTextColor: "#5a5a5a",
 
+    // 날짜 셀 내용 커스터마이징 (숫자만 표시)
+    dayCellContent: function(arg) {
+      return { html: arg.dayNumberText.replace('일', '') };
+    },
+
     events: function (info, successCallback, failureCallback) {
       fetch("/api/google-events/")
         .then((res) => res.json())
@@ -404,7 +499,19 @@ document.addEventListener("DOMContentLoaded", function () {
             successCallback([]);
             renderTodaySchedules([]);       // 인증 안 되어도 카드 상태 갱신
           } else {
-            successCallback(data);
+            // 이벤트 데이터에 반복 정보를 extendedProps에 포함
+            const eventsWithExtendedProps = data.map(event => ({
+              id: event.id,
+              title: event.title,
+              start: event.start,
+              end: event.end,
+              extendedProps: {
+                description: event.description || "",
+                repeat: event.repeat || "none",
+              }
+            }));
+
+            successCallback(eventsWithExtendedProps);
             renderTodaySchedules(data);     // 오늘의 일정 표시
             renderMonthSchedules(data);  // 이번 달 일정
           }
@@ -412,8 +519,8 @@ document.addEventListener("DOMContentLoaded", function () {
         .catch((err) => {
           console.error("일정 불러오기 실패:", err);
           failureCallback(err);
-          renderTodaySchedules([]);         
-          renderMonthSchedules([]);      
+          renderTodaySchedules([]);
+          renderMonthSchedules([]);
         });
     },
 
@@ -538,6 +645,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const endVal = endInput.value;
       const description = descInput ? descInput.value.trim() : "";
       const allDay = allDayInput ? allDayInput.checked : false;
+      const mode = modeInput ? modeInput.value : "create";
+      const eventId = eventIdInput ? eventIdInput.value : "";
 
       if (!title) {
         alert("일정 제목을 입력해 주세요.");
@@ -567,17 +676,41 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
+      // 종료 날짜가 시작 날짜보다 빠른 경우 검사
+      if (end <= start) {
+        alert("종료 일시는 시작 일시보다 이후여야 합니다.");
+        return;
+      }
+
+      // 반복 값 가져오기
+      const repeat = repeatSelect ? repeatSelect.value : "none";
+
       const payload = {
         title: title,
         start: start.toISOString(),
         end: end.toISOString(),
         description: description,
         all_day: allDay,
+        repeat: repeat,
       };
 
       try {
-        const res = await fetch("/api/google-events/create/", {
-          method: "POST",
+        let url, method, successMsg;
+
+        if (mode === "edit") {
+          // 수정 모드
+          url = `/api/google-events/${eventId}/update/`;
+          method = "POST";
+          successMsg = "일정이 수정되었습니다.";
+        } else {
+          // 생성 모드
+          url = "/api/google-events/create/";
+          method = "POST";
+          successMsg = "구글 캘린더에 일정이 생성되었습니다.";
+        }
+
+        const res = await fetch(url, {
+          method: method,
           headers: {
             "Content-Type": "application/json",
             "X-CSRFToken": csrftoken,
@@ -594,22 +727,34 @@ document.addEventListener("DOMContentLoaded", function () {
               (data.detail ? " (" + data.detail + ")" : "")
           );
         } else {
-          alert("구글 캘린더에 일정이 생성되었습니다.");
+          alert(successMsg);
 
-          // 화면에도 즉시 반영 (description 포함)
-          calendar.addEvent({
-            id: data.id,
-            title: title,
-            start: start,
-            end: end,
-            allDay: allDay,
-            extendedProps: {
-              description: description,
-            },
-          });
+          if (mode === "edit") {
+            // 수정: 기존 이벤트 업데이트
+            const calEvent = calendar.getEventById(eventId);
+            if (calEvent) {
+              calEvent.setProp("title", title);
+              calEvent.setStart(start);
+              calEvent.setEnd(end);
+              calEvent.setExtendedProp("description", description);
+              calEvent.setExtendedProp("repeat", repeat);
+            }
+          } else {
+            // 생성: 새 이벤트 추가
+            calendar.addEvent({
+              id: data.id,
+              title: title,
+              start: start,
+              end: end,
+              allDay: allDay,
+              extendedProps: {
+                description: description,
+                repeat: repeat,
+              },
+            });
+          }
 
           reloadAllSchedules();
-
           closeModal();
         }
       } catch (err) {

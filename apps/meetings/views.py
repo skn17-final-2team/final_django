@@ -8,19 +8,17 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.urls import reverse
 
-from .models import Meeting, Attendee, Domain, Task
+from .models import Meeting, Attendee, Task
 from django.contrib import messages
 from django.db import transaction
 
 
 from apps.meetings.utils.s3_upload import upload_raw_file_bytes, get_presigned_url
-from apps.meetings.utils.runpod import get_stt, get_sllm, runpod_health
+from apps.meetings.utils.runpod import get_stt, get_sllm
 
-from apps.meetings.models import S3File
 from django.views.decorators.http import require_GET, require_POST
 from datetime import date, datetime
 
-from django.template.loader import render_to_string  
 from io import BytesIO
 from docx import Document
 from reportlab.pdfgen import canvas
@@ -497,7 +495,7 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
     def post(self, request, *args, **kwargs):
 
         attendee_ids = request.POST.getlist("attendees")
-        domain_names = request.POST.getlist("domains")
+        domain_name = request.POST.getlist("domain")
         if not attendee_ids:
             messages.error(request, "참석자를 최소 1명 이상 선택해 주세요.")
             context = self.get_context_data()
@@ -532,7 +530,7 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
                 place=place,
                 host=host_user,   # FK: User 인스턴스
                 transcript="",    # NOT NULL 필드라면 임시값
-                domain_upload=bool(domain_names),
+                domain=domain_name,
             )
 
         Attendee.objects.create(meeting=meeting, user=host_user)
@@ -542,14 +540,6 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
                 Attendee(meeting=meeting, user=u) for u in users
         ]
         Attendee.objects.bulk_create(attendee_objs)
-
-        # domain_tbl insert (특화 도메인)
-        if domain_names:
-            domain_objs = [
-                Domain(meeting=meeting, domain_name=name)
-                for name in domain_names
-            ]
-            Domain.objects.bulk_create(domain_objs)
 
         # 5. 생성된 meeting_id를 가지고 녹음 화면으로 이동
         return redirect("meetings:meeting_record", meeting_id=meeting.meeting_id)

@@ -312,7 +312,6 @@
   document.querySelectorAll(".task-who-wrapper").forEach(bindWhoDropdown);
 
   // 태스크 추가 버튼(상단)
-  const taskAddMainBtn = document.getElementById("btn-tasks-add-main");
   function addTaskRow() {
     const body = document.querySelector(".detail-task-body");
     if (!body) return;

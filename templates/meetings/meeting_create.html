@@ -83,8 +83,8 @@
                 class="domain-toggle"
             >
                 <span class="domain-toggle-icon"></span>
-                <span class="domain-toggle-text">
-                특화 도메인 선택하기 (최대 3개 선택 가능)
+                <span class="domain-toggle-text" id="domain-toggle-text">
+                특화 도메인 선택하기
                 </span>
             </button>
 
@@ -95,46 +95,46 @@
             >
                 <label class="domain-modal-item">
                 <input
-                    type="checkbox"
+                    type="radio"
                     name="domains"
                     value="IT"
-                    data-domain-checkbox
+                    data-domain-radio
                 />
                 <span>IT</span>
                 </label>
                 <label class="domain-modal-item">
                 <input
-                    type="checkbox"
+                    type="radio"
                     name="domains"
                     value="마케팅"
-                    data-domain-checkbox
+                    data-domain-radio
                 />
                 <span>마케팅</span>
                 </label>
                 <label class="domain-modal-item">
                 <input
-                    type="checkbox"
+                    type="radio"
                     name="domains"
                     value="디자인"
-                    data-domain-checkbox
+                    data-domain-radio
                 />
                 <span>디자인</span>
                 </label>
                 <label class="domain-modal-item">
                 <input
-                    type="checkbox"
+                    type="radio"
                     name="domains"
                     value="경영"
-                    data-domain-checkbox
+                    data-domain-radio
                 />
                 <span>경영</span>
                 </label>
                 <label class="domain-modal-item">
                 <input
-                    type="checkbox"
+                    type="radio"
                     name="domains"
                     value="회계"
-                    data-domain-checkbox
+                    data-domain-radio
                 />
                 <span>회계</span>
                 </label>
@@ -209,7 +209,7 @@
                 class="btn-reset-attendee"
                 id="btn-clear-attendees"
               >
-                선택 초기화
+                선택 <br>초기화
               </button>
             </div>
 
@@ -246,8 +246,7 @@
               <span class="">비공개 회의</span>
             </label>
             <p class="private-desc">
-              체크하지 않으면, 회의 참석자의 부서원 전체에게 회의가
-              공개됩니다.
+              체크하지 않으면, 회의 참석자의 부서원 전체에게 회의가 공개됩니다.
             </p>
           </div>
 

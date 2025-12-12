@@ -25,7 +25,7 @@ class Meeting(models.Model):
         blank=True,
         db_column="record_url",
     )
-    domain_upload = models.BooleanField(default=False)
+    domain = models.BooleanField(max_length=12, null=True, blank=True)
     private_yn = models.BooleanField(default=False)
     class Meta:
         db_table = "meeting_tbl"
@@ -78,21 +78,6 @@ class Task(models.Model):
 
     def __str__(self):
         return f"[{self.meeting_id}] {self.task_content}"
-
-class Domain(models.Model):
-    meeting = models.ForeignKey(
-        Meeting,
-        on_delete=models.CASCADE,
-        related_name="domains",
-    )
-    domain_name = models.CharField(max_length=16)
-
-    class Meta:
-        db_table = "domain_tbl"
-        unique_together = ("meeting", "domain_name")
-
-    def __str__(self):
-        return f"{self.meeting_id} - {self.domain_name}"
 
 class S3File(models.Model):
     # s3_key (S3 객체 경로)

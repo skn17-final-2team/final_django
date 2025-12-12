@@ -44,6 +44,27 @@ document.addEventListener("DOMContentLoaded", function () {
   let currentPage = 1;
   let totalPages = 1;
   let filteredRows = []; // 필터 + 정렬 후의 row 목록
+  
+  function updateSearchPlaceholder() {
+    if (!searchInput) return;
+
+    switch (currentSearchField) {
+      case "title":
+        searchInput.placeholder = "제목을 입력해 주세요";
+        break;
+      case "host":
+        searchInput.placeholder = "주최자를 입력해 주세요";
+        break;
+      case "title_host":
+        searchInput.placeholder = "제목 또는 주최자를 입력해 주세요";
+        break;
+      case "datetime":
+        searchInput.placeholder = "회의 일시를 입력해 주세요";
+        break;
+      default:
+        searchInput.placeholder = "검색어를 입력해 주세요";
+    }
+  }
 
   // ===== 유틸: 문자열 포함 여부 (대소문자 무시) =====
   function containsIgnoreCase(target, keyword) {
@@ -83,6 +104,8 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
+      
+
       // 열람 필터
       let matchedRead = true;
       if (currentReadFilter === "read") {
@@ -95,6 +118,8 @@ document.addEventListener("DOMContentLoaded", function () {
         filteredRows.push(row);
       }
     });
+
+    
 
     // 2. 정렬
     filteredRows.sort((a, b) => {

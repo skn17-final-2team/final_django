@@ -19,7 +19,7 @@
     <div class="record-meta">
       <!-- 일정/장소 줄 -->
       <div class="record-meta-row">
-      <img src="{% static 'img/icon-calendar.png' %}" class="record-meta-icon-img" alt="calendar">
+      <img src="{% static 'img/icon-calendar.svg' %}" class="record-meta-icon-img" alt="calendar">
         <span class="record-meta-text">
           {{ meeting.meet_date_time|date:"Y.m.d H:i" }}
           · {{ meeting.place }}
@@ -37,7 +37,7 @@
 
       <!-- 참석자 줄 -->
       <div class="record-meta-row">
-      <img src="{% static 'img/icon-person.png' %}" class="record-meta-icon-img" alt="attendees">
+      <img src="{% static 'img/icon-person.svg' %}" class="record-meta-icon-img" alt="attendees">
         <span class="record-meta-text">
           {% for a in attendees %}
             {{ a.user.name }} ({{ a.user.dept.dept_name }})

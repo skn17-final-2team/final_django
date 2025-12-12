@@ -8,6 +8,7 @@ GOOGLE_OAUTH2_SCOPES = [
     "https://www.googleapis.com/auth/calendar",
     "https://www.googleapis.com/auth/calendar.readonly",
 ]
+GOOGLE_OAUTH2_REDIRECT_URI = "http://localhost:8000/oauth2callback/"
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")

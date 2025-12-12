@@ -10,10 +10,6 @@
 {% block content %}
 <div class="admin-layout">
 
-  <header class="admin-header">
-    <h1 class="admin-header-title">관리자 홈</h1>
-  </header>
-
   <div class="admin-body">
 
     {# ========== 왼쪽: 부서원 목록 ========== #}
@@ -65,7 +61,7 @@
 
     {# ========== 오른쪽: 등록/수정 폼(열고 닫는 영역) ========== #}
     {# ★ 반드시 이 id 사용 ★ #}
-    <section class="admin-panel admin-panel-right" id="admin-panel-right">
+    <section class="admin-panel admin-panel-right collapsed" id="admin-panel-right">
       <button type="button" class="admin-panel-toggle" id="btn-panel-toggle">
         <span id="toggle-icon">◀</span>
       </button>
@@ -108,9 +104,9 @@
             </div>
           </div>
 
-          {# 생년월일과 관리자 권한을 같은 줄에 배치 #}
+          {# 생년월일과 비밀번호 초기화 버튼을 같은 줄에 배치 #}
           <div class="admin-form-row">
-            <div class="admin-form-field admin-form-field-half">
+            <div class="admin-form-field admin-form-field-birth">
               <label for="emp-birth" class="admin-form-label">생년월일</label>
               <input
                 type="text"
@@ -125,16 +121,16 @@
               />
             </div>
 
-            <div class="admin-form-field admin-form-field-half admin-form-checkbox-wrapper">
-              <label class="admin-form-checkbox-label">
-                <input
-                  type="checkbox"
-                  id="emp-admin"
-                  name="admin_yn"
-                  class="admin-form-checkbox"
-                />
-                <span>관리자 권한 부여</span>
-              </label>
+            <div class="admin-form-field admin-form-field-reset-pw">
+              <label class="admin-form-label">&nbsp;</label>
+              <button
+                type="button"
+                class="btn-admin-reset-pw"
+                id="btn-admin-reset-pw"
+                style="display:none;"
+              >
+                비밀번호 초기화
+              </button>
             </div>
           </div>
 
@@ -167,6 +163,19 @@
               required
             />
           </div>
+
+          {# 관리자 권한을 업무 밑에 배치 #}
+          <div class="admin-form-field">
+            <label class="admin-form-checkbox-label">
+              <input
+                type="checkbox"
+                id="emp-admin"
+                name="admin_yn"
+                class="admin-form-checkbox"
+              />
+              <span>관리자 권한 부여</span>
+            </label>
+          </div>
         </div>
 
         <div class="admin-form-actions">
@@ -179,14 +188,6 @@
             id="btn-admin-close"
           >
             취소
-          </button>
-          <button
-            type="button"
-            class="btn-admin-warning"
-            id="btn-admin-reset-pw"
-            style="display:none;"
-          >
-            비밀번호 초기화
           </button>
         </div>
       </form>
