@@ -49,11 +49,11 @@ POD_ID=<POD ID>
 ```
 # 9. .env 파일 EC2로 옮기기
 ```bash
-scp -i final_ec2.pem .env ubuntu@[EC2 IP]:/home/ubuntu/final_django
+scp -i <pem키 경로> <.env 경로> ubuntu@[EC2 IP]:/home/ubuntu/final_django
 ```
 # 10. settings DEBUG = False 주석 풀기
 ```bash
-vim final_django\settings.py
+vim final_django/settings.py
 ```
 # 11. Docker 빌드 및  실행
 ```bash
