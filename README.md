@@ -6,13 +6,11 @@
 ```bash
 ssh -i <pem키 경로> ubuntu@<EC2 IP>
 ```
-
 # 2. 필수 패키지 설치
 ```bash
 sudo apt-get update
 sudo apt-get install -y ca-certificates curl gnupg lsb-release
 ```
-
 # 3. Docker GPG 키 등록
 ```bash
 sudo mkdir -p /etc/apt/keyrings
@@ -31,7 +29,6 @@ echo \
 sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
-
 # 6. Docker 명령어 등록
 ```bash
 sudo usermod -aG docker ubuntu
@@ -59,5 +56,8 @@ vim final_django/settings.py
 ```bash
 docker compose build --no-cache
 docker compose up -d
+```
+# 12. Docker 다운
+```bash
 docker compose down
 ```
