@@ -1,10 +1,24 @@
+// ===== DOM 요소 =====
 const dropzone = document.getElementById('dropzone');
 const hiddenInput = document.getElementById('hidden-file');
 const preview = document.getElementById('preview');
 const uploadBtn = document.getElementById('upload-btn');
 const csrftoken = document.querySelector("input[name='csrfmiddlewaretoken']")?.value;
 
-let selectedFiles = []; // 드래그/선택된 파일을 저장해두는 배열 (전역)
+// 녹음 관련 요소
+const btnRecord = document.getElementById('btn-record');
+const btnPause = document.getElementById('btn-pause');
+const btnStop = document.getElementById('btn-stop');
+const recordingTimer = document.getElementById('recording-timer');
+const recordingStatus = document.getElementById('recording-status');
+
+// ===== 전역 변수 =====
+let selectedFiles = []; // 드래그/선택된 파일을 저장해두는 배열
+let mediaRecorder = null;
+let audioChunks = [];
+let recordingStartTime = 0;
+let timerInterval = null;
+let isPaused = false;
 
 // 클릭으로 파일 선택
 dropzone.addEventListener('click', () => hiddenInput.click());
@@ -70,6 +84,95 @@ function handleFiles(fileList) {
     preview.appendChild(item);
 }
 
+// ===== 녹음 기능 =====
+
+// 타이머 업데이트
+function updateTimer() {
+    const elapsed = Date.now() - recordingStartTime;
+    const minutes = Math.floor(elapsed / 60000);
+    const seconds = Math.floor((elapsed % 60000) / 1000);
+    recordingTimer.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+// 녹음 시작
+btnRecord.addEventListener('click', async () => {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const audioFile = new File([audioBlob], `recording_${Date.now()}.wav`, { type: 'audio/wav' });
+
+            selectedFiles = [audioFile];
+            preview.innerHTML = '';
+            const item = document.createElement('div');
+            item.textContent = `${audioFile.name} (${Math.round(audioFile.size / 1024)} KB) - 녹음 완료`;
+            preview.appendChild(item);
+
+            // 상태 메시지
+            recordingStatus.textContent = '녹음이 완료되었습니다.';
+            recordingStatus.classList.remove('active');
+
+            // 스트림 종료
+            stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+        recordingStartTime = Date.now();
+        isPaused = false;
+
+        // 타이머 시작
+        timerInterval = setInterval(updateTimer, 100);
+
+        // UI 업데이트
+        btnRecord.disabled = true;
+        btnRecord.classList.add('recording');
+        btnPause.disabled = false;
+        btnStop.disabled = false;
+        recordingStatus.textContent = '녹음 중...';
+        recordingStatus.classList.add('active');
+
+    } catch (err) {
+        console.error('녹음 시작 오류:', err);
+        alert('마이크 접근 권한이 필요합니다.');
+    }
+});
+
+// 일시정지/재개
+btnPause.addEventListener('click', () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.pause();
+        clearInterval(timerInterval);
+        recordingStatus.textContent = '일시정지됨';
+        isPaused = true;
+    } else if (mediaRecorder && mediaRecorder.state === 'paused') {
+        mediaRecorder.resume();
+        timerInterval = setInterval(updateTimer, 100);
+        recordingStatus.textContent = '녹음 중...';
+        isPaused = false;
+    }
+});
+
+// 녹음 중지
+btnStop.addEventListener('click', () => {
+    if (mediaRecorder && (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused')) {
+        mediaRecorder.stop();
+        clearInterval(timerInterval);
+
+        // UI 초기화
+        btnRecord.disabled = false;
+        btnRecord.classList.remove('recording');
+        btnPause.disabled = true;
+        btnStop.disabled = true;
+    }
+});
+
 // 업로드 버튼 클릭 시 실행
 uploadBtn.addEventListener('click', async (e) => {
     e.preventDefault();
@@ -79,7 +182,7 @@ uploadBtn.addEventListener('click', async (e) => {
     }
     const pathParts = window.location.pathname.split('/');
     const meetingId = pathParts[2];
-    
+
     const formData = new FormData();
 
     formData.append('file', selectedFiles[0]);
@@ -98,6 +201,11 @@ uploadBtn.addEventListener('click', async (e) => {
             selectedFiles = [];
             preview.innerHTML = '';
             if (hiddenInput) hiddenInput.value = "";
+
+            // 녹음 관련 초기화
+            recordingTimer.textContent = '00:00';
+            recordingStatus.textContent = '';
+
             window.location.href = `/meetings/${meetingId}/rendering/`;
         } else {
             const data = await res.json().catch(() => ({}));
