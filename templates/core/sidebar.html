@@ -19,7 +19,7 @@
       <li class="sidebar-item {% if request.resolver_match.app_name == 'core' and request.resolver_match.url_name == 'home' %}sidebar-item-active{% endif %}">
         <a href="{% url 'core:home' %}" class="sidebar-link">
           <img
-            src="{% static 'img/icon-home.png' %}"
+            src="{% static 'img/icon-home.svg' %}"
             alt=""
             class="sidebar-icon"
           />
@@ -30,7 +30,7 @@
       <li class="sidebar-item {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'meeting_create' %}sidebar-item-active{% endif %}">
         <a href="{% url 'meetings:meeting_create' %}" class="sidebar-link">
           <img
-            src="{% static 'img/icon-new-meeting.png' %}"
+            src="{% static 'img/icon-new-meeting.svg' %}"
             alt=""
             class="sidebar-icon"
           />
@@ -45,7 +45,7 @@
     <button type="button" class="sidebar-collapse">
       <div class="sidebar-collapse-left">
         <img
-          src="{% static 'img/icon-meeting-list.png' %}"
+          src="{% static 'img/icon-meeting-list.svg' %}"
           alt=""
           class="sidebar-icon"
         />
@@ -87,7 +87,7 @@
         <a href="{% url 'meetings:meeting_detail' m.meeting_id %}" class="meeting-card">
           <div class="meeting-card-icon">
             <img
-              src="{% static 'img/icon-mic.png' %}"
+              src="{% static 'img/icon-mic.svg' %}"
               alt=""
               class="meeting-icon-image"
             />

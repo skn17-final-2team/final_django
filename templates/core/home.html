@@ -15,7 +15,7 @@
     <header class="dashboard-header">
       <div class="dashboard-header-left">
         <div class="calendar-icon-wrapper">
-          <img src="{% static 'img/icon-calendar.png' %}"
+          <img src="{% static 'img/icon-calendar.svg' %}"
               alt="달력"
               class="dashboard-calendar-icon"
               id="home-calendar-icon">
@@ -44,13 +44,15 @@
           </div>
         </div>
 
-        <span id="home-current-date"></span>
+        <div class="date-text-wrapper">
+          <span id="home-current-date"></span>
+        </div>
       </div>
 
 
       <div class="dashboard-header-right">
         <button type="button" class="btn-add-schedule">
-          <img src="{% static 'img/icon-plus.png' %}" alt="추가" class="btn-add-icon">
+          <img src="{% static 'img/icon-plus.svg' %}" alt="추가" class="btn-add-icon">
           <span class="btn-add-text">일정 추가</span>
         </button>
       </div>

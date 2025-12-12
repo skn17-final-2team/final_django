@@ -1,6 +1,6 @@
 /* ===== 페이지 전체 컨테이너 ===== */
 .meeting-create-page {
-  padding: 32px 40px;
+  padding: 20px 32px;
   background-color: transparent;
   box-sizing: border-box;
 }
@@ -15,7 +15,7 @@
 .meeting-columns {
   display: grid;
   grid-template-columns: 1.05fr 1.05fr;
-  column-gap: 40px;
+  column-gap: 24px;
 }
 
 /* 각 컬럼 */
@@ -23,14 +23,19 @@
 .meeting-right {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 4px #00000040;
 }
 
 /* ========== 공통 필드 ========== */
 .field-section {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
 }
 
 .field-row-2 {
@@ -53,7 +58,7 @@
 }
 
 .field-input {
-  height: 48px;
+  height: 44px;
   border-radius: 10px;
   border: 1px solid #e0f2fe;
   background-color: #ffffff;
@@ -78,7 +83,7 @@
 .domain-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .domain-header {
@@ -108,8 +113,8 @@
 
 /* 업로드 카드 */
 .domain-upload-card {
-  width: 320px;
-  height: 150px;
+  width: 310px;
+  height: 130px;
   border-radius: 18px;
   background-color: #ffffff;
   box-shadow: 0 4px 4px #00000040;
@@ -232,6 +237,7 @@
   font-size: 14px;
   color: #475569;
   margin-bottom: 6px;
+  cursor: pointer;
 }
 
 .domain-modal-item:last-child {
@@ -241,18 +247,14 @@
 .domain-modal-item input {
   width: 16px;
   height: 16px;
+  cursor: pointer;
 }
 
 /* ========== 참석자 영역 ========== */
 .attendee-section {
-  padding: 12px 14px;
-  border-radius: 16px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 4px #00000040;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .attendee-header {
@@ -277,8 +279,9 @@
 .attendee-layout {
   display: grid;
   grid-template-columns: 1.2fr 0.4fr 1.2fr;
-  column-gap: 12px;
+  column-gap: 10px;
   align-items: stretch;
+  height: 220px;
 }
 
 /* 조직도 */
@@ -289,6 +292,7 @@
   padding: 8px 10px;
   font-size: 13px;
   color: #475569;
+  overflow-y: auto;
 }
 
 /* 간단 트리 스타일 */
@@ -351,6 +355,7 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  overflow-y: auto;
 }
 
 .attendee-selected-header {
@@ -380,6 +385,7 @@
   list-style: none;
   margin: 4px 0 0;
   padding: 0;
+  overflow-y: auto;
 }
 
 .attendee-list-item {
@@ -477,11 +483,11 @@
 
 .btn-start-meeting {
   width: 200px;
-  height: 46px;
+  height: 44px;
   border-radius: 10px;
   background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
   border: none;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 500;
   color: #ffffff;
   cursor: pointer;

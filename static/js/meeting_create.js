@@ -1,10 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
-  /* ===== 특화 도메인: 최대 3개 제한 ===== */
-  const domainCheckboxes = document.querySelectorAll("[data-domain-checkbox]");
-  const maxDomains = 3;
+  /* ===== 특화 도메인: 라디오 버튼으로 1개만 선택 ===== */
+  const domainRadios = document.querySelectorAll("[data-domain-radio]");
   const toggleWrapper = document.getElementById("domain-toggle-wrapper");
   const toggleBtn = document.getElementById("btn-domain-toggle");
+  const toggleText = document.getElementById("domain-toggle-text");
   const modal = document.getElementById("domain-modal");
+
   if (toggleWrapper && toggleBtn && modal) {
     // 토글 클릭 시 열고 닫기
     toggleBtn.addEventListener("click", function (e) {
@@ -20,36 +21,26 @@ document.addEventListener("DOMContentLoaded", function () {
         modal.classList.contains("is-open")
       ) {
         modal.classList.remove("is-open");
-        toggleWrapper.classList.remove("is-open");
+        // 스위치는 켜진 상태 유지 (is-open 클래스 제거하지 않음)
+        // toggleWrapper.classList.remove("is-open");
       }
     });
   }
 
-  // ===== 도메인 최대 3개 제한 =====
-  function syncDomainLimit() {
-    const checked = Array.from(domainCheckboxes).filter((c) => c.checked);
-    const isFull = checked.length >= maxDomains;
-    domainCheckboxes.forEach((c) => {
-      if (!c.checked) {
-        c.disabled = isFull;
-      }
-    });
-  }
-  domainCheckboxes.forEach((c) => {
-    c.addEventListener("change", syncDomainLimit);
-  });
-  syncDomainLimit();
-
-  function updateDomainSelection(evt) {
-    const checked = Array.from(domainCheckboxes).filter((cb) => cb.checked);
-    if (checked.length > maxDomains) {
-      evt.target.checked = false;
-      alert(`특화 도메인은 최대 ${maxDomains}개까지 선택할 수 있습니다.`);
+  // 라디오 버튼 선택 시 텍스트 업데이트
+  function updateDomainSelection() {
+    const selectedRadio = document.querySelector("[data-domain-radio]:checked");
+    if (selectedRadio && toggleText) {
+      toggleText.textContent = `선택됨: ${selectedRadio.value}`;
+      // 스위치를 켜진 상태로 유지
+      toggleWrapper.classList.add("is-open");
     }
+    // 모달은 닫기
+    modal.classList.remove("is-open");
   }
 
-  domainCheckboxes.forEach((cb) => {
-    cb.addEventListener("change", updateDomainSelection);
+  domainRadios.forEach((radio) => {
+    radio.addEventListener("change", updateDomainSelection);
   });
 
   /* ===== 도메인 파일 업로드: 파일명 표시 ===== */

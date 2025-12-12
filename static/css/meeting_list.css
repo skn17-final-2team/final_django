@@ -40,13 +40,13 @@ body {
   display: flex;
   align-items: center;
   padding: 7px 40px 7px 32px;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.04);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
   transition: all 0.2s ease;
 }
 
 .meeting-search-box:focus-within {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
 }
 
 .search-icon {
