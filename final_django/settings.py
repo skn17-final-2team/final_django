@@ -19,7 +19,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    # os.getenv("AWS_ELASTIC_IP") or '',
+    os.getenv("AWS_ELASTIC_IP") or '',
     # os.getenv("DOMAIN_URL") or '',
 ]
 
@@ -137,3 +137,8 @@ STORAGES = {
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
 AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'ap-northeast-2')
 POD_ID = os.getenv("POD_ID")
+
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://" + os.getenv("AWS_ELASTIC_IP") + ":8080",
+]

@@ -58,18 +58,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const saveBtn = document.getElementById("btn-transcript-save");
   if (!saveBtn) return;
 
-  saveBtn.addEventListener("click", function () {
-    const summaryUrl = saveBtn.dataset.summaryUrl;
-    if (!summaryUrl) {
-      alert("요약 페이지 URL을 찾을 수 없습니다.");
-      return;
-    }
+  const summaryUrl = saveBtn.dataset.summaryUrl;
+  if (!summaryUrl) {
+    // 요약 URL이 없는 경우에는 아무 동작도 하지 않고 종료
+    return;
+  }
 
+  saveBtn.addEventListener("click", function (event) {
+    event.preventDefault();
     window.location.href = summaryUrl;
   });
-});
-
-document.getElementById("btn-transcript-save").addEventListener("click", function () {
-    const url = this.dataset.summaryUrl;
-    window.location.href = url;
 });

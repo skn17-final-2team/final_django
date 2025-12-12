@@ -35,6 +35,9 @@
     btn.addEventListener("click", () => {
       const target = btn.dataset.tabTarget; // summary / tasks / minutes
       activateTab(target, btn);
+      if (target) {
+        window.location.hash = `#${target}`;
+      }
 
       if (target === "minutes") {
       // openMinutesConfig 함수는 아래쪽에서 선언되어 있음 (function 선언이라 호이스팅됨)
@@ -44,6 +47,17 @@
     }
     });
   });
+
+  // URL hash에 따라 초기 탭 활성화
+  const initialTab = (window.location.hash || "").replace("#", "");
+  if (initialTab) {
+    const btn = Array.from(tabButtons).find(
+      (b) => b.dataset.tabTarget === initialTab
+    );
+    if (btn) {
+      activateTab(initialTab, btn);
+    }
+  }
 
   /* =========================================
    * 2. 회의 정보 팝업 (상단 제목 옆 화살표)
@@ -123,7 +137,87 @@
   }
 
   /* =========================================
-   * 4. 회의록( minutes ) 에디터 관련
+   * 4. 태스크 저장 (Who/What/When)
+   * ========================================= */
+  const taskSaveBtn = document.getElementById("btn-tasks-save");
+  if (taskSaveBtn && meetingId) {
+    taskSaveBtn.addEventListener("click", async () => {
+      const rows = Array.from(document.querySelectorAll(".detail-task-row"));
+      const tasksPayload = [];
+
+      rows.forEach((row) => {
+        const who = (row.querySelector('[data-task-field="who"]')?.value || "").trim();
+        const what = (row.querySelector('[data-task-field="what"]')?.value || "").trim();
+        const when = (row.querySelector('[data-task-field="when"]')?.value || "").trim();
+        if (!who && !what && !when) return;
+
+        const taskData = { who, what, when };
+        const taskId = row.dataset.taskId;
+        if (taskId) {
+          taskData.id = taskId;
+        }
+        tasksPayload.push(taskData);
+      });
+
+      try {
+        const res = await fetch(`/meetings/${meetingId}/tasks/save/`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
+          },
+          body: JSON.stringify({ tasks: tasksPayload }),
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.ok === false) {
+          throw new Error(data.error || "태스크 저장 중 오류가 발생했습니다.");
+        }
+        alert("태스크가 저장되었습니다.");
+        // 저장 후에도 태스크 탭을 유지하도록 해시를 설정한 뒤 새로고침
+        const path = window.location.pathname;
+        window.location.href = `${path}#tasks`;
+        window.location.reload();
+      } catch (err) {
+        console.error("tasks save error:", err);
+        alert(err.message || "태스크 저장에 실패했습니다.");
+      }
+    });
+  }
+
+  // 태스크 행 추가 버튼(추가)을 누르면 빈 행을 하나 더 생성
+  function attachTaskAddHandler(btn) {
+    btn.addEventListener("click", () => {
+      const body = btn.closest(".detail-task-box")?.querySelector(".detail-task-body");
+      if (!body) return;
+      const newRow = document.createElement("div");
+      newRow.className = "detail-task-row";
+      newRow.innerHTML = `
+        <div class="detail-task-col detail-task-col-who">
+          <textarea class="task-edit-field" data-task-field="who" rows="2"></textarea>
+        </div>
+        <div class="detail-task-col detail-task-col-what">
+          <textarea class="task-edit-field" data-task-field="what" rows="2"></textarea>
+        </div>
+        <div class="detail-task-col detail-task-col-when">
+          <textarea class="task-edit-field" data-task-field="when" rows="2"></textarea>
+        </div>
+        <div class="detail-task-col detail-task-col-add">
+          <button type="button" class="detail-task-add-btn">추가</button>
+        </div>
+      `;
+      body.appendChild(newRow);
+      const newAddBtn = newRow.querySelector(".detail-task-add-btn");
+      if (newAddBtn) {
+        attachTaskAddHandler(newAddBtn);
+      }
+    });
+  }
+
+  document.querySelectorAll(".detail-task-add-btn").forEach(attachTaskAddHandler);
+
+  /* =========================================
+   * 5. 회의록( minutes ) 에디터 관련
    *    - 구성 선택 팝업
    *    - 템플릿에서 섹션 생성
    *    - 저장

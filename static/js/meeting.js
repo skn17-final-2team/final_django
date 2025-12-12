@@ -206,7 +206,7 @@ uploadBtn.addEventListener('click', async (e) => {
             recordingTimer.textContent = '00:00';
             recordingStatus.textContent = '';
 
-            window.location.href = `/meetings/${meetingId}/rendering/`;
+            window.location.href = `/meetings/${meetingId}/rendering/stt/`;
         } else {
             const data = await res.json().catch(() => ({}));
             alert(`업로드 실패: ${data.error ?? '알 수 없는 오류'}`);

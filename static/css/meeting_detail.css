@@ -227,6 +227,16 @@
   word-break: break-word;
 }
 
+.task-edit-field {
+  width: 100%;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
 .detail-task-add-btn {
   min-width: 52px;
   height: 28px;

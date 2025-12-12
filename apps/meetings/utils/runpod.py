@@ -14,3 +14,13 @@ def get_stt(presigned_url):
         json={'audio_url': presigned_url}
     )
     return res
+
+def get_sllm(transcript, domain=""):
+    res = requests.post(
+        url + "inference",
+        json={
+            'transcript': transcript,
+            'domain': domain
+        }
+    )
+    return res
