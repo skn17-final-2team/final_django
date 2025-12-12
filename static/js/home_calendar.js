@@ -259,6 +259,87 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  const hoverOffset = 10;
+  let hoverCardEl = null;
+
+  const hoverTimeFormatter = new Intl.DateTimeFormat("ko-KR", {
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  function formatEventRangeText(event) {
+    if (!event.start) return "";
+    const start =
+      event.start instanceof Date ? event.start : new Date(event.start);
+    const endRaw = event.end || event.extendedProps?.end;
+    const end = endRaw
+      ? endRaw instanceof Date
+        ? endRaw
+        : new Date(endRaw)
+      : null;
+
+    const startText = hoverTimeFormatter.format(start);
+    if (!end || isNaN(end.getTime())) return startText;
+    return `${startText} - ${hoverTimeFormatter.format(end)}`;
+  }
+
+  function hideEventHoverCard() {
+    if (hoverCardEl) {
+      hoverCardEl.remove();
+      hoverCardEl = null;
+    }
+  }
+
+  function showEventHoverCard(targetEl, event) {
+    hideEventHoverCard();
+
+    const card = document.createElement("div");
+    card.className = "event-hover-card";
+
+    const titleText = event.title || "(제목 없음)";
+    const timeText = formatEventRangeText(event);
+    const descText = event.extendedProps?.description || "";
+
+    card.innerHTML = `
+      <div class="event-hover-title">${titleText}</div>
+      ${timeText ? `<div class="event-hover-time">${timeText}</div>` : ""}
+      ${descText ? `<div class="event-hover-desc">${descText}</div>` : ""}
+    `;
+
+    document.body.appendChild(card);
+
+    const rect = targetEl.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    let top = rect.top + window.scrollY - cardRect.height - hoverOffset;
+    let left =
+      rect.left +
+      window.scrollX +
+      rect.width / 2 -
+      cardRect.width / 2;
+
+    if (top < window.scrollY + 4) {
+      top = rect.bottom + window.scrollY + hoverOffset;
+    }
+
+    const maxLeft =
+      document.documentElement.clientWidth -
+      cardRect.width -
+      hoverOffset;
+    if (left < hoverOffset) left = hoverOffset;
+    if (left > maxLeft) left = Math.max(hoverOffset, maxLeft);
+
+    card.style.top = `${top}px`;
+    card.style.left = `${left}px`;
+
+    hoverCardEl = card;
+  }
+
+  document.addEventListener("scroll", hideEventHoverCard, true);
+  window.addEventListener("resize", hideEventHoverCard);
+  document.addEventListener("click", hideEventHoverCard);
+
   let selectedEvent = null;
 
   function openModal(defaultDate, editEvent = null) {
@@ -490,6 +571,20 @@ document.addEventListener("DOMContentLoaded", function () {
       return { html: arg.dayNumberText.replace('일', '') };
     },
 
+    eventDidMount: function (info) {
+      const el = info.el;
+      if (el) {
+        el.addEventListener("mouseenter", () =>
+          showEventHoverCard(el, info.event)
+        );
+        el.addEventListener("mouseleave", hideEventHoverCard);
+        el.addEventListener("focus", () =>
+          showEventHoverCard(el, info.event)
+        );
+        el.addEventListener("blur", hideEventHoverCard);
+      }
+    },
+
     events: function (info, successCallback, failureCallback) {
       fetch("/api/google-events/")
         .then((res) => res.json())
@@ -555,6 +650,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // 아이콘 클릭 시 팝오버 열기/닫기
     calendarIconEl.addEventListener("click", function (e) {
       e.stopPropagation();
+      // 현재 달력 연도로 동기화
+      popoverYear = calendar.getDate().getFullYear();
+      updatePopoverYearLabel();
       monthPopoverEl.classList.toggle("hidden");
     });
 
@@ -582,6 +680,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const monthIndex = Number(btn.dataset.month); // 0~11
         const targetDate = new Date(popoverYear, monthIndex, 1);
         calendar.gotoDate(targetDate);
+        // 팝오버 연도도 현재 선택한 연도로 맞춰둔다
+        popoverYear = targetDate.getFullYear();
         if (currentDateEl) {
           currentDateEl.textContent = formatMonthLabel(calendar.getDate());
         }

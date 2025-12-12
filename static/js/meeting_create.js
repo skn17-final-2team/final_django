@@ -1,47 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
   /* ===== 특화 도메인: 라디오 버튼으로 1개만 선택 ===== */
-  const domainRadios = document.querySelectorAll("[data-domain-radio]");
-  const toggleWrapper = document.getElementById("domain-toggle-wrapper");
-  const toggleBtn = document.getElementById("btn-domain-toggle");
-  const toggleText = document.getElementById("domain-toggle-text");
-  const modal = document.getElementById("domain-modal");
-
-  if (toggleWrapper && toggleBtn && modal) {
-    // 토글 클릭 시 열고 닫기
-    toggleBtn.addEventListener("click", function (e) {
-      e.stopPropagation();
-      modal.classList.toggle("is-open");
-      toggleWrapper.classList.toggle("is-open");
-    });
-
-    // 모달 밖 클릭하면 닫기
-    document.addEventListener("click", function (e) {
-      if (
-        !toggleWrapper.contains(e.target) &&
-        modal.classList.contains("is-open")
-      ) {
-        modal.classList.remove("is-open");
-        // 스위치는 켜진 상태 유지 (is-open 클래스 제거하지 않음)
-        // toggleWrapper.classList.remove("is-open");
-      }
-    });
-  }
-
-  // 라디오 버튼 선택 시 텍스트 업데이트
-  function updateDomainSelection() {
-    const selectedRadio = document.querySelector("[data-domain-radio]:checked");
-    if (selectedRadio && toggleText) {
-      toggleText.textContent = `선택됨: ${selectedRadio.value}`;
-      // 스위치를 켜진 상태로 유지
-      toggleWrapper.classList.add("is-open");
-    }
-    // 모달은 닫기
-    modal.classList.remove("is-open");
-  }
-
-  domainRadios.forEach((radio) => {
-    radio.addEventListener("change", updateDomainSelection);
-  });
+  // 라디오 버튼은 HTML의 name 속성으로 자동으로 단일 선택됨
+  // 별도의 JavaScript 처리 불필요
 
   /* ===== 도메인 파일 업로드: 파일명 표시 ===== */
   const domainFileInput = document.getElementById("id_domain_file");

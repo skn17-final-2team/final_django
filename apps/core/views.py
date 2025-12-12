@@ -266,7 +266,7 @@ def admin_member_delete(request, user_id):
     except Exception as e:
         return JsonResponse({"success": False, "message": f"오류가 발생했습니다: {str(e)}"}, status=500)
 
-
+    
 @require_http_methods(["POST"])
 def admin_member_reset_password(request, user_id):
     """부서원 비밀번호 초기화 API (생년월일로 초기화)"""

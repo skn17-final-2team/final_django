@@ -160,95 +160,35 @@
   color: #94a3b8;
 }
 
-/* 도메인 토글 + 모달 */
-.domain-toggle-wrapper {
-  position: relative;
-  display: inline-block;
+/* 도메인 라디오 버튼 리스트 */
+.domain-radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   margin-top: 4px;
 }
 
-.domain-toggle {
-  border: none;
-  background: transparent;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0;
-  cursor: pointer;
-}
-
-.domain-toggle-icon {
-  width: 36px;
-  height: 20px;
-  border-radius: 999px;
-  background-color: #e5e5e5;
-  border: 1px solid #b3b3b3;
-  position: relative;
-}
-
-.domain-toggle-icon::before {
-  content: "";
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background-color: #475569;
-  top: 1px;
-  left: 2px;
-  transition: transform 0.15s ease;
-}
-
-/* 토글 ON (모달 열렸을 때) */
-.domain-toggle-wrapper.is-open .domain-toggle-icon {
-  background-color: #d4d4d4;
-}
-
-.domain-toggle-wrapper.is-open .domain-toggle-icon::before {
-  transform: translateX(14px);
-}
-
-.domain-toggle-text {
-  font-size: 14px;
-  color: #475569;
-}
-
-/* 모달 카드 */
-.domain-modal {
-  position: absolute;
-  top: 28px;
-  left: 0;
-  width: 180px;
-  padding: 12px 14px;
-  border-radius: 18px;
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 4px #00000040;
-  display: none;
-  z-index: 10;
-}
-
-.domain-modal.is-open {
-  display: block;
-}
-
-.domain-modal-item {
+.domain-radio-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
+  gap: 10px;
+  font-size: 15px;
   color: #475569;
-  margin-bottom: 6px;
   cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
 }
 
-.domain-modal-item:last-child {
-  margin-bottom: 0;
+.domain-radio-item:hover {
+  background-color: #f0f9ff;
 }
 
-.domain-modal-item input {
-  width: 16px;
-  height: 16px;
+.domain-radio-item input[type="radio"] {
+  width: 18px;
+  height: 18px;
   cursor: pointer;
+  accent-color: #3b82f6;
 }
 
 /* ========== 참석자 영역 ========== */
@@ -412,7 +352,7 @@
   background: transparent;
   cursor: pointer;
   font-size: 14px;
-  color: #9ca3af;
+  color: #3B82F6;
 }
 
 .attendee-validator-input {
@@ -478,11 +418,7 @@
     height: 0;
 }
 
-/* 체크 상태 표시 */
-.private-checkbox:checked ~ .private-icon-wrapper {
-    background-color: #3b82f6;
-    border-color: #3b82f6;
-}
+
 
 .private-checkbox:checked ~ .private-icon-wrapper .private-icon {
     width: 12px;
