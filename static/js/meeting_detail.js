@@ -195,6 +195,7 @@
   const whoOptions = Array.from(
     document.querySelectorAll("#task-who-options option")
   ).map((opt) => opt.value || "");
+  whoOptions.unshift("대상 없음");
 
   // 태스크 추가 버튼(상단)으로 빈 행 추가
   const taskAddMainBtn = document.getElementById("btn-tasks-add-main");
@@ -204,6 +205,9 @@
     const newRow = document.createElement("div");
     newRow.className = "detail-task-row";
     newRow.innerHTML = `
+      <div class="detail-task-col detail-task-col-check">
+        <input type="checkbox" class="task-row-check">
+      </div>
       <div class="detail-task-col detail-task-col-who">
         <div class="task-who-wrapper">
           <input type="text" class="task-edit-field task-who-input" data-task-field="who" list="task-who-options" />
@@ -215,6 +219,9 @@
       </div>
       <div class="detail-task-col detail-task-col-when">
         <textarea class="task-edit-field" data-task-field="when" rows="2"></textarea>
+      </div>
+      <div class="detail-task-col detail-task-col-add">
+        <button type="button" class="detail-task-add-btn">추가</button>
       </div>
     `;
     body.appendChild(newRow);
@@ -232,6 +239,32 @@
     taskAddMainBtn.addEventListener("click", addTaskRow);
   }
 
+  // 태스크 행 삭제: 선택 삭제
+  const taskDeleteSelectedBtn = document.getElementById("btn-tasks-delete-selected");
+  const taskCheckAll = document.getElementById("task-check-all");
+
+  function deleteSelectedTasks() {
+    const rows = document.querySelectorAll(".detail-task-row");
+    rows.forEach((row) => {
+      const chk = row.querySelector(".task-row-check");
+      if (chk && chk.checked) {
+        row.remove();
+      }
+    });
+  }
+
+  if (taskDeleteSelectedBtn) {
+    taskDeleteSelectedBtn.addEventListener("click", deleteSelectedTasks);
+  }
+  if (taskCheckAll) {
+    taskCheckAll.addEventListener("change", (e) => {
+      const checked = e.target.checked;
+      document.querySelectorAll(".task-row-check").forEach((chk) => {
+        chk.checked = checked;
+      });
+    });
+  }
+
   function bindWhoDropdown(wrapper) {
     const input = wrapper.querySelector(".task-who-input");
     const toggle = wrapper.querySelector(".task-who-toggle");
@@ -246,23 +279,8 @@
 
     const renderList = (keyword = "") => {
       dropdown.innerHTML = "";
-      const lower = keyword.toLowerCase();
-      const filtered = whoOptions.filter((v) => v.toLowerCase().includes(lower));
-      if (!filtered.length) {
-        // 항상 전체 목록을 보여주기 위해 필터가 비면 전체 표시
-        whoOptions.forEach((val) => {
-          const item = document.createElement("div");
-          item.className = "task-who-dropdown-item";
-          item.textContent = val;
-          item.addEventListener("click", () => {
-            input.value = val;
-            dropdown.style.display = "none";
-          });
-          dropdown.appendChild(item);
-        });
-        return;
-      }
-      filtered.forEach((val) => {
+      const list = whoOptions.slice();
+      list.forEach((val) => {
         const item = document.createElement("div");
         item.className = "task-who-dropdown-item";
         item.textContent = val;
@@ -305,8 +323,6 @@
       }
     });
   }
-
-  document.querySelectorAll(".detail-task-add-btn").forEach(attachTaskAddHandler);
 
   // 기존 행에도 커스텀 드롭다운 바인딩
   document.querySelectorAll(".task-who-wrapper").forEach(bindWhoDropdown);

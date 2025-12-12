@@ -199,13 +199,13 @@
 .detail-task-header,
 .detail-task-row {
   display: grid;
-  grid-template-columns: 1.2fr 2.4fr 1.2fr;
+  grid-template-columns: 0.6fr 1.2fr 2.4fr 1.2fr 0.9fr;
   column-gap: 8px;
   align-items: center;
 }
 
-.detail-task-col-add {
-  display: none;
+.detail-task-col-check {
+  text-align: center;
 }
 
 .detail-task-header {
@@ -268,6 +268,8 @@
   line-height: 1;
   padding: 2px 4px;
   color: #555;
+  z-index: 5;
+  pointer-events: auto;
 }
 .task-who-toggle:hover {
   color: #222;
@@ -277,13 +279,14 @@
   top: calc(100% + 4px);
   left: 0;
   right: 0;
+  width: 100%;
   max-height: 180px;
   overflow-y: auto;
   background: #fff;
   border: 1px solid #d0d0d0;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  z-index: 10;
+  z-index: 50;
 }
 .task-who-dropdown-item,
 .task-who-dropdown-empty {

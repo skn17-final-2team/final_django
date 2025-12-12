@@ -166,17 +166,24 @@
           id="tab-tasks"
           data-tab-panel="tasks"
         >
-          <div class="detail-task-box">
-            <div class="detail-task-header">
-              <div class="detail-task-col detail-task-col-who">Who</div>
-              <div class="detail-task-col detail-task-col-what">What</div>
-              <div class="detail-task-col detail-task-col-when">When</div>
-            </div>
+            <div class="detail-task-box">
+              <div class="detail-task-header">
+                <div class="detail-task-col detail-task-col-check">
+                  <input type="checkbox" id="task-check-all">
+                </div>
+                <div class="detail-task-col detail-task-col-who">Who</div>
+                <div class="detail-task-col detail-task-col-what">What</div>
+                <div class="detail-task-col detail-task-col-when">When</div>
+                <div class="detail-task-col detail-task-col-add">Add</div>
+              </div>
 
-            <div class="detail-task-body">
-              {% if tasks_display %}
-                {% for task in tasks_display %}
+              <div class="detail-task-body">
+                {% if tasks_display %}
+                  {% for task in tasks_display %}
                   <div class="detail-task-row" data-task-id="{{ task.id }}">
+                    <div class="detail-task-col detail-task-col-check">
+                      <input type="checkbox" class="task-row-check">
+                    </div>
                     <div class="detail-task-col detail-task-col-who">
                       <div class="task-who-wrapper">
                         <input
@@ -195,6 +202,9 @@
                     <div class="detail-task-col detail-task-col-when">
                       <textarea class="task-edit-field" data-task-field="when" rows="2">{{ task.when }}</textarea>
                     </div>
+                    <div class="detail-task-col detail-task-col-add">
+                      <button type="button" class="detail-task-add-btn">추가</button>
+                    </div>
                   </div>
                 {% endfor %}
               {% else %}
@@ -208,7 +218,14 @@
               <button
                 type="button"
                 class="detail-minutes-btn"
-                id="btn-tasks-add-main"
+                id="btn-tasks-delete-selected"
+              >
+                태스크 삭제
+              </button>
+              <button
+                type="button"
+                class="detail-minutes-btn"
+                id="btn-tasks-delete-all"
               >
                 태스크 추가
               </button>

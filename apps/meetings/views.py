@@ -247,7 +247,7 @@ def _task_to_display(task):
         "id": getattr(task, "task_id", None),
         "who": who_text,
         "what": what,
-        "when": when_text or "-",
+        "when": when_text or "직접입력",
     }
 
 
