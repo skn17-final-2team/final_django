@@ -1,6 +1,8 @@
 services:
   web:
     build: .
+    environment:
+      RUN_MAIN: "true"
     container_name: django_web
     volumes:
       - .:/code
