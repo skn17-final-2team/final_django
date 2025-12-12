@@ -1,23 +1,23 @@
 /* ========= 공통 기본 스타일 ========= */
 
 :root {
-  --color-bg: #eef2ff;
-  --color-bg-alt: #fdfdff;
+  --color-bg: #f0f9ff;
+  --color-bg-alt: #fefeff;
   --color-sidebar-bg: #ffffff;
-  --color-sidebar-border: #e0e7ff;
+  --color-sidebar-border: #e0f2fe;
   --color-header-bg: #ffffff;
-  --color-header-border: #e0e7ff;
+  --color-header-border: #e0f2fe;
 
   --color-text: #1f2937;
   --color-text-muted: #6b7280;
 
-  --color-primary: #6366f1;
-  --color-primary-hover: #4f46e5;
-  --color-accent-soft: #eef2ff;
-  --color-accent-strong: #c084fc;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-accent-soft: #e0f2fe;
+  --color-accent-strong: #60a5fa;
 
   --color-border-subtle: #e5e7eb;
-  --shadow-soft: 0 10px 25px rgba(99, 102, 241, 0.12);
+  --shadow-soft: 0 10px 25px rgba(59, 130, 246, 0.1);
 
   --animate-spin: spin 1s linear infinite;
   --shimmer-width: 160px;
@@ -73,12 +73,12 @@ body {
 .btn-primary {
   background-color: var(--color-primary);
   color: #ffffff;
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.2);
 }
 
 .btn-primary:hover {
   background-color: var(--color-primary-hover);
-  box-shadow: 0 12px 28px rgba(79, 70, 229, 0.35);
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.3);
 }
 
 .btn-outline {
@@ -253,7 +253,7 @@ body {
 .pw-hint {
   margin: 0 0 12px 0;
   font-size: 13px;
-  color: #4c66d6;
+  color: #3b82f6;
 }
 
 /* 입력 그룹 */
@@ -279,7 +279,7 @@ body {
 }
 
 .pw-input:focus {
-  border-color: #6c7af7;
+  border-color: #3b82f6;
   background: #ffffff;
 }
 
@@ -302,7 +302,7 @@ body {
   display: none;
   margin-top: 6px;
   font-size: 12px;
-  color: #4c66d6;  /* 파란색 */
+  color: #3b82f6;  /* 파란색 */
   text-align: left;
 }
 .pw-info-text.visible {
