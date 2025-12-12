@@ -15,11 +15,12 @@ def get_stt(presigned_url):
     )
     return res
 
-def get_sllm(transcript, domain=[]):
+def get_sllm(transcript, domain=""):
     res = requests.post(
         url + "inference",
         json={
             'transcript': transcript,
-            'domain': domain}
+            'domain': domain
+        }
     )
     return res
