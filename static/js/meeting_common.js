@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const summaryUrl = saveBtn.dataset.summaryUrl;
   if (!summaryUrl) {
-    alert("요약 페이지 URL을 찾을 수 없습니다.");    
+    // 요약 URL이 없는 경우에는 아무 동작도 하지 않고 종료
     return;
   }
 

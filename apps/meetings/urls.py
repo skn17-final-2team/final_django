@@ -17,6 +17,7 @@ from .views import (
     minutes_download,
     minutes_save,
     meeting_transcript_api,
+    tasks_save,
 )
 
 app_name = "meetings"
@@ -39,6 +40,7 @@ urlpatterns = [
 
     path("<int:meeting_id>/minutes/save/", minutes_save, name="minutes_save"),
     path("<int:meeting_id>/minutes/download/<str:fmt>/", minutes_download, name="minutes_download"),
+    path("<int:meeting_id>/tasks/save/", tasks_save, name="tasks_save"),
 
     path("list/all/", MeetingListAllView.as_view(), name="list_all"),
     path("list/mine/", MeetingListMineView.as_view(), name="list_mine"),

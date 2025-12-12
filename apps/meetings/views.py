@@ -247,6 +247,7 @@ def _task_to_display(task):
         who_text = who_text_from_json
 
     return {
+        "id": getattr(task, "task_id", None),
         "who": who_text,
         "what": what,
         "when": when_text or "-",
@@ -888,7 +889,7 @@ def meeting_sllm_prepare(request, meeting_id):
             status=500,
         )
     print("1번")
-    print(res)
+    print(f"[SLLM][request] meeting_id={meeting_id} status={getattr(res, 'status_code', None)}")
     try:
         res_json = res.json()
     except Exception:
@@ -901,7 +902,13 @@ def meeting_sllm_prepare(request, meeting_id):
     print(payload)
     # 일부 응답은 success 필드를 포함하지 않을 수 있으므로, 실패 명시(false)인 경우만 실패로 간주
     if res.status_code != 200 or res_json.get("success") is False or not payload:
-        message = res_json.get("message") or res_json.get("error") or res.text or "SLLM 호출 중 오류가 발생했습니다."
+        body_preview = ""
+        try:
+            body_preview = res.text[:300]
+        except Exception:
+            body_preview = ""
+        message = res_json.get("message") or res_json.get("error") or body_preview or "SLLM 호출 중 오류가 발생했습니다."
+        print(f"[SLLM][error] status={res.status_code} message={message}")
         return JsonResponse(
             {
                 "status": "error",
@@ -949,7 +956,6 @@ def meeting_sllm_prepare(request, meeting_id):
                     content_payload["assignee"] = assignee_name
                 if due_raw:
                     content_payload["due"] = due_raw
-                    content_payload["due_text"] = due_raw
                 if due_date_raw:
                     content_payload["due_date"] = due_date_raw
 
@@ -1020,6 +1026,86 @@ def minutes_save(request, meeting_id):
 
     meeting.meeting_notes = content
     meeting.save(update_fields=["meeting_notes"])
+
+    return JsonResponse({"ok": True})
+
+
+@require_POST
+def tasks_save(request, meeting_id):
+    """
+    태스크(Who/What/When) 수정본을 저장. 주최자만 가능.
+    기존 태스크를 모두 삭제 후 전달된 목록으로 재생성한다.
+    """
+    meeting = get_object_or_404(Meeting, pk=meeting_id)
+
+    session_user_id = request.session.get("login_user_id")
+    request_user_id = None
+    if hasattr(request, "user") and request.user.is_authenticated:
+        request_user_id = getattr(request.user, "user_id", None) or request.user.id
+
+    host_user_id = str(meeting.host_id) if meeting.host_id else None
+    has_permission = False
+    if host_user_id:
+        if session_user_id and str(session_user_id) == host_user_id:
+            has_permission = True
+        elif request_user_id and str(request_user_id) == host_user_id:
+            has_permission = True
+
+    if not has_permission:
+        return JsonResponse(
+            {"ok": False, "error": "태스크를 저장할 권한이 없습니다."},
+            status=403,
+        )
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
+
+    tasks_payload = payload.get("tasks")
+    if tasks_payload is None or not isinstance(tasks_payload, list):
+        return JsonResponse({"ok": False, "error": "tasks 형식이 올바르지 않습니다."}, status=400)
+
+    new_tasks = []
+    for item in tasks_payload:
+        if not isinstance(item, dict):
+            continue
+        who = (item.get("who") or item.get("assignee") or "").strip()
+        what = (item.get("what") or item.get("description") or "").strip()
+        when = (item.get("when") or item.get("due") or item.get("due_text") or "").strip()
+
+        # 빈 행은 저장하지 않는다.
+        if not (who or what or when):
+            continue
+
+        due_date = _parse_due_date(when) if when else None
+        assignee_obj = None
+        if who:
+            try:
+                assignee_obj = User.objects.filter(name=who).first()
+            except Exception:
+                assignee_obj = None
+
+        content_payload = {"description": what}
+        if who:
+            content_payload["assignee"] = who
+        if when:
+            content_payload["due"] = when
+            content_payload["due_date"] = when
+
+        new_tasks.append(
+            Task(
+                meeting=meeting,
+                task_content=json.dumps(content_payload, ensure_ascii=False),
+                assignee=assignee_obj,
+                due_date=due_date,
+            )
+        )
+
+    with transaction.atomic():
+        meeting.tasks.all().delete()
+        if new_tasks:
+            Task.objects.bulk_create(new_tasks)
 
     return JsonResponse({"ok": True})
 
