@@ -14,18 +14,7 @@
   <div class="meeting-list-toolbar">
     <div class="meeting-search">
       <div class="meeting-search-box">
-        <img
-          src="{% static 'img/icon-search.png' %}"
-          alt="검색"
-          class="search-icon"
-        />
-        <input
-          id="search-input"
-          type="text"
-          class="search-input"
-          placeholder="검색어를 입력해 주세요"
-          autocomplete="off"
-        />
+        <!-- 필터 버튼 (왼쪽) -->
         <button
           type="button"
           id="search-filter-toggle"
@@ -34,11 +23,31 @@
           aria-expanded="false"
         >
           <img
-            src="{% static 'img/icon-filter.png' %}"
+            src="{% static 'img/icon-filter.svg' %}"
             alt="검색 조건"
             class="filter-icon"
           />
         </button>
+
+        <!-- ✅ 선택된 필터 라벨을 검색창 안에 표시 -->
+        <span id="search-filter-label" class="search-filter-label">
+          제목
+        </span>
+
+        <!-- 검색 입력 -->
+        <input
+          id="search-input"
+          type="text"
+          class="search-input"
+          autocomplete="off"
+        />
+
+        <!-- 돋보기 아이콘 (오른쪽) -->
+        <img
+          src="{% static 'img/icon-search.png' %}"
+          alt="검색"
+          class="search-icon"
+        />
 
         <!-- 검색 조건 드롭다운 -->
         <div
@@ -59,10 +68,6 @@
             회의 일시
           </button>
         </div>
-      </div>
-
-      <div class="search-current-label">
-        <span id="search-filter-label">제목</span>
       </div>
     </div>
   </div>
