@@ -15,11 +15,12 @@
     <header class="dashboard-header">
       <div class="dashboard-header-left">
         <div class="calendar-icon-wrapper">
-          <img src="{% static 'img/icon-calendar.svg' %}"
-              alt="달력"
-              class="dashboard-calendar-icon"
-              id="home-calendar-icon"
-              title="다른 달을 선택합니다.">
+          <span
+            class="dashboard-calendar-icon"
+            id="home-calendar-icon"
+            title="다른 달을 선택합니다."
+            aria-hidden="true"
+          ></span>
 
           <!-- 달 선택 팝오버 (커스텀) -->
           <div class="month-popover hidden" id="home-month-popover">

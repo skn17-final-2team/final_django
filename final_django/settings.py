@@ -9,6 +9,7 @@ GOOGLE_OAUTH2_SCOPES = [
     "https://www.googleapis.com/auth/calendar.readonly",
 ]
 GOOGLE_OAUTH2_REDIRECT_URI = "http://localhost:8000/oauth2callback/"
+
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
@@ -49,7 +50,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
 ]
 
 ROOT_URLCONF = 'final_django.urls'
@@ -113,6 +113,13 @@ TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 USE_TZ = False  # 시간대
+
+# 세션 설정 (구글 OAuth 상태 유지를 위해)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 1209600  # 2주
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'

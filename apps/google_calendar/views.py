@@ -28,7 +28,7 @@ def google_login(request):
     flow = Flow.from_client_secrets_file(
         settings.GOOGLE_OAUTH2_CLIENT_SECRETS_JSON,
         scopes=settings.GOOGLE_OAUTH2_SCOPES,
-        redirect_uri=settings.GOOGLE_OAUTH2_REDIRECT_URI,  # 예: http://localhost:8000/oauth2callback/
+        redirect_uri=settings.GOOGLE_OAUTH2_REDIRECT_URI,
     )
 
     # authorization_url을 만들면서, 내부적으로 state를 생성해 준다.
@@ -40,6 +40,7 @@ def google_login(request):
 
     # ✅ 이 state를 세션에 저장해 둔다. (콜백에서 검증할 용도)
     request.session["state"] = state
+    request.session.modified = True
 
     return redirect(authorization_url)
 
@@ -52,35 +53,46 @@ def oauth2callback(request):
     if settings.DEBUG:
         os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
+    # 로그인 여부 먼저 확인
+    login_user_id = request.session.get("login_user_id")
+    if not login_user_id:
+        return JsonResponse({"error": "not_logged_in", "detail": "먼저 로그인해주세요."}, status=400)
+
     # ✅ 로그인 단계에서 세션에 저장해 둔 state
     state = request.session.get("state")
     if not state:
-        return JsonResponse({"error": "missing_state_in_session"}, status=400)
+        return JsonResponse({
+            "error": "missing_state_in_session",
+            "detail": "세션이 만료되었습니다. 다시 시도해주세요.",
+            "redirect": "/google/login/"
+        }, status=400)
 
     # ✅ Flow를 같은 state, 같은 redirect_uri로 생성해야 한다.
-    flow = Flow.from_client_secrets_file(
-        settings.GOOGLE_OAUTH2_CLIENT_SECRETS_JSON,
-        scopes=settings.GOOGLE_OAUTH2_SCOPES,
-        state=state,
-    )
-    flow.redirect_uri = settings.GOOGLE_OAUTH2_REDIRECT_URI  # 예: http://localhost:8000/oauth2callback/
+    try:
+        flow = Flow.from_client_secrets_file(
+            settings.GOOGLE_OAUTH2_CLIENT_SECRETS_JSON,
+            scopes=settings.GOOGLE_OAUTH2_SCOPES,
+            state=state,
+        )
+        flow.redirect_uri = settings.GOOGLE_OAUTH2_REDIRECT_URI
 
-    # 구글이 현재 이 콜백으로 호출한 전체 URL
-    authorization_response = request.build_absolute_uri()
+        # 구글이 현재 이 콜백으로 호출한 전체 URL
+        authorization_response = request.build_absolute_uri()
 
-    # ✅ 여기서 oauthlib이 "URL에 있는 state"와 "Flow에 지정된 state"를 비교한다.
-    # 두 값이 다르면 지금처럼 MismatchingStateError 발생.
-    flow.fetch_token(authorization_response=authorization_response)
+        # ✅ 여기서 oauthlib이 "URL에 있는 state"와 "Flow에 지정된 state"를 비교한다.
+        flow.fetch_token(authorization_response=authorization_response)
 
-    credentials = flow.credentials
-    token_json = credentials.to_json()
+        credentials = flow.credentials
+        token_json = credentials.to_json()
 
-    login_user_id = request.session.get("login_user_id")
-    if not login_user_id:
-        return JsonResponse({"error": "not_logged_in"}, status=400)
+    except Exception as e:
+        return JsonResponse({
+            "error": "oauth_error",
+            "detail": str(e)
+        }, status=500)
 
     try:
-        user = User.objects.get(pk=login_user_id)
+        user = User.objects.get(user_id=login_user_id)
     except User.DoesNotExist:
         return JsonResponse({"error": "user_not_found"}, status=404)
 
@@ -95,6 +107,9 @@ def oauth2callback(request):
 
     # state는 쓸 일 끝났으면 지워도 됨 (선택)
     request.session.pop("state", None)
+
+    # 세션 변경사항 저장
+    request.session.modified = True
 
     return redirect("/")  # 홈으로 이동
 

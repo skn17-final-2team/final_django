@@ -67,6 +67,8 @@ def login_api(request):
     request.session["login_user_name"] = user.name
     request.session["login_user_admin"] = user.admin_yn
 
+    print("[DEBUG] 로그인 성공 - 세션:", dict(request.session))
+
     next_url = request.POST.get("next") or "/"
     return JsonResponse({"ok": True, "redirect_url": next_url})
 
