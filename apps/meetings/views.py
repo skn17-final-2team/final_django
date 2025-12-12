@@ -5,7 +5,7 @@ from apps.accounts.models import Dept, User
 from django.db.models import Prefetch, Q
 
 from django.shortcuts import get_object_or_404
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.urls import reverse
 
 from .models import Meeting, Attendee, Task
@@ -211,6 +211,28 @@ def _extract_structured_tasks(full_tasks):
         )
     return tasks
 
+def _get_privacy_from_domain(domain_value):
+    """
+    domain 필드 재사용해 privacy 플래그를 읽는다.
+    - {"privacy": "private"} 형태를 우선
+    - 문자열 "private" 도 허용
+    """
+    if not domain_value:
+        return "public"
+    parsed = None
+    if isinstance(domain_value, str):
+        try:
+            parsed = json.loads(domain_value)
+        except Exception:
+            parsed = None
+    if isinstance(parsed, dict):
+        val = parsed.get("privacy")
+        if isinstance(val, str) and val.lower() == "private":
+            return "private"
+    if isinstance(domain_value, str) and domain_value.strip().lower() == "private":
+        return "private"
+    return "public"
+
 
 def _task_to_display(task):
     """
@@ -220,6 +242,7 @@ def _task_to_display(task):
     what = task.task_content or ""
     when_text = ""
     who_text_from_json = ""
+    assignee_id_from_json = None
     try:
         parsed = json.loads(task.task_content)
         if isinstance(parsed, dict):
@@ -228,10 +251,12 @@ def _task_to_display(task):
                 what = first.get("description") or what
                 when_text = first.get("due") or first.get("due_text") or ""
                 who_text_from_json = first.get("assignee") or ""
+                assignee_id_from_json = first.get("assignee_id")
             else:
                 what = parsed.get("description") or what
                 when_text = parsed.get("due") or parsed.get("due_text") or ""
                 who_text_from_json = parsed.get("assignee") or ""
+                assignee_id_from_json = parsed.get("assignee_id")
     except Exception:
         pass
 
@@ -239,7 +264,7 @@ def _task_to_display(task):
     if task.assignee:
         who_text = task.assignee.name
         if getattr(task.assignee, "dept", None):
-            who_text += f", {task.assignee.dept.dept_name}"
+            who_text += f" ({task.assignee.dept.dept_name})"
     elif who_text_from_json:
         who_text = who_text_from_json
 
@@ -247,7 +272,8 @@ def _task_to_display(task):
         "id": getattr(task, "task_id", None),
         "who": who_text,
         "what": what,
-        "when": when_text or "-",
+        "when": when_text or "직접입력",
+        "assignee_id": task.assignee_id or assignee_id_from_json,
     }
 
 
@@ -318,8 +344,10 @@ def build_meeting_list_context(meeting_qs, login_user_id=None):
 
     # 로그인 사용자 객체(필요하면)
     login_user = None
+    login_user_dept_id = None
     if login_user_id:
         login_user = User.objects.select_related("dept").get(user_id=login_user_id)
+        login_user_dept_id = getattr(login_user, "dept_id", None)
 
     for m in meeting_qs:
         attendees = list(m.attendees.all())
@@ -328,12 +356,29 @@ def build_meeting_list_context(meeting_qs, login_user_id=None):
 
         # 참여 여부 (All 페이지에서만 실제로 사용, Mine/Dept 에선 옵션)
         is_joined = False
+        is_host = str(m.host_id) == str(login_user_id) if login_user_id else False
+        is_attendee = False
         if login_user_id:
-            if str(m.host_id) == str(login_user_id):
+            if is_host:
                 is_joined = True
             else:
-                is_joined = any(str(a.user_id) == str(login_user_id) for a in attendees)
+                is_attendee = any(str(a.user_id) == str(login_user_id) for a in attendees)
+                is_joined = is_attendee
 
+        # 공개 여부/접근 권한
+        privacy = _get_privacy_from_domain(m.domain)
+        if privacy == "private":
+            allowed = is_host or is_attendee
+        else:
+            same_dept = False
+            if login_user_dept_id:
+                same_dept = any(
+                    getattr(a.user, "dept_id", None) == login_user_dept_id
+                    for a in attendees
+                )
+            allowed = is_host or is_attendee or same_dept
+        if not allowed:
+            continue
 
         meetings_data.append(
             {
@@ -495,7 +540,12 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
     def post(self, request, *args, **kwargs):
 
         attendee_ids = request.POST.getlist("attendees")
-        domain_name = request.POST.getlist("domain")
+        domain_name = (
+            request.POST.getlist("domain")
+            or request.POST.getlist("domains")
+            or [request.POST.get("domains")]
+        )
+        privacy_private = request.POST.get("is_private") in ["on", "1", "true", True]
         if not attendee_ids:
             messages.error(request, "참석자를 최소 1명 이상 선택해 주세요.")
             context = self.get_context_data()
@@ -524,13 +574,17 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
         # 4. meeting_tbl에 새 레코드 생성
         with transaction.atomic():
             # meeting_tbl insert
+            domain_payload = {}
+            if domain_name and any(domain_name):
+                domain_payload["domain"] = [d for d in domain_name if d]
+            domain_payload["privacy"] = "private" if privacy_private else "public"
             meeting = Meeting.objects.create(
                 title=title,
                 meet_date_time=meet_date_time,
                 place=place,
                 host=host_user,   # FK: User 인스턴스
                 transcript="",    # NOT NULL 필드라면 임시값
-                domain=domain_name,
+                domain=json.dumps(domain_payload, ensure_ascii=False),
             )
 
         Attendee.objects.create(meeting=meeting, user=host_user)
@@ -705,10 +759,47 @@ class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
         context = super().get_context_data(**kwargs)
 
         meeting_id = self.kwargs.get("meeting_id")
-        meeting = get_object_or_404(Meeting, pk=meeting_id)
+        meeting = (
+            Meeting.objects
+            .select_related("host")
+            .prefetch_related("attendees__user__dept")
+            .filter(pk=meeting_id)
+            .first()
+        )
+        if not meeting:
+            raise Http404()
+
+        session_user_id = self.request.session.get("login_user_id")
+        login_user_obj = None
+        login_user_dept_id = None
+        if session_user_id:
+            try:
+                login_user_obj = User.objects.select_related("dept").get(user_id=session_user_id)
+                login_user_dept_id = getattr(login_user_obj, "dept_id", None)
+            except User.DoesNotExist:
+                login_user_obj = None
+
+        attendees_list = list(meeting.attendees.all())
+        is_host = session_user_id and str(meeting.host_id) == str(session_user_id)
+        is_attendee = any(str(a.user_id) == str(session_user_id) for a in attendees_list) if session_user_id else False
+        privacy = _get_privacy_from_domain(meeting.domain)
+        if privacy == "private":
+            allowed = is_host or is_attendee
+        else:
+            same_dept = False
+            if login_user_dept_id:
+                same_dept = any(
+                    getattr(a.user, "dept_id", None) == login_user_dept_id
+                    for a in attendees_list
+                )
+            allowed = is_host or is_attendee or same_dept
+        if not allowed:
+            return HttpResponse("접근 권한이 없습니다.", status=403)
 
         # 템플릿에서 사용할 데이터 주입
         context["meeting"] = meeting
+        context["login_user"] = login_user_obj
+        context["login_user_id"] = session_user_id
         context["attendees"] = (
             meeting.attendees
                    .select_related("user", "user__dept")
@@ -728,9 +819,12 @@ class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
                 .order_by("name")
         )
         context["transcript_display_html"] = _render_transcript_html(meeting.transcript)
+        try:
+            context["all_users_json"] = json.dumps(context["all_users"], ensure_ascii=False)
+        except Exception:
+            context["all_users_json"] = "[]"
 
         # 주최자인지 여부 판단 (세션 기반)
-        session_user_id = self.request.session.get("login_user_id")
         is_host = False
 
         if session_user_id and meeting.host_id:
@@ -1071,6 +1165,7 @@ def tasks_save(request, meeting_id):
         if not isinstance(item, dict):
             continue
         who = (item.get("who") or item.get("assignee") or "").strip()
+        assignee_id_payload = item.get("assignee_id")
         what = (item.get("what") or item.get("description") or "").strip()
         when = (item.get("when") or item.get("due") or item.get("due_text") or "").strip()
 
@@ -1080,15 +1175,28 @@ def tasks_save(request, meeting_id):
 
         parsed_due = _parse_due_date(when) if when else None
         assignee_obj = None
-        if who:
+        if assignee_id_payload:
             try:
-                assignee_obj = User.objects.filter(name=who).first()
+                assignee_obj = User.objects.filter(user_id=assignee_id_payload).first()
+            except Exception:
+                assignee_obj = None
+        if not assignee_obj and who:
+            try:
+                # "이름 (부서)" 형태라면 이름만 떼어 검색
+                who_for_lookup = who.split("(", 1)[0].strip()
+                # 호스트 이름이 명시되었으면 우선 호스트로 매칭
+                if meeting.host and who_for_lookup == meeting.host.name:
+                    assignee_obj = meeting.host
+                if not assignee_obj:
+                    assignee_obj = User.objects.filter(name=who_for_lookup).first()
             except Exception:
                 assignee_obj = None
 
         content_payload = {"description": what}
         if who:
             content_payload["assignee"] = who
+            if assignee_obj and getattr(assignee_obj, "user_id", None):
+                content_payload["assignee_id"] = assignee_obj.user_id
         if when and when.strip().lower() not in ("*", "null", "none", ""):
             content_payload["due"] = when
             if parsed_due:

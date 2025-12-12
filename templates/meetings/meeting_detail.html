@@ -12,6 +12,8 @@
   class="meeting-detail-page"
   data-meeting-id="{{ meeting.meeting_id }}"
   data-is-host="{{ is_host|yesno:'true,false' }}"
+  data-login-user-name="{{ login_user.name|default_if_none:'' }}"
+  data-login-user-id="{{ login_user.user_id|default:login_user_id|default_if_none:'' }}"
 >
   <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
   <!-- 상단 제목 + 우측 라인 + 화살표 버튼 -->
@@ -168,15 +170,26 @@
         >
           <div class="detail-task-box">
             <div class="detail-task-header">
+              <div class="detail-task-col detail-task-col-check">
+                  {% if is_host %}
+                    <input type="checkbox" id="task-check-all">
+                  {% endif %}
+                </div>
               <div class="detail-task-col detail-task-col-who">Who</div>
               <div class="detail-task-col detail-task-col-what">What</div>
               <div class="detail-task-col detail-task-col-when">When</div>
-            </div>
+              <div class="detail-task-col detail-task-col-add">Add</div>
+              </div>
 
-            <div class="detail-task-body">
-              {% if tasks_display %}
-                {% for task in tasks_display %}
-                  <div class="detail-task-row" data-task-id="{{ task.id }}">
+              <div class="detail-task-body">
+                {% if tasks_display %}
+                  {% for task in tasks_display %}
+                  <div class="detail-task-row" data-task-id="{{ task.id }}" data-assignee-id="{{ task.assignee_id|default_if_none:'' }}">
+                    <div class="detail-task-col detail-task-col-check">
+                      {% if is_host %}
+                        <input type="checkbox" class="task-row-check">
+                      {% endif %}
+                    </div>
                     <div class="detail-task-col detail-task-col-who">
                       <div class="task-who-wrapper">
                         <input
@@ -185,15 +198,23 @@
                           data-task-field="who"
                           list="task-who-options"
                           value="{{ task.who }}"
+                          {% if not is_host %}disabled readonly{% endif %}
                         />
-                        <button type="button" class="task-who-toggle" aria-label="who 목록 열기">&#9662;</button>
+                        {% if is_host %}
+                          <button type="button" class="task-who-toggle" aria-label="who 목록 열기">&#9662;</button>
+                        {% endif %}
                       </div>
                     </div>
                     <div class="detail-task-col detail-task-col-what">
-                      <textarea class="task-edit-field" data-task-field="what" rows="2">{{ task.what }}</textarea>
+                      <textarea class="task-edit-field" data-task-field="what" rows="2" {% if not is_host %}readonly disabled{% endif %}>{{ task.what }}</textarea>
                     </div>
                     <div class="detail-task-col detail-task-col-when">
-                      <textarea class="task-edit-field" data-task-field="when" rows="2">{{ task.when }}</textarea>
+                      <textarea class="task-edit-field" data-task-field="when" rows="2" {% if not is_host %}readonly disabled{% endif %}>{{ task.when }}</textarea>
+                    </div>
+                    <div class="detail-task-col detail-task-col-add">
+                      {% if task.assignee_id|stringformat:"s" == login_user_id|stringformat:"s" or task.who|lower == "대상 없음" %}
+                        <button type="button" class="detail-task-add-btn">추가</button>
+                      {% endif %}
                     </div>
                   </div>
                 {% endfor %}
@@ -205,6 +226,13 @@
 
           {% if is_host %}
             <div class="detail-minutes-actions" style="margin-top: 12px;">
+              <button
+                type="button"
+                class="detail-minutes-btn"
+                id="btn-tasks-delete-selected"
+              >
+                선택 삭제
+              </button>
               <button
                 type="button"
                 class="detail-minutes-btn"
@@ -230,6 +258,9 @@
               {% endfor %}
             {% endif %}
           </datalist>
+          {% autoescape off %}
+          <script id="task-users-data" type="application/json">{{ all_users_json }}</script>
+          {% endautoescape %}
         </div>
 
         <!-- 회의록 탭 -->
