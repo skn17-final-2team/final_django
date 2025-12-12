@@ -326,9 +326,38 @@
             },
             body: JSON.stringify(payload),
           });
-          const data = await res.json();
-          if (!res.ok || !data.ok) {
-            const msg = data && data.error ? data.error : "전문 저장 중 오류가 발생했습니다.";
+
+          // 리디렉션이면 그대로 이동
+          if (res.redirected && res.url) {
+            window.location.href = res.url;
+            return;
+          }
+
+          const raw = await res.text();
+          const contentType = res.headers.get("content-type") || "";
+          let data = {};
+          let parsed = false;
+          if (contentType.includes("application/json")) {
+            try {
+              data = raw ? JSON.parse(raw) : {};
+              parsed = true;
+            } catch (err) {
+              console.error("JSON parse failed for transcript/save response:", err, raw);
+            }
+          }
+
+          // JSON이 아니면(로그인 페이지 등) 에러 처리
+          if (!parsed) {
+            const msg = res.statusText || "전문 저장 중 오류가 발생했습니다.";
+            alert(msg);
+            return;
+          }
+
+          if (!res.ok || data.ok === false) {
+            const msg =
+              (data && data.error) ||
+              res.statusText ||
+              "전문 저장 중 오류가 발생했습니다.";
             alert(msg);
             return;
           }

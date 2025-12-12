@@ -35,6 +35,7 @@
     btn.addEventListener("click", () => {
       const target = btn.dataset.tabTarget; // summary / tasks / minutes
       activateTab(target, btn);
+      console.log("tab click:", target);
       if (target) {
         window.location.hash = `#${target}`;
       }
@@ -56,7 +57,12 @@
     );
     if (btn) {
       activateTab(initialTab, btn);
+    } else {
+      activateTab("summary", document.querySelector('.detail-tab[data-tab-target="summary"]'));
     }
+  } else {
+    // 기본 요약 탭 보이기
+    activateTab("summary", document.querySelector('.detail-tab[data-tab-target="summary"]'));
   }
 
   /* =========================================
@@ -185,36 +191,155 @@
     });
   }
 
-  // 태스크 행 추가 버튼(추가)을 누르면 빈 행을 하나 더 생성
-  function attachTaskAddHandler(btn) {
-    btn.addEventListener("click", () => {
-      const body = btn.closest(".detail-task-box")?.querySelector(".detail-task-body");
-      if (!body) return;
-      const newRow = document.createElement("div");
-      newRow.className = "detail-task-row";
-      newRow.innerHTML = `
-        <div class="detail-task-col detail-task-col-who">
-          <textarea class="task-edit-field" data-task-field="who" rows="2"></textarea>
+  /* ---------- WHO 드롭다운 유틸 ---------- */
+  const whoOptions = Array.from(
+    document.querySelectorAll("#task-who-options option")
+  ).map((opt) => opt.value || "");
+
+  // 태스크 추가 버튼(상단)으로 빈 행 추가
+  const taskAddMainBtn = document.getElementById("btn-tasks-add-main");
+  function addTaskRow() {
+    const body = document.querySelector(".detail-task-body");
+    if (!body) return;
+    const newRow = document.createElement("div");
+    newRow.className = "detail-task-row";
+    newRow.innerHTML = `
+      <div class="detail-task-col detail-task-col-who">
+        <div class="task-who-wrapper">
+          <input type="text" class="task-edit-field task-who-input" data-task-field="who" list="task-who-options" />
+          <button type="button" class="task-who-toggle" aria-label="who 목록 열기">&#9662;</button>
         </div>
-        <div class="detail-task-col detail-task-col-what">
-          <textarea class="task-edit-field" data-task-field="what" rows="2"></textarea>
-        </div>
-        <div class="detail-task-col detail-task-col-when">
-          <textarea class="task-edit-field" data-task-field="when" rows="2"></textarea>
-        </div>
-        <div class="detail-task-col detail-task-col-add">
-          <button type="button" class="detail-task-add-btn">추가</button>
-        </div>
-      `;
-      body.appendChild(newRow);
-      const newAddBtn = newRow.querySelector(".detail-task-add-btn");
-      if (newAddBtn) {
-        attachTaskAddHandler(newAddBtn);
+      </div>
+      <div class="detail-task-col detail-task-col-what">
+        <textarea class="task-edit-field" data-task-field="what" rows="2"></textarea>
+      </div>
+      <div class="detail-task-col detail-task-col-when">
+        <textarea class="task-edit-field" data-task-field="when" rows="2"></textarea>
+      </div>
+    `;
+    body.appendChild(newRow);
+    const newWrapper = newRow.querySelector(".task-who-wrapper");
+    if (newWrapper) {
+      bindWhoDropdown(newWrapper);
+    }
+    const firstInput = newRow.querySelector(".task-who-input");
+    if (firstInput) {
+      firstInput.focus();
+    }
+    body.scrollTop = body.scrollHeight;
+  }
+  if (taskAddMainBtn) {
+    taskAddMainBtn.addEventListener("click", addTaskRow);
+  }
+
+  function bindWhoDropdown(wrapper) {
+    const input = wrapper.querySelector(".task-who-input");
+    const toggle = wrapper.querySelector(".task-who-toggle");
+    if (!input || !toggle) return;
+
+    wrapper.style.position = "relative";
+
+    const dropdown = document.createElement("div");
+    dropdown.className = "task-who-dropdown";
+    dropdown.style.display = "none";
+    wrapper.appendChild(dropdown);
+
+    const renderList = (keyword = "") => {
+      dropdown.innerHTML = "";
+      const lower = keyword.toLowerCase();
+      const filtered = whoOptions.filter((v) => v.toLowerCase().includes(lower));
+      if (!filtered.length) {
+        // 항상 전체 목록을 보여주기 위해 필터가 비면 전체 표시
+        whoOptions.forEach((val) => {
+          const item = document.createElement("div");
+          item.className = "task-who-dropdown-item";
+          item.textContent = val;
+          item.addEventListener("click", () => {
+            input.value = val;
+            dropdown.style.display = "none";
+          });
+          dropdown.appendChild(item);
+        });
+        return;
+      }
+      filtered.forEach((val) => {
+        const item = document.createElement("div");
+        item.className = "task-who-dropdown-item";
+        item.textContent = val;
+        item.addEventListener("click", () => {
+          input.value = val;
+          dropdown.style.display = "none";
+        });
+        dropdown.appendChild(item);
+      });
+    };
+
+    const show = () => {
+      renderList(input.value.trim());
+      dropdown.style.display = "block";
+    };
+    const hide = () => {
+      dropdown.style.display = "none";
+    };
+
+    toggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (dropdown.style.display === "block") {
+        hide();
+      } else {
+        input.focus();
+        show();
+      }
+    });
+
+    input.addEventListener("input", () => {
+      if (dropdown.style.display === "block") {
+        renderList(input.value.trim());
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!wrapper.contains(e.target)) {
+        hide();
       }
     });
   }
 
   document.querySelectorAll(".detail-task-add-btn").forEach(attachTaskAddHandler);
+
+  // 기존 행에도 커스텀 드롭다운 바인딩
+  document.querySelectorAll(".task-who-wrapper").forEach(bindWhoDropdown);
+
+  // 태스크 추가 버튼(상단)
+  function addTaskRow() {
+    const body = document.querySelector(".detail-task-body");
+    if (!body) return;
+    const newRow = document.createElement("div");
+    newRow.className = "detail-task-row";
+    newRow.innerHTML = `
+      <div class="detail-task-col detail-task-col-who">
+        <div class="task-who-wrapper">
+          <input type="text" class="task-edit-field task-who-input" data-task-field="who" list="task-who-options" />
+          <button type="button" class="task-who-toggle" aria-label="who 목록 열기">&#9662;</button>
+        </div>
+      </div>
+      <div class="detail-task-col detail-task-col-what">
+        <textarea class="task-edit-field" data-task-field="what" rows="2"></textarea>
+      </div>
+      <div class="detail-task-col detail-task-col-when">
+        <textarea class="task-edit-field" data-task-field="when" rows="2"></textarea>
+      </div>
+    `;
+    body.appendChild(newRow);
+    const newWrapper = newRow.querySelector(".task-who-wrapper");
+    if (newWrapper) {
+      bindWhoDropdown(newWrapper);
+    }
+  }
+  if (taskAddMainBtn) {
+    taskAddMainBtn.addEventListener("click", addTaskRow);
+  }
 
   /* =========================================
    * 5. 회의록( minutes ) 에디터 관련
