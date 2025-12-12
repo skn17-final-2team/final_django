@@ -5,6 +5,10 @@
   const meetingId = meetingDetailRoot.dataset.meetingId || "";
   const csrfInput = document.getElementById("csrf-token");
   const csrftoken = csrfInput ? csrfInput.value : "";
+  const isHost =
+    (meetingDetailRoot.dataset.isHost || "").toLowerCase() === "true";
+  const loginUserName = meetingDetailRoot.dataset.loginUserName || "";
+  const loginUserId = meetingDetailRoot.dataset.loginUserId || "";
 
   /* =========================================
    * 1. 탭 전환 (요약 / 태스크 / 회의록)
@@ -146,7 +150,7 @@
    * 4. 태스크 저장 (Who/What/When)
    * ========================================= */
   const taskSaveBtn = document.getElementById("btn-tasks-save");
-  if (taskSaveBtn && meetingId) {
+  if (taskSaveBtn && meetingId && isHost) {
     taskSaveBtn.addEventListener("click", async () => {
       const rows = Array.from(document.querySelectorAll(".detail-task-row"));
       const tasksPayload = [];
@@ -155,9 +159,24 @@
         const who = (row.querySelector('[data-task-field="who"]')?.value || "").trim();
         const what = (row.querySelector('[data-task-field="what"]')?.value || "").trim();
         const when = (row.querySelector('[data-task-field="when"]')?.value || "").trim();
+        let assigneeId =
+          row.dataset.assigneeId ||
+          row.querySelector('[data-task-field="who"]')?.dataset.userId ||
+          "";
+        // 호스트가 자신을 지정했는데 ID가 비어있다면 직접 채운다.
+        if (!assigneeId && isHost && loginUserId) {
+          const whoNorm = normalizeWho(who);
+          const selfNorm = normalizeWho(loginUserName);
+          if (whoNorm && selfNorm && whoNorm === selfNorm) {
+            assigneeId = loginUserId;
+          }
+        }
         if (!who && !what && !when) return;
 
         const taskData = { who, what, when };
+        if (assigneeId) {
+          taskData.assignee_id = assigneeId;
+        }
         const taskId = row.dataset.taskId;
         if (taskId) {
           taskData.id = taskId;
@@ -192,10 +211,84 @@
   }
 
   /* ---------- WHO 드롭다운 유틸 ---------- */
-  const whoOptions = Array.from(
-    document.querySelectorAll("#task-who-options option")
-  ).map((opt) => opt.value || "");
-  whoOptions.unshift("대상 없음");
+  // 전체 사용자 정보(JSON) 파싱
+  let usersData = [];
+  const usersScript = document.getElementById("task-users-data");
+  if (usersScript && usersScript.textContent) {
+    try {
+      usersData = JSON.parse(usersScript.textContent);
+    } catch (e) {
+      usersData = [];
+    }
+  }
+  const whoOptions = [
+    "대상 없음",
+    ...usersData.map((u) => buildLabel(u)),
+  ];
+  const loginUserRaw = (loginUserName || "").trim();
+
+  function normalizeWho(val) {
+    return (val || "").trim().toLowerCase();
+  }
+  function buildLabel(u) {
+    const dept = u.dept__dept_name ? ` (${u.dept__dept_name})` : "";
+    return `${u.name}${dept}`;
+  }
+  function getUsersByLabel(labelNormalized) {
+    return usersData.filter(
+      (u) => normalizeWho(buildLabel(u)) === labelNormalized
+    );
+  }
+
+  // Add 버튼 활성화 조건 바인딩
+function bindRowAddButton(row) {
+  const whoInput = row.querySelector(".task-who-input");
+  const addBtn = row.querySelector(".detail-task-add-btn");
+  if (!addBtn) return;
+  // row에 내려온 assignee_id를 입력값에도 반영
+  if (row.dataset.assigneeId && whoInput) {
+    whoInput.dataset.userId = row.dataset.assigneeId;
+  }
+  const applyState = () => {
+    const whoValNormalized = normalizeWho(whoInput ? whoInput.value : "");
+    const assigneeIdInRow =
+      row.dataset.assigneeId || (whoInput ? whoInput.dataset.userId : "");
+    let allowed = false;
+    if (whoValNormalized === "대상 없음".toLowerCase()) {
+      allowed = true;
+      if (whoInput) {
+        delete whoInput.dataset.userId;
+      }
+      row.dataset.assigneeId = "";
+    } else if (
+      loginUserId &&
+      assigneeIdInRow &&
+      String(assigneeIdInRow) === String(loginUserId)
+    ) {
+      allowed = true;
+    }
+    addBtn.disabled = !allowed;
+    addBtn.style.display = allowed ? "inline-block" : "none";
+  };
+  applyState();
+  if (whoInput) {
+    whoInput.addEventListener("blur", () => {
+      const selectedId = whoInput.dataset.userId || "";
+      if (selectedId) {
+        row.dataset.assigneeId = selectedId;
+      } else {
+        row.dataset.assigneeId = "";
+      }
+    });
+    whoInput.addEventListener("input", () => {
+      if (!whoInput.value.trim()) {
+        delete whoInput.dataset.userId;
+        row.dataset.assigneeId = "";
+      }
+      applyState();
+    });
+  }
+  }
 
   // 태스크 추가 버튼(상단)으로 빈 행 추가
   const taskAddMainBtn = document.getElementById("btn-tasks-add-main");
@@ -204,6 +297,9 @@
     if (!body) return;
     const newRow = document.createElement("div");
     newRow.className = "detail-task-row";
+    const toggleBtnHtml = isHost
+      ? '<button type="button" class="task-who-toggle" aria-label="who 목록 열기">&#9662;</button>'
+      : "";
     newRow.innerHTML = `
       <div class="detail-task-col detail-task-col-check">
         <input type="checkbox" class="task-row-check">
@@ -211,7 +307,7 @@
       <div class="detail-task-col detail-task-col-who">
         <div class="task-who-wrapper">
           <input type="text" class="task-edit-field task-who-input" data-task-field="who" list="task-who-options" />
-          <button type="button" class="task-who-toggle" aria-label="who 목록 열기">&#9662;</button>
+          ${toggleBtnHtml}
         </div>
       </div>
       <div class="detail-task-col detail-task-col-what">
@@ -229,13 +325,18 @@
     if (newWrapper) {
       bindWhoDropdown(newWrapper);
     }
+    bindRowAddButton(newRow);
+    const addBtn = newRow.querySelector(".detail-task-add-btn");
+    if (addBtn) {
+      bindAddButtonCalendar(addBtn);
+    }
     const firstInput = newRow.querySelector(".task-who-input");
     if (firstInput) {
       firstInput.focus();
     }
     body.scrollTop = body.scrollHeight;
   }
-  if (taskAddMainBtn) {
+  if (taskAddMainBtn && isHost) {
     taskAddMainBtn.addEventListener("click", addTaskRow);
   }
 
@@ -253,10 +354,10 @@
     });
   }
 
-  if (taskDeleteSelectedBtn) {
+  if (taskDeleteSelectedBtn && isHost) {
     taskDeleteSelectedBtn.addEventListener("click", deleteSelectedTasks);
   }
-  if (taskCheckAll) {
+  if (taskCheckAll && isHost) {
     taskCheckAll.addEventListener("change", (e) => {
       const checked = e.target.checked;
       document.querySelectorAll(".task-row-check").forEach((chk) => {
@@ -265,10 +366,10 @@
     });
   }
 
-  function bindWhoDropdown(wrapper) {
-    const input = wrapper.querySelector(".task-who-input");
-    const toggle = wrapper.querySelector(".task-who-toggle");
-    if (!input || !toggle) return;
+function bindWhoDropdown(wrapper) {
+  const input = wrapper.querySelector(".task-who-input");
+  const toggle = wrapper.querySelector(".task-who-toggle");
+  if (!input) return;
 
     wrapper.style.position = "relative";
 
@@ -279,13 +380,35 @@
 
     const renderList = (keyword = "") => {
       dropdown.innerHTML = "";
-      const list = whoOptions.slice();
-      list.forEach((val) => {
+      // 대상 없음
+      const noneItem = document.createElement("div");
+      noneItem.className = "task-who-dropdown-item";
+      noneItem.textContent = "대상 없음";
+      noneItem.dataset.userId = "";
+      noneItem.addEventListener("click", () => {
+        input.value = "대상 없음";
+        delete input.dataset.userId;
+        const row = wrapper.closest(".detail-task-row");
+        if (row) {
+          row.dataset.assigneeId = "";
+        }
+        dropdown.style.display = "none";
+      });
+      dropdown.appendChild(noneItem);
+      // 사용자 목록
+      usersData.forEach((u) => {
+        const label = buildLabel(u);
         const item = document.createElement("div");
         item.className = "task-who-dropdown-item";
-        item.textContent = val;
+        item.textContent = label;
+        item.dataset.userId = u.user_id;
         item.addEventListener("click", () => {
-          input.value = val;
+          input.value = label;
+          input.dataset.userId = u.user_id;
+          const row = wrapper.closest(".detail-task-row");
+          if (row) {
+            row.dataset.assigneeId = u.user_id;
+          }
           dropdown.style.display = "none";
         });
         dropdown.appendChild(item);
@@ -300,69 +423,155 @@
       dropdown.style.display = "none";
     };
 
-    toggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (dropdown.style.display === "block") {
-        hide();
-      } else {
-        input.focus();
-        show();
-      }
-    });
+    const openDropdown = () => {
+      renderList();
+      dropdown.style.display = "block";
+    };
+    const closeDropdown = () => {
+      dropdown.style.display = "none";
+    };
 
+    if (toggle) {
+      toggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (dropdown.style.display === "block") {
+          closeDropdown();
+        } else {
+          openDropdown();
+        }
+      });
+    }
+
+    input.addEventListener("focus", openDropdown);
     input.addEventListener("input", () => {
       if (dropdown.style.display === "block") {
         renderList(input.value.trim());
       }
     });
 
+  document.addEventListener("click", (e) => {
+    if (!wrapper.contains(e.target)) {
+      hide();
+    }
+  });
+}
+
+// 기존 행에도 커스텀 드롭다운/버튼 상태 바인딩
+document.querySelectorAll(".task-who-wrapper").forEach(bindWhoDropdown);
+document.querySelectorAll(".detail-task-row").forEach(bindRowAddButton);
+document
+  .querySelectorAll(".detail-task-add-btn")
+  .forEach((btn) => bindAddButtonCalendar(btn));
+
+  /* ---------- Add 버튼: 캘린더 팝오버 ---------- */
+  let calendarPopover = null;
+  let calendarDateInput = null;
+  let calendarConfirmBtn = null;
+  let calendarCancelBtn = null;
+  let calendarCurrentRow = null;
+
+  function ensureCalendarPopover() {
+    if (calendarPopover) return;
+    calendarPopover = document.createElement("div");
+    calendarPopover.className = "task-calendar-popover";
+    calendarPopover.innerHTML = `
+      <div class="task-calendar-header">일정 추가</div>
+      <div class="task-calendar-body">
+        <label class="task-calendar-label">날짜 선택</label>
+        <input type="date" class="task-calendar-date" />
+      </div>
+      <div class="task-calendar-actions">
+        <button type="button" class="task-calendar-btn task-calendar-cancel">취소</button>
+        <button type="button" class="task-calendar-btn task-calendar-confirm">확인</button>
+      </div>
+    `;
+    document.body.appendChild(calendarPopover);
+    calendarDateInput = calendarPopover.querySelector(".task-calendar-date");
+    calendarConfirmBtn = calendarPopover.querySelector(".task-calendar-confirm");
+    calendarCancelBtn = calendarPopover.querySelector(".task-calendar-cancel");
+
+    calendarCancelBtn.addEventListener("click", hideCalendarPopover);
+    calendarConfirmBtn.addEventListener("click", handleCalendarConfirm);
+
     document.addEventListener("click", (e) => {
-      if (!wrapper.contains(e.target)) {
-        hide();
+      if (!calendarPopover) return;
+      if (
+        calendarPopover.style.display === "block" &&
+        !calendarPopover.contains(e.target) &&
+        !(e.target && e.target.classList.contains("detail-task-add-btn"))
+      ) {
+        hideCalendarPopover();
       }
     });
   }
 
-  // 기존 행에도 커스텀 드롭다운 바인딩
-  document.querySelectorAll(".task-who-wrapper").forEach(bindWhoDropdown);
+  function hideCalendarPopover() {
+    if (!calendarPopover) return;
+    calendarPopover.style.display = "none";
+    calendarCurrentRow = null;
+  }
 
-  // 태스크 추가 버튼(상단)
-  function addTaskRow() {
-    const body = document.querySelector(".detail-task-body");
-    if (!body) return;
-    const newRow = document.createElement("div");
-    newRow.className = "detail-task-row";
-    newRow.innerHTML = `
-      <div class="detail-task-col detail-task-col-who">
-        <div class="task-who-wrapper">
-          <input type="text" class="task-edit-field task-who-input" data-task-field="who" list="task-who-options" />
-          <button type="button" class="task-who-toggle" aria-label="who 목록 열기">&#9662;</button>
-        </div>
-      </div>
-      <div class="detail-task-col detail-task-col-what">
-        <textarea class="task-edit-field" data-task-field="what" rows="2"></textarea>
-      </div>
-      <div class="detail-task-col detail-task-col-when">
-        <textarea class="task-edit-field" data-task-field="when" rows="2"></textarea>
-      </div>
-    `;
-    body.appendChild(newRow);
-    const newWrapper = newRow.querySelector(".task-who-wrapper");
-    if (newWrapper) {
-      bindWhoDropdown(newWrapper);
+  function showCalendarPopover(targetBtn, row) {
+    ensureCalendarPopover();
+    calendarCurrentRow = row;
+    const rect = targetBtn.getBoundingClientRect();
+    const popoverWidth = 220;
+    const centerOffset = rect.left + rect.width / 2 - popoverWidth / 2;
+    calendarPopover.style.left = `${Math.max(8, centerOffset + window.scrollX)}px`;
+    calendarPopover.style.top = `${rect.bottom + window.scrollY + 6}px`;
+    calendarPopover.style.display = "block";
+    if (calendarDateInput) {
+      calendarDateInput.value = "";
+      calendarDateInput.focus();
     }
   }
-  if (taskAddMainBtn) {
-    taskAddMainBtn.addEventListener("click", addTaskRow);
+
+  function handleCalendarConfirm() {
+    if (!calendarCurrentRow || !calendarDateInput) return;
+    const dateVal = calendarDateInput.value;
+    if (!dateVal) {
+      alert("날짜를 선택해 주세요.");
+      return;
+    }
+    const whoVal =
+      calendarCurrentRow.querySelector('[data-task-field="who"]')?.value || "";
+    const whatVal =
+      calendarCurrentRow.querySelector('[data-task-field="what"]')?.value || "";
+    const whenVal =
+      calendarCurrentRow.querySelector('[data-task-field="when"]')?.value || "";
+    const title = whatVal || "회의 태스크";
+    const detailsParts = [];
+    if (whoVal) detailsParts.push(`Who: ${whoVal}`);
+    if (whenVal) detailsParts.push(`When: ${whenVal}`);
+    const details = detailsParts.join(" | ");
+    const start = dateVal.replace(/-/g, "");
+    const end = start;
+    const url =
+      "https://calendar.google.com/calendar/render" +
+      `?action=TEMPLATE&text=${encodeURIComponent(title)}` +
+      `&details=${encodeURIComponent(details || title)}` +
+      `&dates=${start}/${end}`;
+    window.open(url, "_blank");
+    hideCalendarPopover();
   }
 
-  /* =========================================
-   * 5. 회의록( minutes ) 에디터 관련
-   *    - 구성 선택 팝업
-   *    - 템플릿에서 섹션 생성
-   *    - 저장
-   * ========================================= */
+  function bindAddButtonCalendar(btn) {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const row = btn.closest(".detail-task-row");
+      if (!row) return;
+      showCalendarPopover(btn, row);
+    });
+  }
+
+/* =========================================
+ * 5. 회의록( minutes ) 에디터 관련
+ *    - 구성 선택 팝업
+ *    - 템플릿에서 섹션 생성
+ *    - 저장
+ * ========================================= */
 
   // minutes 탭 안의 에디터만 명시적으로 선택
   const minutesEditor =
@@ -374,25 +583,25 @@
   const minutesConfigOverlay = document.getElementById(
     "minutes-config-overlay"
   );
-  const minutesConfigForm = document.getElementById("minutes-config-form");
-  const btnMinutesConfigConfirm = document.getElementById(
-    "minutes-config-confirm"
-  );
-  const btnMinutesConfigCancel = document.getElementById(
+const minutesConfigForm = document.getElementById("minutes-config-form");
+const btnMinutesConfigConfirm = document.getElementById(
+  "minutes-config-confirm"
+);
+const btnMinutesConfigCancel = document.getElementById(
     "minutes-config-cancel"
   );
-  const btnMinutesConfigClose = document.getElementById("minutes-config-close");
-  const pdfDownloadBtn = document.getElementById("btn-minutes-download-pdf");
-  const wordDownloadBtn = document.getElementById("btn-minutes-download-word");
+const btnMinutesConfigClose = document.getElementById("minutes-config-close");
+const pdfDownloadBtn = document.getElementById("btn-minutes-download-pdf");
+const wordDownloadBtn = document.getElementById("btn-minutes-download-word");
 
-  const isHost =
-    (meetingDetailRoot.dataset.isHost || "") === "true" ||
-    (minutesRoot && minutesRoot.dataset.isHost === "true") ||
-    !!minutesConfigOverlay;
+const isHostMinutes =
+  isHost ||
+  (minutesRoot && minutesRoot.dataset.isHost === "true") ||
+  !!minutesConfigOverlay;
 
-  if (!minutesEditor || !minutesTemplates) {
-    return;
-  }
+if (!minutesEditor || !minutesTemplates) {
+  return;
+}
 
   function setDownloadButtonsVisibility(visible) {
     const displayValue = visible ? "inline-flex" : "none";

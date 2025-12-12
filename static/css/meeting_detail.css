@@ -199,9 +199,11 @@
 .detail-task-header,
 .detail-task-row {
   display: grid;
-  grid-template-columns: 0.6fr 1.2fr 2.4fr 1.2fr 0.9fr;
+  grid-template-columns: 0.3fr 1.5fr 2.25fr 1.2fr 0.8fr;
   column-gap: 8px;
   align-items: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .detail-task-col-check {
@@ -210,7 +212,7 @@
 
 .detail-task-header {
   border-bottom: 1px solid #e0f2fe;
-  padding-bottom: 8px;
+  padding: 0 8px 8px 0;
   margin-bottom: 8px;
   font-weight: 600;
   color: #475569;
@@ -219,6 +221,7 @@
 .detail-task-body {
   flex: 1 1 auto;
   overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .detail-task-row {
@@ -254,7 +257,60 @@
   display: block;
 }
 .task-who-input {
-  padding-right: 32px;
+  padding-right: 22px;
+  min-width: 110px;
+}
+
+.task-calendar-popover {
+  position: absolute;
+  z-index: 2000;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  width: 220px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  display: none;
+}
+.task-calendar-header {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 8px;
+}
+.task-calendar-body {
+  margin-bottom: 10px;
+}
+.task-calendar-label {
+  display: block;
+  font-size: 12px;
+  color: #475569;
+  margin-bottom: 6px;
+}
+.task-calendar-date {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+.task-calendar-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.task-calendar-btn {
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.task-calendar-btn:hover {
+  background: #e2e8f0;
 }
 .task-who-toggle {
   position: absolute;

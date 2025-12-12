@@ -220,6 +220,7 @@ def _task_to_display(task):
     what = task.task_content or ""
     when_text = ""
     who_text_from_json = ""
+    assignee_id_from_json = None
     try:
         parsed = json.loads(task.task_content)
         if isinstance(parsed, dict):
@@ -228,10 +229,12 @@ def _task_to_display(task):
                 what = first.get("description") or what
                 when_text = first.get("due") or first.get("due_text") or ""
                 who_text_from_json = first.get("assignee") or ""
+                assignee_id_from_json = first.get("assignee_id")
             else:
                 what = parsed.get("description") or what
                 when_text = parsed.get("due") or parsed.get("due_text") or ""
                 who_text_from_json = parsed.get("assignee") or ""
+                assignee_id_from_json = parsed.get("assignee_id")
     except Exception:
         pass
 
@@ -239,7 +242,7 @@ def _task_to_display(task):
     if task.assignee:
         who_text = task.assignee.name
         if getattr(task.assignee, "dept", None):
-            who_text += f", {task.assignee.dept.dept_name}"
+            who_text += f" ({task.assignee.dept.dept_name})"
     elif who_text_from_json:
         who_text = who_text_from_json
 
@@ -248,6 +251,7 @@ def _task_to_display(task):
         "who": who_text,
         "what": what,
         "when": when_text or "직접입력",
+        "assignee_id": task.assignee_id or assignee_id_from_json,
     }
 
 
@@ -709,6 +713,15 @@ class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
 
         # 템플릿에서 사용할 데이터 주입
         context["meeting"] = meeting
+        session_user_id = self.request.session.get("login_user_id")
+        login_user_obj = None
+        if session_user_id:
+            try:
+                login_user_obj = User.objects.select_related("dept").get(user_id=session_user_id)
+            except User.DoesNotExist:
+                login_user_obj = None
+        context["login_user"] = login_user_obj
+        context["login_user_id"] = session_user_id
         context["attendees"] = (
             meeting.attendees
                    .select_related("user", "user__dept")
@@ -728,9 +741,12 @@ class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
                 .order_by("name")
         )
         context["transcript_display_html"] = _render_transcript_html(meeting.transcript)
+        try:
+            context["all_users_json"] = json.dumps(context["all_users"], ensure_ascii=False)
+        except Exception:
+            context["all_users_json"] = "[]"
 
         # 주최자인지 여부 판단 (세션 기반)
-        session_user_id = self.request.session.get("login_user_id")
         is_host = False
 
         if session_user_id and meeting.host_id:
@@ -1071,6 +1087,7 @@ def tasks_save(request, meeting_id):
         if not isinstance(item, dict):
             continue
         who = (item.get("who") or item.get("assignee") or "").strip()
+        assignee_id_payload = item.get("assignee_id")
         what = (item.get("what") or item.get("description") or "").strip()
         when = (item.get("when") or item.get("due") or item.get("due_text") or "").strip()
 
@@ -1080,15 +1097,28 @@ def tasks_save(request, meeting_id):
 
         parsed_due = _parse_due_date(when) if when else None
         assignee_obj = None
-        if who:
+        if assignee_id_payload:
             try:
-                assignee_obj = User.objects.filter(name=who).first()
+                assignee_obj = User.objects.filter(user_id=assignee_id_payload).first()
+            except Exception:
+                assignee_obj = None
+        if not assignee_obj and who:
+            try:
+                # "이름 (부서)" 형태라면 이름만 떼어 검색
+                who_for_lookup = who.split("(", 1)[0].strip()
+                # 호스트 이름이 명시되었으면 우선 호스트로 매칭
+                if meeting.host and who_for_lookup == meeting.host.name:
+                    assignee_obj = meeting.host
+                if not assignee_obj:
+                    assignee_obj = User.objects.filter(name=who_for_lookup).first()
             except Exception:
                 assignee_obj = None
 
         content_payload = {"description": what}
         if who:
             content_payload["assignee"] = who
+            if assignee_obj and getattr(assignee_obj, "user_id", None):
+                content_payload["assignee_id"] = assignee_obj.user_id
         if when and when.strip().lower() not in ("*", "null", "none", ""):
             content_payload["due"] = when
             if parsed_due:
