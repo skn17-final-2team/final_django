@@ -175,6 +175,8 @@ def _extract_structured_tasks(full_tasks):
                     or item.get("when")
                     or item.get("due_text")
                 )
+                if isinstance(due_raw, str) and due_raw.strip().lower() in ("*", "null", "none", ""):
+                    due_raw = ""
                 due_date_val = item.get("due_date")
                 parsed_due_date = None
                 if due_raw:
@@ -187,7 +189,6 @@ def _extract_structured_tasks(full_tasks):
                         "assignee_name": assignee_name if assignee_name else "",
                         "due_date": parsed_due_date,
                         "due_raw": due_raw or "",
-                        "due_date_raw": "" if due_date_val in (None, "", "null", "none", "None") else str(due_date_val),
                     }
                 )
             elif isinstance(item, str):
@@ -197,7 +198,6 @@ def _extract_structured_tasks(full_tasks):
                         "assignee_name": "",
                         "due_date": None,
                         "due_raw": "",
-                        "due_date_raw": "",
                     }
                 )
     elif isinstance(full_tasks, str) and full_tasks.strip():
@@ -207,7 +207,6 @@ def _extract_structured_tasks(full_tasks):
                 "assignee_name": "",
                 "due_date": None,
                 "due_raw": "",
-                "due_date_raw": "",
             }
         )
     return tasks
@@ -721,6 +720,13 @@ class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
                    .all()
         )
         context["tasks_display"] = [_task_to_display(t) for t in context["tasks"]]
+        # 전체 사용자 목록 (who 자동완성용)
+        context["all_users"] = list(
+            User.objects
+                .select_related("dept")
+                .values("user_id", "name", "dept__dept_name")
+                .order_by("name")
+        )
         context["transcript_display_html"] = _render_transcript_html(meeting.transcript)
 
         # 주최자인지 여부 판단 (세션 기반)
@@ -783,6 +789,7 @@ def meeting_record_upload(request, meeting_id):
 
     return JsonResponse({
         "ok": True,
+        "s3_key": s3_key,
     })
 
 def meeting_summary(request, meeting_id):
@@ -878,8 +885,9 @@ def meeting_sllm_prepare(request, meeting_id):
             {"status": "error", "message": f"SLLM 호출 중 통신 오류가 발생했습니다: {e}"},
             status=500,
         )
+    req_url = getattr(getattr(res, "request", None), "url", None)
     print("1번")
-    print(f"[SLLM][request] meeting_id={meeting_id} status={getattr(res, 'status_code', None)}")
+    print(f"[SLLM][request] meeting_id={meeting_id} status={getattr(res, 'status_code', None)} url={req_url}")
     try:
         res_json = res.json()
     except Exception:
@@ -898,7 +906,7 @@ def meeting_sllm_prepare(request, meeting_id):
         except Exception:
             body_preview = ""
         message = res_json.get("message") or res_json.get("error") or body_preview or "SLLM 호출 중 오류가 발생했습니다."
-        print(f"[SLLM][error] status={res.status_code} message={message}")
+        print(f"[SLLM][error] status={res.status_code} url={req_url} message={message}")
         return JsonResponse(
             {
                 "status": "error",
@@ -932,7 +940,6 @@ def meeting_sllm_prepare(request, meeting_id):
                 assignee_name = (t.get("assignee_name") or "").strip()
                 due_date = t.get("due_date")
                 due_raw = t.get("due_raw") or ""
-                due_date_raw = t.get("due_date_raw") or ""
 
                 assignee_obj = None
                 if assignee_name:
@@ -946,8 +953,11 @@ def meeting_sllm_prepare(request, meeting_id):
                     content_payload["assignee"] = assignee_name
                 if due_raw:
                     content_payload["due"] = due_raw
-                if due_date_raw:
-                    content_payload["due_date"] = due_date_raw
+                if due_date:
+                    try:
+                        content_payload["due_date"] = due_date.isoformat()
+                    except Exception:
+                        content_payload["due_date"] = str(due_date)
 
                 task_objs.append(
                     Task(
@@ -1068,7 +1078,7 @@ def tasks_save(request, meeting_id):
         if not (who or what or when):
             continue
 
-        due_date = _parse_due_date(when) if when else None
+        parsed_due = _parse_due_date(when) if when else None
         assignee_obj = None
         if who:
             try:
@@ -1079,16 +1089,17 @@ def tasks_save(request, meeting_id):
         content_payload = {"description": what}
         if who:
             content_payload["assignee"] = who
-        if when:
+        if when and when.strip().lower() not in ("*", "null", "none", ""):
             content_payload["due"] = when
-            content_payload["due_date"] = when
+            if parsed_due:
+                content_payload["due_date"] = parsed_due.isoformat()
 
         new_tasks.append(
             Task(
                 meeting=meeting,
                 task_content=json.dumps(content_payload, ensure_ascii=False),
                 assignee=assignee_obj,
-                due_date=due_date,
+                due_date=parsed_due,
             )
         )
 

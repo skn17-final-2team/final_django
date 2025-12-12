@@ -195,7 +195,9 @@ uploadBtn.addEventListener('click', async (e) => {
             body: formData,
         });
 
-        if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.ok !== false) {
             alert('업로드 성공!');
             // 필요하면 selectedFiles/preview 초기화
             selectedFiles = [];
@@ -208,11 +210,10 @@ uploadBtn.addEventListener('click', async (e) => {
 
             window.location.href = `/meetings/${meetingId}/rendering/stt/`;
         } else {
-            const data = await res.json().catch(() => ({}));
-            alert(`업로드 실패: ${data.error ?? '알 수 없는 오류'}`);
+            alert(`업로드 실패: ${data.error ?? res.statusText ?? '알 수 없는 오류'}`);
         }
     } catch (err) {
         console.error(err);
-        alert('업로드 중 오류가 발생했습니다.');
+        alert(`업로드 중 오류가 발생했습니다: ${err.message || err}`);
     }
 });
