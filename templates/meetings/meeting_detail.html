@@ -171,7 +171,6 @@
               <div class="detail-task-col detail-task-col-who">Who</div>
               <div class="detail-task-col detail-task-col-what">What</div>
               <div class="detail-task-col detail-task-col-when">When</div>
-              <div class="detail-task-col detail-task-col-add">Add</div>
             </div>
 
             <div class="detail-task-body">
@@ -179,18 +178,22 @@
                 {% for task in tasks_display %}
                   <div class="detail-task-row" data-task-id="{{ task.id }}">
                     <div class="detail-task-col detail-task-col-who">
-                      <textarea class="task-edit-field" data-task-field="who" rows="2">{{ task.who }}</textarea>
+                      <div class="task-who-wrapper">
+                        <input
+                          type="text"
+                          class="task-edit-field task-who-input"
+                          data-task-field="who"
+                          list="task-who-options"
+                          value="{{ task.who }}"
+                        />
+                        <button type="button" class="task-who-toggle" aria-label="who 목록 열기">&#9662;</button>
+                      </div>
                     </div>
                     <div class="detail-task-col detail-task-col-what">
                       <textarea class="task-edit-field" data-task-field="what" rows="2">{{ task.what }}</textarea>
                     </div>
                     <div class="detail-task-col detail-task-col-when">
                       <textarea class="task-edit-field" data-task-field="when" rows="2">{{ task.when }}</textarea>
-                    </div>
-                    <div class="detail-task-col detail-task-col-add">
-                      <button type="button" class="detail-task-add-btn">
-                        추가
-                      </button>
                     </div>
                   </div>
                 {% endfor %}
@@ -205,12 +208,28 @@
               <button
                 type="button"
                 class="detail-minutes-btn"
+                id="btn-tasks-add-main"
+              >
+                태스크 추가
+              </button>
+              <button
+                type="button"
+                class="detail-minutes-btn"
                 id="btn-tasks-save"
               >
                 태스크 저장
               </button>
             </div>
           {% endif %}
+
+          {# WHO 자동완성 옵션 (전체 사용자) #}
+          <datalist id="task-who-options">
+            {% if all_users %}
+              {% for u in all_users %}
+                <option value="{{ u.name }}{% if u.dept__dept_name %} ({{ u.dept__dept_name }}){% endif %}"></option>
+              {% endfor %}
+            {% endif %}
+          </datalist>
         </div>
 
         <!-- 회의록 탭 -->
