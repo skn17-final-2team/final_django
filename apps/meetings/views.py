@@ -213,25 +213,27 @@ def _extract_structured_tasks(full_tasks):
 
 def _get_privacy_from_domain(domain_value):
     """
-    domain 필드 재사용해 privacy 플래그를 읽는다.
-    - {"privacy": "private"} 형태를 우선
-    - 문자열 "private" 도 허용
+    기존 BooleanField(domain) 호환 + legacy 문자열 처리.
     """
-    if not domain_value:
-        return "public"
-    parsed = None
-    if isinstance(domain_value, str):
-        try:
+    if domain_value in [True, False]:
+        return "private" if domain_value else "public"
+    try:
+        if isinstance(domain_value, str):
             parsed = json.loads(domain_value)
-        except Exception:
-            parsed = None
-    if isinstance(parsed, dict):
-        val = parsed.get("privacy")
-        if isinstance(val, str) and val.lower() == "private":
-            return "private"
-    if isinstance(domain_value, str) and domain_value.strip().lower() == "private":
-        return "private"
+            if isinstance(parsed, dict):
+                val = parsed.get("privacy")
+                if isinstance(val, str) and val.lower() == "private":
+                    return "private"
+            if domain_value.strip().lower() == "private":
+                return "private"
+    except Exception:
+        pass
     return "public"
+
+def _get_privacy(meeting: Meeting):
+    if getattr(meeting, "private_yn", False):
+        return "private"
+    return _get_privacy_from_domain(getattr(meeting, "domain", None))
 
 
 def _task_to_display(task):
@@ -366,7 +368,7 @@ def build_meeting_list_context(meeting_qs, login_user_id=None):
                 is_joined = is_attendee
 
         # 공개 여부/접근 권한
-        privacy = _get_privacy_from_domain(m.domain)
+        privacy = _get_privacy(m)
         if privacy == "private":
             allowed = is_host or is_attendee
         else:
@@ -390,6 +392,7 @@ def build_meeting_list_context(meeting_qs, login_user_id=None):
                 "attendee_count": attendee_count,
                 "attendee_names": attendee_names,
                 "is_joined": is_joined,
+                "is_private": privacy == "private",
             }
         )
 
@@ -574,17 +577,17 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
         # 4. meeting_tbl에 새 레코드 생성
         with transaction.atomic():
             # meeting_tbl insert
-            domain_payload = {}
+            domain_flag = False
             if domain_name and any(domain_name):
-                domain_payload["domain"] = [d for d in domain_name if d]
-            domain_payload["privacy"] = "private" if privacy_private else "public"
+                domain_flag = True
             meeting = Meeting.objects.create(
                 title=title,
                 meet_date_time=meet_date_time,
                 place=place,
                 host=host_user,   # FK: User 인스턴스
                 transcript="",    # NOT NULL 필드라면 임시값
-                domain=json.dumps(domain_payload, ensure_ascii=False),
+                domain=domain_flag,
+                private_yn=privacy_private,
             )
 
         Attendee.objects.create(meeting=meeting, user=host_user)
@@ -782,7 +785,7 @@ class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
         attendees_list = list(meeting.attendees.all())
         is_host = session_user_id and str(meeting.host_id) == str(session_user_id)
         is_attendee = any(str(a.user_id) == str(session_user_id) for a in attendees_list) if session_user_id else False
-        privacy = _get_privacy_from_domain(meeting.domain)
+        privacy = _get_privacy(meeting)
         if privacy == "private":
             allowed = is_host or is_attendee
         else:
@@ -1073,12 +1076,44 @@ def today_meetings(request):
     """
     today = date.today()
 
-    meetings = (
+    login_user_id = request.session.get("login_user_id")
+    login_user = None
+    login_user_dept_id = None
+    if login_user_id:
+        try:
+            login_user = User.objects.select_related("dept").get(user_id=login_user_id)
+            login_user_dept_id = getattr(login_user, "dept_id", None)
+        except User.DoesNotExist:
+            login_user = None
+
+    base_qs = (
         Meeting.objects
         .filter(meet_date_time__date=today)
         .select_related("host")
-        .order_by("-meet_date_time")[:3]
+        .prefetch_related("attendees__user__dept")
+        .order_by("-meet_date_time")
     )
+
+    meetings = []
+    for m in base_qs:
+        attendees = list(m.attendees.all())
+        is_host = login_user_id and str(m.host_id) == str(login_user_id)
+        is_attendee = any(str(a.user_id) == str(login_user_id) for a in attendees) if login_user_id else False
+        privacy = _get_privacy(m)
+        if privacy == "private":
+            allowed = is_host or is_attendee
+        else:
+            same_dept = False
+            if login_user_dept_id:
+                same_dept = any(
+                    getattr(a.user, "dept_id", None) == login_user_dept_id
+                    for a in attendees
+                )
+            allowed = is_host or is_attendee or same_dept
+        if allowed:
+            meetings.append(m)
+        if len(meetings) >= 3:
+            break
 
     return {
         "today_meetings": meetings
