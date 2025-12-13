@@ -52,6 +52,7 @@ def login_api(request):
     if not pw_pattern.match(password):
         request.session["login_user_id"] = user.user_id
         request.session["login_user_name"] = user.name
+        request.session["login_user_dept_name"] = getattr(user.dept, "dept_name", "")
         request.session["login_user_admin"] = user.admin_yn
         request.session.save()
         return JsonResponse(
@@ -66,6 +67,7 @@ def login_api(request):
     # 세션 설정
     request.session["login_user_id"] = user.user_id
     request.session["login_user_name"] = user.name
+    request.session["login_user_dept_name"] = getattr(user.dept, "dept_name", "")
     request.session["login_user_admin"] = user.admin_yn
 
     # 세션 명시적 저장

@@ -141,12 +141,12 @@ body {
 }
 
 .search-filter-label {
-  margin-left: 36px;          /* 왼쪽 필터 아이콘과 겹치지 않게 */
+  margin-left: 8px;          /* 왼쪽 필터 아이콘과 겹치지 않게 */
   margin-right: 8px;
   font-size: 14px;
   color: #64748b;
   white-space: nowrap;
-  pointer-events: none;       /* 클릭 포커스 안 받도록 */
+  pointer-events: none;          /* 클릭 포커스 안 받도록 */
 }
 
 /* 입력창은 남은 공간을 채우게 */

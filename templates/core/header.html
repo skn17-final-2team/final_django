@@ -34,9 +34,13 @@
     <div class="header-user">
       <img src="{% static 'img/icon-user.svg' %}" alt="user" class="user-icon">
       <div class="header-user-info">
-        <span class="user-name">{{ request.session.login_user_name }}님</span>
+        <span class="user-name">
+          {{ request.session.login_user_name }}님
+          {% if request.session.login_user_dept_name %}
+            ({{ request.session.login_user_dept_name }})
+          {% endif %}
+        </span>
       </div>
     </div>
   </div>
 </header>
-

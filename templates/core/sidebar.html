@@ -1,6 +1,11 @@
 {% load static %}
 
-<nav class="sidebar">
+<nav class="sidebar" id="main-sidebar">
+  <!-- 토글 버튼 -->
+  <button type="button" class="sidebar-toggle-btn" id="sidebar-toggle">
+    <span class="sidebar-toggle-icon">‹</span>
+  </button>
+
   <!-- 로고 영역 -->
   <div class="sidebar-header">
     <div class="sidebar-logo">
@@ -12,13 +17,12 @@
     </div>
   </div>
 
-  <!-- 상단 메뉴 (홈 / 새 회의) -->
+  <!-- 상단 메뉴 (홈 / 새 회의 / 전체 회의 목록) -->
   <div class="sidebar-section">
     <ul class="sidebar-menu">
       <!-- 홈 -->
       <li class="sidebar-item {% if request.resolver_match.app_name == 'core' and request.resolver_match.url_name == 'home' %}sidebar-item-active{% endif %}">
         <a href="{% url 'core:home' %}" class="sidebar-link">
-          
           <span class="sidebar-icon sidebar-icon-home" aria-hidden="true"></span>
           <span class="sidebar-link-text">홈</span>
         </a>
@@ -33,24 +37,17 @@
     </ul>
   </div>
 
-  <!-- 회의 목록 (접힘/펼침) -->
+  <!-- 전체 회의 목록 (접힘/펼침) -->
   <div class="sidebar-section">
-    <button type="button" class="sidebar-collapse">
+    <button type="button" class="sidebar-collapse {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'list_all' %}sidebar-item-active{% endif %}" data-url="{% url 'meetings:list_all' %}">
       <div class="sidebar-collapse-left">
         <span class="sidebar-icon sidebar-icon-list" aria-hidden="true"></span>
-        <span class="sidebar-section-title">회의 목록</span>
+        <span class="sidebar-section-title">전체 회의 목록</span>
       </div>
       <span class="sidebar-collapse-icon">▼</span>
     </button>
 
     <ul class="sidebar-menu sidebar-menu-nested">
-      <!-- 상위: 전체 회의 목록 -->
-      <li class="sidebar-item {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'list_all' %}sidebar-item-active{% endif %}">
-        <a href="{% url 'meetings:list_all' %}" class="sidebar-link">
-          <span class="sidebar-link-text">전체 회의 목록</span>
-        </a>
-      </li>
-
       <!-- 하위: 내가 참여한 회의 -->
       <li class="sidebar-item sidebar-item-child {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'list_mine' %}sidebar-item-active{% endif %}">
         <a href="{% url 'meetings:list_mine' %}" class="sidebar-link">

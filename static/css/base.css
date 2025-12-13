@@ -206,7 +206,8 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0; /* top, right, bottom, left */
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -219,41 +220,42 @@ body {
 
 /* 모달 박스 */
 .modal-box.pw-modal-box {
-  background: #ffffff;
-  border-radius: 24px;
-  padding: 40px 48px;
-  width: 480px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  border-radius: 18px;
+  padding: 32px 32px 28px;
+  width: 460px;
   max-width: calc(100% - 40px);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
+  border: 1px solid #dbeafe;
+  box-shadow: 0 14px 36px rgba(59, 130, 246, 0.16);
   box-sizing: border-box;
   text-align: left; /* 입력/안내 문구를 왼쪽 정렬 */
 }
 
 /* 제목 */
 .pw-title {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 700;
-  color: #333333;
-  margin: 0 0 32px 0;
+  color: #0f172a;
+  margin: 0 0 24px 0;
 }
 
 /* 섹션 */
 .pw-section {
-  margin-bottom: 28px;
+  margin-bottom: 22px;
 }
 
 .pw-section-title {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
-  color: #555555;
-  margin: 0 0 12px 0;
+  color: #0f172a;
+  margin: 0 0 10px 0;
 }
 
 /* 안내 문구 */
 .pw-hint {
   margin: 0 0 12px 0;
   font-size: 13px;
-  color: #3b82f6;
+  color: #2563eb;
 }
 
 /* 입력 그룹 */
@@ -264,23 +266,29 @@ body {
 /* 입력창 */
 .pw-input {
   width: 100%;
-  height: 52px;
-  padding: 0 16px;
-  border-radius: 18px;
-  border: 1px solid #e0e0e0;
-  background: #fafafa;
+  height: 48px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 2px solid #e0f2fe;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
   font-size: 14px;
+  font-weight: 500;
+  color: #0f172a;
   outline: none;
   box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
+  transition: all 0.25s ease;
 }
 
 .pw-input::placeholder {
-  color: #c0c0c0;
+  color: #94a3b8;
 }
 
 .pw-input:focus {
   border-color: #3b82f6;
-  background: #ffffff;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14), 0 4px 16px rgba(59, 130, 246, 0.18);
+  transform: translateY(-1px);
 }
 
 /* 에러 텍스트 */
@@ -321,7 +329,7 @@ body {
 .btn-modal {
   min-width: 120px;
   height: 44px;
-  border-radius: 14px;
+  border-radius: 12px;
   border: none;
   font-size: 15px;
   cursor: pointer;
@@ -329,23 +337,25 @@ body {
 
 /* 변경 버튼 */
 .pw-actions .btn-primary {
-  background: var(--color-primary);
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
   color: #ffffff;
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.18);
 }
 
 .pw-actions .btn-primary:hover {
-  background: var(--color-primary-hover);
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  transform: translateY(-1px);
 }
 
 /* 취소 버튼 */
 .pw-actions .btn-secondary {
   background: #ffffff;
-  color: #4b5563;
+  color: #1f2937;
   border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
 }
 
 .pw-actions .btn-secondary:hover {
   background: var(--color-accent-soft);
+  color: #0f172a;
 }
-

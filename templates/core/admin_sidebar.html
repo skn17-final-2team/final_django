@@ -1,6 +1,11 @@
 {% load static %}
 
-<nav class="sidebar">
+<nav class="sidebar" id="admin-sidebar">
+  <!-- 토글 버튼 -->
+  <button type="button" class="sidebar-toggle-btn" id="admin-sidebar-toggle">
+    <span class="sidebar-toggle-icon">‹</span>
+  </button>
+
   <!-- 로고 영역 -->
   <div class="sidebar-header">
     <div class="sidebar-logo">
@@ -17,11 +22,7 @@
     <ul class="sidebar-menu">
       <li class="sidebar-item {% if request.resolver_match.app_name == 'core' and request.resolver_match.url_name == 'home' %}sidebar-item-active{% endif %}">
         <a href="{% url 'core:home' %}" class="sidebar-link">
-          <img
-            src="{% static 'img/icon-home.svg' %}"
-            alt=""
-            class="sidebar-icon"
-          />
+          <span class="sidebar-icon sidebar-icon-home" aria-hidden="true"></span>
           <span class="sidebar-link-text">홈</span>
         </a>
       </li>

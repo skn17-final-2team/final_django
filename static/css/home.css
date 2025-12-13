@@ -11,7 +11,6 @@
 .dashboard-main {
   display: flex;
   flex-direction: column;
-  min-height: 0;
   overflow: visible;
 }
 
@@ -200,10 +199,8 @@
 
 /* 달력 카드 */
 .calendar-card {
-  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
-  min-height: 0;
   background: linear-gradient(135deg, #ffffff 0%, #fafeff 100%);
   border-radius: 10px;
   border: 1px solid #dbeafe;
@@ -284,7 +281,7 @@
 
 .schedule-date {
   font-weight: 700;
-  color: #0369a1;
+  color: #3B82F6;
   white-space: nowrap;
 }
 

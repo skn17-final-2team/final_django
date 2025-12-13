@@ -121,6 +121,9 @@ def oauth2callback(request):
 
     # 세션을 복원하고 리다이렉트
     request.session["login_user_id"] = login_user_id
+    request.session["login_user_name"] = user.name
+    request.session["login_user_dept_name"] = getattr(user.dept, "dept_name", "")
+    request.session["login_user_admin"] = user.admin_yn
     request.session["google_credentials"] = token_json
     request.session.save()
 

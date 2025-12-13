@@ -15,9 +15,62 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // 회의 목록 접기 & 펼치기
   if (collapse && nested) {
-    collapse.addEventListener("click", function () {
-        nested.classList.toggle("is-collapsed");
-        collapse.classList.toggle("collapsed");
+    collapse.addEventListener("click", function (e) {
+        // 화살표 아이콘을 클릭한 경우에만 토글
+        if (e.target.classList.contains("sidebar-collapse-icon") ||
+            e.target.closest(".sidebar-collapse-icon")) {
+          nested.classList.toggle("is-collapsed");
+          collapse.classList.toggle("collapsed");
+        } else {
+          // 화살표가 아닌 다른 부분을 클릭하면 페이지 이동
+          window.location.href = collapse.dataset.url || "/meetings/list/all/";
+        }
+    });
+  }
+
+  // 사이드바 토글 기능 (일반 사이드바)
+  const mainSidebar = document.getElementById("main-sidebar");
+  const sidebarToggle = document.getElementById("sidebar-toggle");
+
+  if (mainSidebar && sidebarToggle) {
+    // localStorage에서 저장된 상태 불러오기
+    const savedState = localStorage.getItem("sidebarCollapsed");
+    if (savedState === "true") {
+      mainSidebar.classList.add("collapsed");
+      sidebarToggle.style.left = "56px";
+    }
+
+    sidebarToggle.addEventListener("click", function () {
+      mainSidebar.classList.toggle("collapsed");
+      // 상태 저장
+      const isCollapsed = mainSidebar.classList.contains("collapsed");
+      localStorage.setItem("sidebarCollapsed", isCollapsed);
+
+      // 토글 버튼 위치 업데이트
+      sidebarToggle.style.left = isCollapsed ? "56px" : "246px";
+    });
+  }
+
+  // 관리자 사이드바 토글 기능
+  const adminSidebar = document.getElementById("admin-sidebar");
+  const adminSidebarToggle = document.getElementById("admin-sidebar-toggle");
+
+  if (adminSidebar && adminSidebarToggle) {
+    // localStorage에서 저장된 상태 불러오기
+    const savedState = localStorage.getItem("adminSidebarCollapsed");
+    if (savedState === "true") {
+      adminSidebar.classList.add("collapsed");
+      adminSidebarToggle.style.left = "56px";
+    }
+
+    adminSidebarToggle.addEventListener("click", function () {
+      adminSidebar.classList.toggle("collapsed");
+      // 상태 저장
+      const isCollapsed = adminSidebar.classList.contains("collapsed");
+      localStorage.setItem("adminSidebarCollapsed", isCollapsed);
+
+      // 토글 버튼 위치 업데이트
+      adminSidebarToggle.style.left = isCollapsed ? "56px" : "246px";
     });
   }
 

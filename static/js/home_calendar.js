@@ -863,4 +863,15 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
+
+  // 사이드바 토글 시 FullCalendar 리사이즈
+  const sidebarToggle = document.getElementById("sidebar-toggle");
+  if (sidebarToggle && calendar) {
+    sidebarToggle.addEventListener("click", function () {
+      // 애니메이션 완료 후 리사이즈 (0.3s + 약간의 여유)
+      setTimeout(function () {
+        calendar.updateSize();
+      }, 350);
+    });
+  }
 });
