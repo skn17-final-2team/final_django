@@ -42,11 +42,17 @@
   padding: 8px;
   border-radius: 18px;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .calendar-icon-wrapper:hover {
-  background-color: #e0f2fe;
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.28);
+  transform: translateY(-1px);
+}
+
+.calendar-icon-wrapper:hover .dashboard-calendar-icon {
+  filter: brightness(0) invert(1);
 }
 
 /* 날짜 텍스트 전용 래퍼 */

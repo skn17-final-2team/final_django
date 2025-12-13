@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 
 from apps.accounts.models import User
-from apps.google_calendar.models import GoogleCalendarToken
+from apps.google_calendar.models import GoogleCalendarToken, OAuthState
 from apps.google_calendar.utils import get_google_credentials
 
 from google_auth_oauthlib.flow import Flow
@@ -22,6 +22,14 @@ def google_login(request):
     """
     구글 OAuth 로그인/동의 화면으로 리다이렉트
     """
+    # 로그인 확인
+    login_user_id = request.session.get("login_user_id")
+    if not login_user_id:
+        return JsonResponse(
+            {"error": "not_logged_in", "detail": "먼저 로그인해주세요."},
+            status=400
+        )
+
     if settings.DEBUG:
         os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
@@ -38,9 +46,11 @@ def google_login(request):
         prompt="consent",
     )
 
-    # ✅ 이 state를 세션에 저장해 둔다. (콜백에서 검증할 용도)
-    request.session["state"] = state
-    request.session.modified = True
+    # ✅ state와 user_id를 DB에 저장 (세션이 유지되지 않으므로)
+    OAuthState.objects.update_or_create(
+        state=state,
+        defaults={"user_id": login_user_id}
+    )
 
     return redirect(authorization_url)
 
@@ -53,18 +63,22 @@ def oauth2callback(request):
     if settings.DEBUG:
         os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
-    # 로그인 여부 먼저 확인
-    login_user_id = request.session.get("login_user_id")
-    if not login_user_id:
-        return JsonResponse({"error": "not_logged_in", "detail": "먼저 로그인해주세요."}, status=400)
-
-    # ✅ 로그인 단계에서 세션에 저장해 둔 state
-    state = request.session.get("state")
+    # URL에서 state 파라미터 가져오기
+    state = request.GET.get("state")
     if not state:
         return JsonResponse({
-            "error": "missing_state_in_session",
-            "detail": "세션이 만료되었습니다. 다시 시도해주세요.",
-            "redirect": "/google/login/"
+            "error": "missing_state",
+            "detail": "인증 상태 정보가 없습니다.",
+        }, status=400)
+
+    # DB에서 state로 user_id 조회
+    try:
+        oauth_state = OAuthState.objects.get(state=state)
+        login_user_id = oauth_state.user_id
+    except OAuthState.DoesNotExist:
+        return JsonResponse({
+            "error": "invalid_state",
+            "detail": "유효하지 않은 인증 상태입니다. 다시 시도해주세요.",
         }, status=400)
 
     # ✅ Flow를 같은 state, 같은 redirect_uri로 생성해야 한다.
@@ -102,14 +116,13 @@ def oauth2callback(request):
         defaults={"token_json": token_json},
     )
 
-    # 세션에도 저장
+    # 사용한 state는 DB에서 삭제
+    oauth_state.delete()
+
+    # 세션을 복원하고 리다이렉트
+    request.session["login_user_id"] = login_user_id
     request.session["google_credentials"] = token_json
-
-    # state는 쓸 일 끝났으면 지워도 됨 (선택)
-    request.session.pop("state", None)
-
-    # 세션 변경사항 저장
-    request.session.modified = True
+    request.session.save()
 
     return redirect("/")  # 홈으로 이동
 

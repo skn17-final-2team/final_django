@@ -17,3 +17,13 @@ class GoogleCalendarToken(models.Model):
 
     def __str__(self):
         return f"GoogleToken({self.user.user_id})"
+
+
+class OAuthState(models.Model):
+    """OAuth 인증 과정에서 state와 user_id를 임시 저장"""
+    state = models.CharField(max_length=255, unique=True, primary_key=True)
+    user_id = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "oauth_state"

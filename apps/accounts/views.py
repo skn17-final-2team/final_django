@@ -53,6 +53,7 @@ def login_api(request):
         request.session["login_user_id"] = user.user_id
         request.session["login_user_name"] = user.name
         request.session["login_user_admin"] = user.admin_yn
+        request.session.save()
         return JsonResponse(
             {
                 "ok": False,
@@ -66,6 +67,9 @@ def login_api(request):
     request.session["login_user_id"] = user.user_id
     request.session["login_user_name"] = user.name
     request.session["login_user_admin"] = user.admin_yn
+
+    # 세션 명시적 저장
+    request.session.save()
 
     print("[DEBUG] 로그인 성공 - 세션:", dict(request.session))
 

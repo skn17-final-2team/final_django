@@ -117,9 +117,12 @@ USE_TZ = False  # 시간대
 # 세션 설정 (구글 OAuth 상태 유지를 위해)
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_AGE = 1209600  # 2주
-SESSION_SAVE_EVERY_REQUEST = False
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_SAVE_EVERY_REQUEST = True  # OAuth 리다이렉트 시 세션 유지
+SESSION_COOKIE_HTTPONLY = False  # OAuth 리다이렉트를 위해 False
+SESSION_COOKIE_SECURE = False  # HTTP localhost를 위해
+SESSION_COOKIE_SAMESITE = None  # OAuth 리다이렉트를 위해 None (쿠키 전송 허용)
+SESSION_COOKIE_NAME = 'sessionid'
+SESSION_COOKIE_DOMAIN = None  # localhost에서 작동하도록
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
