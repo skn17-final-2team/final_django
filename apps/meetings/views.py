@@ -216,6 +216,34 @@ def _extract_structured_tasks(full_tasks):
         )
     return tasks
 
+
+def _normalize_summary_text(full_summary):
+    """
+    full_summary가 문자열(코드펜스 포함 가능) 또는 dict/list로 올 때
+    구조를 최대한 유지한 JSON 문자열로 반환.
+    """
+    if full_summary is None:
+        return ""
+    # 문자열이면 코드펜스 제거 후 json 파싱 시도
+    if isinstance(full_summary, str):
+        s = full_summary.strip()
+        if s.startswith("```") and s.endswith("```"):
+            s = re.sub(r"^```[a-zA-Z0-9]*\s*", "", s)
+            s = re.sub(r"\s*```$", "", s)
+        try:
+            parsed = json.loads(s)
+            if isinstance(parsed, (dict, list)):
+                return json.dumps(parsed, ensure_ascii=False, indent=2)
+            return s
+        except Exception:
+            return s
+    if isinstance(full_summary, (dict, list)):
+        try:
+            return json.dumps(full_summary, ensure_ascii=False, indent=2)
+        except Exception:
+            return str(full_summary)
+    return str(full_summary)
+
 def _get_privacy_from_domain(domain_value):
     """
     기존 BooleanField(domain) 호환 + legacy 문자열 처리.
@@ -1023,7 +1051,8 @@ def meeting_sllm_prepare(request, meeting_id):
             status=500,
         )
 
-    full_summary = payload.get("full_summary") or payload.get("summary") or ""
+    full_summary_raw = payload.get("full_summary") or payload.get("summary") or ""
+    full_summary = _normalize_summary_text(full_summary_raw)
     full_tasks = payload.get("full_tasks") or payload.get("tasks") or []
     tasks_structured = _extract_structured_tasks(full_tasks)
     # 태스크 로그 찍기
