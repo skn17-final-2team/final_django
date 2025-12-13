@@ -9,6 +9,9 @@
     (meetingDetailRoot.dataset.isHost || "").toLowerCase() === "true";
   const loginUserName = meetingDetailRoot.dataset.loginUserName || "";
   const loginUserId = meetingDetailRoot.dataset.loginUserId || "";
+  const meetingTitleEl = document.querySelector(".detail-page-title");
+  const meetingTitle =
+    (meetingTitleEl && meetingTitleEl.textContent.trim()) || "";
 
   /* =========================================
    * 1. 탭 전환 (요약 / 태스크 / 회의록)
@@ -328,7 +331,93 @@ function bindRowAddButton(row) {
   }
   }
 
-  // 태스크 추가 버튼(상단)으로 빈 행 추가
+  /* ---------- 시간 파싱/ISO 생성 유틸 ---------- */
+  function parseTimeHHMM(text) {
+    if (!text) return null;
+    const match = text.match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return null;
+    const h = Number(match[1]);
+    const m = Number(match[2]);
+    if (h < 0 || h > 23 || m < 0 || m > 59) return null;
+    return { h, m };
+  }
+
+  function formatTime(h, m) {
+    const hh = String(h).padStart(2, "0");
+    const mm = String(m).padStart(2, "0");
+    return `${hh}:${mm}`;
+  }
+
+  function addMinutesToTime(h, m, minutes) {
+    const total = h * 60 + m + minutes;
+    const dayOffset = Math.floor(total / 1440);
+    const normalized = ((total % 1440) + 1440) % 1440;
+    const endH = Math.floor(normalized / 60);
+    const endM = normalized % 60;
+    return { time: formatTime(endH, endM), dayOffset };
+  }
+
+  function addDays(dateStr, days) {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + days);
+    const yyyy = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, "0");
+    const dd = String(dt.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function buildCalendarDateRange(dateVal, startTimeStr, endTimeStr) {
+    const parsedStart = parseTimeHHMM(startTimeStr || "");
+    const parsedEnd = parseTimeHHMM(endTimeStr || "");
+    const startH = parsedStart ? parsedStart.h : 9;
+    const startM = parsedStart ? parsedStart.m : 0;
+    let startMinutes = startH * 60 + startM;
+    let endMinutes;
+    if (parsedEnd) {
+      endMinutes = parsedEnd.h * 60 + parsedEnd.m;
+      if (endMinutes <= startMinutes) {
+        endMinutes += 24 * 60; // 종료가 시작 이전이면 다음날로 간주
+      }
+    } else {
+      endMinutes = startMinutes + 60; // 기본 1시간
+    }
+    const diff = endMinutes - startMinutes;
+    const { time: endTime, dayOffset } = addMinutesToTime(startH, startM, diff);
+    const endDate = addDays(dateVal, dayOffset);
+    const startTime = formatTime(startH, startM);
+    return {
+      start: `${dateVal}T${startTime}:00+09:00`,
+      end: `${endDate}T${endTime}:00+09:00`,
+    };
+  }
+
+  async function createGoogleCalendarEvent(payload) {
+    const res = await fetch("/api/google-events/create/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+    let data = null;
+    try {
+      data = await res.json();
+    } catch (_) {}
+
+    if (!res.ok) {
+      if (data && data.error === "not_authenticated") {
+        window.location.href = "/google/login/";
+        return;
+      }
+      const msg =
+        (data && (data.detail || data.error)) ||
+        "구글 캘린더 일정 추가에 실패했습니다.";
+      throw new Error(msg);
+    }
+    return data;
+  }
+
+  // 태스크 추가 버튼으로 빈 행 추가
   const taskAddMainBtn = document.getElementById("btn-tasks-add-main");
   function addTaskRow() {
     const body = document.querySelector(".detail-task-body");
@@ -505,6 +594,8 @@ document
   /* ---------- Add 버튼: 캘린더 팝오버 ---------- */
   let calendarPopover = null;
   let calendarDateInput = null;
+  let calendarStartInput = null;
+  let calendarEndInput = null;
   let calendarConfirmBtn = null;
   let calendarCancelBtn = null;
   let calendarCurrentRow = null;
@@ -518,6 +609,16 @@ document
       <div class="task-calendar-body">
         <label class="task-calendar-label">날짜 선택</label>
         <input type="date" class="task-calendar-date" />
+        <div class="task-calendar-time-row">
+          <div>
+            <label class="task-calendar-label">시작 시간</label>
+            <input type="time" class="task-calendar-start" />
+          </div>
+          <div>
+            <label class="task-calendar-label">종료 시간</label>
+            <input type="time" class="task-calendar-end" />
+          </div>
+        </div>
       </div>
       <div class="task-calendar-actions">
         <button type="button" class="task-calendar-btn task-calendar-cancel">취소</button>
@@ -526,6 +627,8 @@ document
     `;
     document.body.appendChild(calendarPopover);
     calendarDateInput = calendarPopover.querySelector(".task-calendar-date");
+    calendarStartInput = calendarPopover.querySelector(".task-calendar-start");
+    calendarEndInput = calendarPopover.querySelector(".task-calendar-end");
     calendarConfirmBtn = calendarPopover.querySelector(".task-calendar-confirm");
     calendarCancelBtn = calendarPopover.querySelector(".task-calendar-cancel");
 
@@ -554,7 +657,7 @@ document
     ensureCalendarPopover();
     calendarCurrentRow = row;
     const rect = targetBtn.getBoundingClientRect();
-    const popoverWidth = 220;
+    const popoverWidth = 280;
     const centerOffset = rect.left + rect.width / 2 - popoverWidth / 2;
     calendarPopover.style.left = `${Math.max(8, centerOffset + window.scrollX)}px`;
     calendarPopover.style.top = `${rect.bottom + window.scrollY + 6}px`;
@@ -563,35 +666,64 @@ document
       calendarDateInput.value = "";
       calendarDateInput.focus();
     }
+    if (calendarStartInput) {
+      calendarStartInput.value = "09:00";
+    }
+    if (calendarEndInput) {
+      calendarEndInput.value = "10:00";
+    }
   }
 
-  function handleCalendarConfirm() {
+  async function handleCalendarConfirm() {
     if (!calendarCurrentRow || !calendarDateInput) return;
     const dateVal = calendarDateInput.value;
     if (!dateVal) {
       alert("날짜를 선택해 주세요.");
       return;
     }
+    const startTimeVal = calendarStartInput ? calendarStartInput.value : "";
+    const endTimeVal = calendarEndInput ? calendarEndInput.value : "";
+    if (startTimeVal && !parseTimeHHMM(startTimeVal)) {
+      alert("시작 시간을 HH:MM 형식으로 입력해 주세요.");
+      return;
+    }
+    if (endTimeVal && !parseTimeHHMM(endTimeVal)) {
+      alert("종료 시간을 HH:MM 형식으로 입력해 주세요.");
+      return;
+    }
+
     const whoVal =
       calendarCurrentRow.querySelector('[data-task-field="who"]')?.value || "";
     const whatVal =
       calendarCurrentRow.querySelector('[data-task-field="what"]')?.value || "";
-    const whenVal =
-      calendarCurrentRow.querySelector('[data-task-field="when"]')?.value || "";
     const title = whatVal || "회의 태스크";
-    const detailsParts = [];
-    if (whoVal) detailsParts.push(`Who: ${whoVal}`);
-    if (whenVal) detailsParts.push(`When: ${whenVal}`);
-    const details = detailsParts.join(" | ");
-    const start = dateVal.replace(/-/g, "");
-    const end = start;
-    const url =
-      "https://calendar.google.com/calendar/render" +
-      `?action=TEMPLATE&text=${encodeURIComponent(title)}` +
-      `&details=${encodeURIComponent(details || title)}` +
-      `&dates=${start}/${end}`;
-    window.open(url, "_blank");
-    hideCalendarPopover();
+    const { start, end } = buildCalendarDateRange(
+      dateVal,
+      startTimeVal,
+      endTimeVal
+    );
+    const addBtn = calendarCurrentRow.querySelector(".detail-task-add-btn");
+    if (addBtn) {
+      addBtn.disabled = true;
+    }
+
+    try {
+      await createGoogleCalendarEvent({
+        title,
+        start,
+        end,
+        description: meetingTitle || title,
+      });
+      alert("구글 캘린더에 일정이 추가되었습니다.");
+      hideCalendarPopover();
+    } catch (err) {
+      console.error("google calendar create error:", err);
+      alert(err.message || "일정 추가에 실패했습니다.");
+    } finally {
+      if (addBtn) {
+        addBtn.disabled = false;
+      }
+    }
   }
 
   function bindAddButtonCalendar(btn) {
@@ -854,4 +986,3 @@ if (!minutesEditor || !minutesTemplates) {
     });
   }
 });
-
