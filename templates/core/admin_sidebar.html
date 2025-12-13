@@ -14,7 +14,13 @@
         alt="말하는대로"
         class="sidebar-logo-image"
       />
+      <img
+        src="{% static 'img/favicon.png' %}"
+        alt="로고 아이콘"
+        class="sidebar-logo-icon"
+      />
     </div>
+    <!-- 접힘 상태 전용 회의 목록 바로가기 -->
   </div>
 
   <!-- 상단 메뉴 (홈) -->
@@ -25,6 +31,16 @@
           <span class="sidebar-icon sidebar-icon-home" aria-hidden="true"></span>
           <span class="sidebar-link-text">홈</span>
         </a>
+      </li>
+      <li class="sidebar-item collapsed-only collapsed-search-item">
+        <button
+          type="button"
+          id="admin-sidebar-search-toggle"
+          class="sidebar-collapsed-action"
+          title="검색 열기"
+        >
+          <span class="sidebar-icon sidebar-icon-search" aria-hidden="true"></span>
+        </button>
       </li>
     </ul>
   </div>

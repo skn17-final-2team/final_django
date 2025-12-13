@@ -14,7 +14,20 @@
         alt="말하는대로"
         class="sidebar-logo-image"
       />
+      <img
+        src="{% static 'img/favicon.png' %}"
+        alt="로고 아이콘"
+        class="sidebar-logo-icon"
+      />
     </div>
+    <!-- 접힘 상태 전용 회의 목록 바로가기 -->
+    <a
+      href="{% url 'meetings:list_all' %}"
+      class="sidebar-collapsed-action collapsed-only"
+      title="전체 회의 목록"
+    >
+      <span class="sidebar-icon sidebar-icon-list" aria-hidden="true"></span>
+    </a>
   </div>
 
   <!-- 상단 메뉴 (홈 / 새 회의 / 전체 회의 목록) -->
@@ -32,6 +45,12 @@
         <a href="{% url 'meetings:meeting_create' %}" class="sidebar-link">
           <span class="sidebar-icon sidebar-icon-add" aria-hidden="true"></span>
           <span class="sidebar-link-text">새 회의</span>
+        </a>
+      </li>
+      <li class="sidebar-item collapsed-only collapsed-menu-item {% if request.resolver_match.app_name == 'meetings' and request.resolver_match.url_name == 'list_all' %}sidebar-item-active{% endif %}">
+        <a href="{% url 'meetings:list_all' %}" class="sidebar-link">
+          <span class="sidebar-icon sidebar-icon-list" aria-hidden="true"></span>
+          <span class="sidebar-link-text">전체 회의 목록</span>
         </a>
       </li>
     </ul>
@@ -80,10 +99,10 @@
           </div>
           <div class="meeting-card-body">
             <p class="meeting-card-title">
-              {{ m.title }}
+              {{ m.title|truncatechars:13 }}
             </p>
             <p class="meeting-card-meta">
-              {{ m.meet_date_time|date:"Y.m.d H:i" }}
+              {{ m.meet_date_time|date:"Y.m.d H:i" }} · {{ m.meet_date_time|timesince }} 전
             </p>
           </div>
         </a>

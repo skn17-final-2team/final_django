@@ -42,9 +42,20 @@
           autocomplete="off"
         />
 
+        <!-- 초기화 버튼 (검색어가 있을 때만 표시) -->
+        <button
+          type="button"
+          id="search-clear-btn"
+          class="search-clear-btn"
+          style="display: none;"
+          aria-label="검색어 초기화"
+        >
+          ✕
+        </button>
+
         <!-- 돋보기 아이콘 (오른쪽) -->
         <img
-          src="{% static 'img/icon-search.png' %}"
+          src="{% static 'img/icon-search.svg' %}"
           alt="검색"
           class="search-icon"
         />
@@ -143,16 +154,16 @@
               href="{% url 'meetings:meeting_detail' meeting_id=meeting.meeting_id %}"
               class="title-link"
             >
-              {{ meeting.title }}
+              {{ meeting.title|truncatechars:20 }}
             </a>
           </td>
 
           <td class="col-place">
-            {{ meeting.place }}
+            {{ meeting.place|truncatechars:10 }}
           </td>
 
           <td class="col-host">
-            {{ meeting.host_name }}
+            {{ meeting.host_name|truncatechars:10 }}
           </td>
 
           <td class="col-count">

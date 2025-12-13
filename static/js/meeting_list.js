@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const allRows = Array.from(tbody.querySelectorAll(".meeting-row"));
 
   const searchInput = document.getElementById("search-input");
+  const searchClearBtn = document.getElementById("search-clear-btn");
   const searchFilterToggle = document.getElementById("search-filter-toggle");
   const searchFilterDropdown = document.getElementById("search-filter-dropdown");
   const searchFilterOptions = searchFilterDropdown
@@ -233,7 +234,23 @@ document.addEventListener("DOMContentLoaded", function () {
   if (searchInput) {
     searchInput.addEventListener("input", function (e) {
       currentSearchKeyword = e.target.value.trim();
+
+      // 검색어가 있으면 초기화 버튼 표시, 없으면 숨김
+      if (searchClearBtn) {
+        searchClearBtn.style.display = currentSearchKeyword ? "flex" : "none";
+      }
+
       applyFiltersAndSort(true); // 검색 바꾸면 항상 1페이지로
+    });
+  }
+
+  // ===== 검색어 초기화 버튼 =====
+  if (searchClearBtn && searchInput) {
+    searchClearBtn.addEventListener("click", function () {
+      searchInput.value = "";
+      currentSearchKeyword = "";
+      searchClearBtn.style.display = "none";
+      applyFiltersAndSort(true); // 검색 초기화 시 1페이지로
     });
   }
 
