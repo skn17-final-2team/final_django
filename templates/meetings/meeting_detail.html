@@ -368,7 +368,13 @@
             <th>주요안건</th>
             <td>
               <div class="minutes-editbox" contenteditable="true">
-                {# 필요하다면 서버에서 기본값을 넣을 수도 있음 #}
+                {% if summary_agendas %}
+                  {% for item in summary_agendas %}
+                    {% if item.agenda %}
+                      {{ forloop.counter }}. {{ item.agenda }}{% if not forloop.last %}<br>{% endif %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
               </div>
             </td>
           </tr>
@@ -387,7 +393,16 @@
           <tr>
             <th>회의 내용</th>
             <td>
-              <div class="minutes-editbox" contenteditable="true"></div>
+              <div class="minutes-editbox" contenteditable="true">
+                {% if summary_agendas %}
+                  {% for item in summary_agendas %}
+                    <p>
+                      {% if item.agenda_description %}- {{ item.agenda_description }}<br>{% endif %}
+                      {% if item.summary %}- {{ item.summary }}<br>{% endif %}
+                    </p>
+                  {% endfor %}
+                {% endif %}
+              </div>
             </td>
           </tr>
         </tbody>
@@ -423,7 +438,9 @@
           <tr>
             <th>해야 할 일</th>
             <td>
-              <div class="minutes-editbox" contenteditable="true"></div>
+              <div class="minutes-editbox" contenteditable="true">
+                {{ tasks_for_minutes|linebreaksbr }}
+              </div>
             </td>
           </tr>
         </tbody>

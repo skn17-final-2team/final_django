@@ -273,6 +273,23 @@ def _parse_summary_agendas(summary_text):
         )
     return result
 
+
+def _format_agendas_for_minutes(agendas):
+    """
+    회의록 기본값으로 넣기 위한 간단한 텍스트 형태로 변환.
+    """
+    if not agendas:
+        return ""
+    lines = []
+    for idx, ag in enumerate(agendas, 1):
+        title = ag.get("agenda") or ""
+        desc = ag.get("agenda_description") or ""
+        summ = ag.get("summary") or ""
+        parts = [p for p in [title, desc, summ] if p]
+        if parts:
+            lines.append(f"{idx}. " + " | ".join(parts))
+    return "\n".join(lines)
+
 def _get_privacy_from_domain(domain_value):
     """
     기존 BooleanField(domain) 호환 + legacy 문자열 처리.
@@ -871,7 +888,23 @@ class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
         )
         context["tasks_display"] = [_task_to_display(t) for t in context["tasks"]]
         # summary JSON(agendas) 파싱
-        context["summary_agendas"] = _parse_summary_agendas(meeting.summary)
+        summary_agendas = _parse_summary_agendas(meeting.summary)
+        context["summary_agendas"] = summary_agendas
+        context["summary_agendas_text"] = _format_agendas_for_minutes(summary_agendas)
+        context["summary_agenda_first"] = summary_agendas[0].get("agenda") if summary_agendas else ""
+        # 해야 할 일 기본값 (회의록용)
+        tasks_for_minutes = []
+        for t in context["tasks_display"]:
+            parts = []
+            if t.get("who"):
+                parts.append(f"Who: {t['who']}")
+            if t.get("what"):
+                parts.append(f"What: {t['what']}")
+            if t.get("when"):
+                parts.append(f"When: {t['when']}")
+            if parts:
+                tasks_for_minutes.append(" | ".join(parts))
+        context["tasks_for_minutes"] = "\n".join(tasks_for_minutes)
         # 전체 사용자 목록 (who 자동완성용)
         context["all_users"] = list(
             User.objects
