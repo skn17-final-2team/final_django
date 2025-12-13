@@ -21,10 +21,10 @@ class LoginRequiredSessionMixin:
         return super().dispatch(request, *args, **kwargs)
 
 class HomeView(LoginRequiredSessionMixin, TemplateView):
-    template_name = "core/home.html"
+    template_name = "includes/home.html"
 
 class AdminHomeView(LoginRequiredSessionMixin, TemplateView):
-    template_name = "core/admin_home.html"
+    template_name = "includes/admin_home.html"
 
     def dispatch(self, request, *args, **kwargs):
         # 세션단에서 검증

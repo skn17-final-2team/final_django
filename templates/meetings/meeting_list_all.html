@@ -1,10 +1,10 @@
-{% extends "core/base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}전체 회의 목록{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/meeting_list.css' %}">
+<link rel="stylesheet" href="{% static 'css/meetings/meeting_list.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -205,5 +205,5 @@
 {% endblock %}
 
 {% block extra_script %}
-<script src="{% static 'js/meeting_list.js' %}"></script>
+<script src="{% static 'js/meetings/meeting_list.js' %}"></script>
 {% endblock %}

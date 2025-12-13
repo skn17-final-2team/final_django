@@ -1,4 +1,4 @@
-{% extends "core/base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}홈{% endblock %}
@@ -210,8 +210,8 @@
 
 {% block extra_script %}
   <!-- FullCalendar JS -->
-  <script src="{% static 'js/fullcalendar_6.1.19.js' %}"></script>
+  <script src="{% static 'js/calendars/fullcalendar_6.1.19.js' %}"></script>
 
   <!-- 홈 화면용 캘린더 초기화 스크립트 -->
-  <script src="{% static 'js/home_calendar.js' %}"></script>
+  <script src="{% static 'js/calendars/home_calendar.js' %}"></script>
 {% endblock %}

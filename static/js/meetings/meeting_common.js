@@ -1,4 +1,4 @@
-// static/js/meeting_common.js
+// static/js/meetings/meeting_common.js
 document.addEventListener("DOMContentLoaded", function () {
   const copyBtn = document.getElementById("btn-copy-full-transcript");
   if (!copyBtn) return;

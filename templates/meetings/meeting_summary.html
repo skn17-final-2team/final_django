@@ -1,11 +1,11 @@
-{% extends "core/base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}회의 요약{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/meeting_transcript.css' %}">
-<link rel="stylesheet" href="{% static 'css/meeting_summary.css' %}">
+<link rel="stylesheet" href="{% static 'css/meetings/meeting_transcript.css' %}">
+<link rel="stylesheet" href="{% static 'css/meetings/meeting_summary.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -81,6 +81,6 @@
 {% endblock %}
 
 {% block extra_script %}
-<script src="{% static 'js/meeting_common.js' %}"></script>
+<script src="{% static 'js/meetings/meeting_common.js' %}"></script>
 <script src="{% static 'js/meeting_summary.js' %}"></script>
 {% endblock %}

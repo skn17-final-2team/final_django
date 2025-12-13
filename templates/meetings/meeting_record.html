@@ -1,11 +1,11 @@
-{% extends "core/base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %}새 회의{% endblock %}
 {% block page_title %}새 회의{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/meeting.css' %}">
+<link rel="stylesheet" href="{% static 'css/meetings/meeting.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -90,6 +90,6 @@
   </form>
 {% endblock %}
 {% block extra_script %}
-<script src="{% static 'js/meeting.js' %}"></script>
+<script src="{% static 'js/meetings/meeting.js' %}"></script>
 {% endblock %}
 
