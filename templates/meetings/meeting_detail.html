@@ -154,7 +154,21 @@
           data-tab-panel="summary"
         >
           <div class="detail-summary-box">
-            {% if meeting.summary %}
+            {% if summary_agendas %}
+              <div class="summary-agenda-list">
+                {% for item in summary_agendas %}
+                  <div class="summary-agenda-item">
+                    <div class="summary-agenda-title">안건{{ forloop.counter }} : {{ item.agenda }}</div>
+                    {% if item.agenda_description %}
+                      <div class="summary-agenda-desc">- {{ item.agenda_description }}</div>
+                    {% endif %}
+                    {% if item.summary %}
+                      <div class="summary-agenda-summary">- {{ item.summary }}</div>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% elif meeting.summary %}
               {{ meeting.summary|linebreaksbr }}
             {% else %}
               <p class="detail-empty-text">요약 내용이 아직 등록되지 않았습니다.</p>
@@ -529,4 +543,3 @@
 {% block extra_script %}
 <script src="{% static 'js/meeting_detail.js' %}"></script>
 {% endblock %}
-

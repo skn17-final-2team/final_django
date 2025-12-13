@@ -244,6 +244,35 @@ def _normalize_summary_text(full_summary):
             return str(full_summary)
     return str(full_summary)
 
+
+def _parse_summary_agendas(summary_text):
+    """
+    저장된 summary_text(JSON 문자열 예상)에서 agendas 배열을 파싱해 리스트 반환.
+    """
+    if not summary_text:
+        return []
+    try:
+        parsed = json.loads(summary_text)
+    except Exception:
+        return []
+    if not isinstance(parsed, dict):
+        return []
+    agendas = parsed.get("agendas")
+    if not isinstance(agendas, list):
+        return []
+    result = []
+    for item in agendas:
+        if not isinstance(item, dict):
+            continue
+        result.append(
+            {
+                "agenda": (item.get("agenda") or "").strip(),
+                "agenda_description": (item.get("agenda_description") or "").strip(),
+                "summary": (item.get("summary") or "").strip(),
+            }
+        )
+    return result
+
 def _get_privacy_from_domain(domain_value):
     """
     기존 BooleanField(domain) 호환 + legacy 문자열 처리.
@@ -841,6 +870,8 @@ class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
                    .all()
         )
         context["tasks_display"] = [_task_to_display(t) for t in context["tasks"]]
+        # summary JSON(agendas) 파싱
+        context["summary_agendas"] = _parse_summary_agendas(meeting.summary)
         # 전체 사용자 목록 (who 자동완성용)
         context["all_users"] = list(
             User.objects

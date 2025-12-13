@@ -182,6 +182,36 @@
   color: #334155;
 }
 
+.summary-agenda-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary-agenda-item {
+  padding: 12px 14px;
+  border: 1px solid #e0f2fe;
+  border-radius: 10px;
+  background: #fafeff;
+}
+
+.summary-agenda-title {
+  font-weight: 700;
+  font-size: 1.08rem;
+  color: #1f2937;
+  margin-bottom: 6px;
+}
+
+.summary-agenda-desc {
+  font-weight: 500;
+  color: #4b5563;
+  margin-bottom: 4px;
+}
+
+.summary-agenda-summary {
+  color: #374151;
+}
+
 /* 태스크 박스 */
 .detail-task-box {
   background-color: #ffffff;
@@ -716,4 +746,3 @@
 .minutes-config-btn:hover {
   background: #f3f4f6;
 }
-
