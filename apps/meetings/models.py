@@ -25,7 +25,7 @@ class Meeting(models.Model):
         blank=True,
         db_column="record_url",
     )
-    domain = models.BooleanField(max_length=12, null=True, blank=True)
+    domain = models.CharField(max_length=12, null=True, blank=True)
     private_yn = models.BooleanField(default=False)
     class Meta:
         db_table = "meeting_tbl"
