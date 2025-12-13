@@ -146,10 +146,15 @@ def _extract_structured_tasks(full_tasks):
     tasks = []
     # 문자열 JSON이면 파싱
     if isinstance(full_tasks, str):
+        s = full_tasks.strip()
+        # 코드펜스 ```json ... ``` 형태 제거
+        if s.startswith("```") and s.endswith("```"):
+            s = re.sub(r"^```[a-zA-Z0-9]*\s*", "", s)
+            s = re.sub(r"\s*```$", "", s)
         try:
-            full_tasks = json.loads(full_tasks)
+            full_tasks = json.loads(s)
         except Exception:
-            pass
+            full_tasks = full_tasks
     # {"tasks": [...]} 형태 처리
     if isinstance(full_tasks, dict) and "tasks" in full_tasks:
         full_tasks = full_tasks.get("tasks")
@@ -262,7 +267,7 @@ def _task_to_display(task):
     except Exception:
         pass
 
-    who_text = "-"
+    who_text = "직접입력"
     if task.assignee:
         who_text = task.assignee.name
         if getattr(task.assignee, "dept", None):
@@ -543,11 +548,8 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
     def post(self, request, *args, **kwargs):
 
         attendee_ids = request.POST.getlist("attendees")
-        domain_name = (
-            request.POST.getlist("domain")
-            or request.POST.getlist("domains")
-            or [request.POST.get("domains")]
-        )
+        # 도메인은 사용자가 선택한 한글 라벨 그대로 저장한다.
+        domain_value = request.POST.get("domains") or ""
         privacy_private = request.POST.get("is_private") in ["on", "1", "true", True]
         if not attendee_ids:
             messages.error(request, "참석자를 최소 1명 이상 선택해 주세요.")
@@ -577,16 +579,13 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
         # 4. meeting_tbl에 새 레코드 생성
         with transaction.atomic():
             # meeting_tbl insert
-            domain_flag = False
-            if domain_name and any(domain_name):
-                domain_flag = True
             meeting = Meeting.objects.create(
                 title=title,
                 meet_date_time=meet_date_time,
                 place=place,
                 host=host_user,   # FK: User 인스턴스
                 transcript="",    # NOT NULL 필드라면 임시값
-                domain=domain_flag,
+                domain=domain_value,
                 private_yn=privacy_private,
             )
 
@@ -975,8 +974,20 @@ def meeting_sllm_prepare(request, meeting_id):
             status=400,
         )
 
+    # SLLM 전달용 도메인 매핑: DB에는 한글, SLLM에는 영문 캐노니컬
+    domain_raw = (meeting.domain or "").strip()
+    domain_map = {
+        "마케팅": "Marketing / Economy",
+        "경영": "Marketing / Economy",
+        "IT": "IT",
+        "디자인": "Design",
+        "회계": "Accounting",
+    }
+    domain_for_api = domain_map.get(domain_raw, domain_raw)
+    domain_payload = [domain_for_api] if domain_for_api else []
+
     try:
-        res = get_sllm(transcript_plain, domain=[])
+        res = get_sllm(transcript_plain, domain=domain_payload)
     except requests.RequestException as e:
         return JsonResponse(
             {"status": "error", "message": f"SLLM 호출 중 통신 오류가 발생했습니다: {e}"},
@@ -1013,7 +1024,7 @@ def meeting_sllm_prepare(request, meeting_id):
         )
 
     full_summary = payload.get("full_summary") or payload.get("summary") or ""
-    full_tasks = payload.get("full_tasks") or []
+    full_tasks = payload.get("full_tasks") or payload.get("tasks") or []
     tasks_structured = _extract_structured_tasks(full_tasks)
     # 태스크 로그 찍기
     try:
