@@ -81,13 +81,14 @@
 
   function openMeetingInfo() {
     if (!meetingInfoOverlay || !meetingInfoToggle) return;
-    meetingInfoOverlay.style.display = "block";
+    // use CSS class to enable centered flex layout defined in CSS
+    meetingInfoOverlay.classList.add("is-open");
     meetingInfoToggle.setAttribute("aria-expanded", "true");
   }
 
   function closeMeetingInfo() {
     if (!meetingInfoOverlay || !meetingInfoToggle) return;
-    meetingInfoOverlay.style.display = "none";
+    meetingInfoOverlay.classList.remove("is-open");
     meetingInfoToggle.setAttribute("aria-expanded", "false");
   }
 
