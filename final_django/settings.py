@@ -20,10 +20,19 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     os.getenv("AWS_ELASTIC_IP") or '',
-    os.getenv("DOMAIN_URL") or '',
-    'www.' + os.getenv("DOMAIN_URL") or '',
-    os.getenv("ALB_DNS_NAME") or '',
 ]
+
+AWS_ELASTIC_IP = os.getenv("AWS_ELASTIC_IP")
+if AWS_ELASTIC_IP:
+    ALLOWED_HOSTS.append(ALLOWED_HOSTS)
+
+DOMAIN_URL = os.getenv("DOMAIN_URL")
+if DOMAIN_URL:
+    ALLOWED_HOSTS += [DOMAIN_URL, f"www.{DOMAIN_URL}"]
+
+ALB_DNS_NAME = os.getenv("ALB_DNS_NAME")
+if ALB_DNS_NAME:
+    ALLOWED_HOSTS.append(ALB_DNS_NAME)
 
 # Application definition
 INSTALLED_APPS = [
@@ -82,7 +91,7 @@ WSGI_APPLICATION = 'final_django.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'testdb',          # 실제 DB 이름으로 수정
+        'NAME': 'proddb',          # 실제 DB 이름으로 수정
         'USER': 'admin',           # 실제 유저명으로 수정
         'PASSWORD': os.getenv('DATABASES_PASSWORD'),
         'HOST': os.getenv('DATABASES_HOST'),
