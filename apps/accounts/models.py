@@ -38,6 +38,11 @@ class User(models.Model):
     admin_yn = models.BooleanField()
     delete_at = models.DateField(null=True, blank=True)
 
+    # 계정 잠금 관련 필드
+    login_fail_count = models.IntegerField(default=0)
+    is_locked = models.BooleanField(default=False)
+    locked_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         db_table = "user_tbl"
         # ✅ DB 레벨 CHECK 제약 조건

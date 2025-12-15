@@ -6,6 +6,7 @@ from .views import (
     modify_pw_view,
     check_old_pw,
     modify_pw_initial,
+    admin_reset_password,
 )
 
 app_name = "accounts"
@@ -17,4 +18,5 @@ urlpatterns = [
     path("modify-pw/", modify_pw_view, name="modify_pw"),
     path("check-old-pw/", check_old_pw, name="check_old_pw"),
     path("modify-pw-initial/", modify_pw_initial, name="modify_pw_initial"),
+    path("admin/reset-password/", admin_reset_password, name="admin_reset_password"),
 ]

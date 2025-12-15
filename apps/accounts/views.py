@@ -6,6 +6,7 @@ from django.views.decorators.http import require_POST
 from .models import User
 from .forms import LoginForm
 from django.contrib.auth import logout as django_logout
+from django.utils import timezone
 import re
 
 def login_view(request):
@@ -34,6 +35,17 @@ def login_api(request):
             status=400
         )
 
+    # 계정 잠금 확인
+    if user.is_locked:
+        return JsonResponse(
+            {
+                "ok": False,
+                "locked": True,
+                "errors": {"__all__": ["계정이 잠겼습니다. 관리자에게 비밀번호 초기화를 문의하세요."]}
+            },
+            status=403
+        )
+
     # 비밀번호 확인
     db_pw = user.password
     if db_pw.startswith("pbkdf2_"):
@@ -42,10 +54,37 @@ def login_api(request):
         pw_ok = (password == db_pw)
 
     if not pw_ok:
+        # 로그인 실패 카운트 증가
+        user.login_fail_count += 1
+
+        # 5회 이상 실패 시 계정 잠금
+        if user.login_fail_count >= 5:
+            user.is_locked = True
+            user.locked_at = timezone.now()
+            user.save()
+            return JsonResponse(
+                {
+                    "ok": False,
+                    "locked": True,
+                    "errors": {"__all__": ["비밀번호를 5회 이상 틀렸습니다. 계정이 잠겼습니다. 관리자에게 비밀번호 초기화를 문의하세요."]}
+                },
+                status=403
+            )
+
+        user.save()
+        remaining_attempts = 5 - user.login_fail_count
+
         return JsonResponse(
-            {"ok": False, "errors": {"__all__": ["비밀번호가 일치하지 않습니다."]}},
+            {
+                "ok": False,
+                "errors": {"__all__": [f"비밀번호가 일치하지 않습니다. ({remaining_attempts}회 남음)"]}
+            },
             status=400
         )
+
+    # 로그인 성공 - 실패 카운트 초기화
+    user.login_fail_count = 0
+    user.save()
 
     # 비밀번호 정책(8~15자, 영문+숫자) 미충족 시 로그인 막고 변경 플래그 반환
     pw_pattern = re.compile(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,15}$")
@@ -234,3 +273,59 @@ def modify_pw_initial(request):
     user.save()
 
     return JsonResponse({"ok": True, "redirect_url": "/"})
+
+
+@require_POST
+def admin_reset_password(request):
+    """
+    관리자가 잠긴 계정의 비밀번호를 초기화하고 계정 잠금을 해제
+    """
+    # 관리자 권한 확인
+    login_user_id = request.session.get("login_user_id")
+    if not login_user_id:
+        return JsonResponse(
+            {"ok": False, "message": "로그인이 필요합니다."},
+            status=401
+        )
+
+    try:
+        admin_user = User.objects.get(user_id=login_user_id)
+        if not admin_user.admin_yn:
+            return JsonResponse(
+                {"ok": False, "message": "관리자 권한이 필요합니다."},
+                status=403
+            )
+    except User.DoesNotExist:
+        return JsonResponse({"ok": False, "message": "사용자를 찾을 수 없습니다."}, status=404)
+
+    # 대상 사용자 ID 가져오기
+    target_user_id = request.POST.get("target_user_id", "").strip()
+    if not target_user_id:
+        return JsonResponse(
+            {"ok": False, "message": "초기화할 사용자 ID를 입력해주세요."},
+            status=400
+        )
+
+    # 대상 사용자 조회
+    try:
+        target_user = User.objects.get(user_id=target_user_id)
+    except User.DoesNotExist:
+        return JsonResponse(
+            {"ok": False, "message": "해당 사용자를 찾을 수 없습니다."},
+            status=404
+        )
+
+    # 비밀번호 초기화 (생년월일 6자리로 설정)
+    initial_password = target_user.birth_date.strftime("%y%m%d")
+    target_user.password = make_password(initial_password)
+
+    # 계정 잠금 해제 및 실패 카운트 초기화
+    target_user.is_locked = False
+    target_user.login_fail_count = 0
+    target_user.locked_at = None
+    target_user.save()
+
+    return JsonResponse({
+        "ok": True,
+        "message": f"'{target_user_id}' 계정의 비밀번호가 초기화되었습니다. (초기 비밀번호: 생년월일 6자리)"
+    })
