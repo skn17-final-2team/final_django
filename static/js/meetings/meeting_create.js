@@ -18,6 +18,14 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   /* ===== 참석자 선택 ===== */
+  // 일시 입력을 시스템 현재시간으로 기본 설정 (비어 있을 때만)
+  const meetDateInput = document.getElementById("id_meet_date_time");
+  if (meetDateInput && !meetDateInput.value) {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const local = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    meetDateInput.value = local;
+  }
   // 부서 토글(열기/닫기) 처리: .tree-label을 클릭하면 해당 부서의 사용자 리스트를 숨김/표시
   const deptNodes = document.querySelectorAll('.attendee-tree .tree-root li > ul > li');
   deptNodes.forEach(function(deptLi){
