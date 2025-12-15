@@ -45,7 +45,8 @@
   <form id="upload-form" method="post" enctype="multipart/form-data">
     {% csrf_token %}
 
-    <!-- 녹음 컨트롤 -->
+    <!-- 녹음 컨트롤 (녹음 허용 여부에 따라 표시) -->
+    {% if allow_recording %}
     <div class="recording-section">
       <h3 class="recording-title">음성 녹음</h3>
       <div class="recording-controls">
@@ -75,6 +76,12 @@
       </div>
       <div id="recording-status" class="recording-status"></div>
     </div>
+    {% else %}
+    <div class="recording-section recording-disabled">
+      <h3 class="recording-title">음성 녹음</h3>
+      <p class="detail-empty-text">회의 시작 시간이 오래되어 녹음 기능은 비활성화되어 있습니다. 음성 파일 업로드는 가능합니다.</p>
+    </div>
+    {% endif %}
 
     <!-- 파일 업로드 -->
     <div class="upload-section">

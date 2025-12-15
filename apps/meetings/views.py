@@ -17,7 +17,8 @@ from apps.meetings.utils.s3_upload import upload_raw_file_bytes, get_presigned_u
 from apps.meetings.utils.runpod import get_stt, get_sllm
 
 from django.views.decorators.http import require_GET, require_POST
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
+from django.utils import timezone
 
 from io import BytesIO
 from docx import Document
@@ -557,21 +558,29 @@ class MeetingListDeptView(LoginRequiredSessionMixin, TemplateView):
 
         # 2) 열람 가능한 회의:
         #    host도 아니고, attendee_tbl에도 없는 회의만(즉, 부서원이 참여한 회의임)
-        meeting_qs = (
-            Meeting.objects
-            .select_related("host")
-            .prefetch_related(
-                Prefetch(
-                    "attendees",
-                    queryset=Attendee.objects.select_related("user", "user__dept"),
+        #    단, 해당 회의는 '참석자들의 부서원' 또는 '주최자의 부서원'인 경우에만 열람 가능
+        dept_id = getattr(login_user, "dept_id", None)
+        if dept_id:
+            meeting_qs = (
+                Meeting.objects
+                .select_related("host")
+                .prefetch_related(
+                    Prefetch(
+                        "attendees",
+                        queryset=Attendee.objects.select_related("user", "user__dept"),
+                    )
                 )
+                .exclude(
+                    Q(host_id=login_user_id) | Q(attendees__user_id=login_user_id)
+                )
+                .filter(
+                    Q(attendees__user__dept_id=dept_id) | Q(host__dept_id=dept_id)
+                )
+                .order_by("-meet_date_time")
+                .distinct()
             )
-            .exclude(
-                Q(host_id=login_user_id) | Q(attendees__user_id=login_user_id)
-            )
-            .order_by("-meet_date_time")
-            .distinct()
-        )
+        else:
+            meeting_qs = Meeting.objects.none()
 
         # 3) 템플릿용 데이터 가공 (전체/내가참여한 과 동일 구조)
         meetings_data = []
@@ -689,6 +698,18 @@ class MeetingRecordView(LoginRequiredSessionMixin, TemplateView):
                    .all()
         )
 
+        # 녹음 허용 여부: 회의 시작 시간이 현재 시점보다 과거여도
+        # 허용 여유(grace) 내(예: 5분 이내)라면 녹음 UI를 노출합니다.
+        grace = timedelta(minutes=5)
+        now = timezone.now()
+        allow_recording = False
+        try:
+            if meeting.meet_date_time:
+                allow_recording = meeting.meet_date_time >= (now - grace)
+        except Exception:
+            allow_recording = False
+
+        context["allow_recording"] = allow_recording
         context["meeting"] = meeting
         context["meeting_id"] = meeting_id
         return context
