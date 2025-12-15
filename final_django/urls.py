@@ -16,8 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import HttpResponse
+
+def health_check(request):
+    return HttpResponse("ok")
 
 urlpatterns = [
+    path("health/", health_check),
+
     path('django_admin/', admin.site.urls),
     
     path("", include("apps.core.urls")),
