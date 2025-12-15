@@ -274,15 +274,18 @@ document.addEventListener("DOMContentLoaded", function () {
         throw new Error(data.detail || data.error || "캘린더 목록을 불러오지 못했습니다.");
       }
 
-      const filteredCalendars = data.filter((cal) => {
-        // "대한민국의 휴일" 캘린더는 제외
+      // 모달용: "대한민국의 휴일" 제외
+      const filteredCalendarsForModal = data.filter((cal) => {
         return !(cal.summary && cal.summary.includes("대한민국의 휴일"));
       });
 
-      // 모달의 캘린더 선택 업데이트
+      // 홈 필터용: 모든 캘린더 포함
+      const allCalendars = data;
+
+      // 모달의 캘린더 선택 업데이트 (공휴일 제외)
       if (calendarSelect) {
         calendarSelect.innerHTML = "";
-        filteredCalendars.forEach((cal) => {
+        filteredCalendarsForModal.forEach((cal) => {
           const opt = document.createElement("option");
           opt.value = cal.id;
           opt.textContent = cal.summary || cal.id;
@@ -295,10 +298,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      // 홈 화면 필터 업데이트
+      // 홈 화면 필터 업데이트 (공휴일 포함)
       if (homeCalendarFilter) {
         homeCalendarFilter.innerHTML = '<option value="all">전체 캘린더</option>';
-        filteredCalendars.forEach((cal) => {
+        allCalendars.forEach((cal) => {
           const opt = document.createElement("option");
           opt.value = cal.id;
           opt.textContent = cal.summary || cal.id;
@@ -641,10 +644,17 @@ document.addEventListener("DOMContentLoaded", function () {
     initialView: "dayGridMonth",
     locale: "ko",
     fixedWeekCount: false,
-    height: "auto",
-    contentHeight: "auto",
-    expandRows: true,
+    height: "100%",
+    contentHeight: "100%",
+    expandRows: false,
     headerToolbar: false,
+
+    // 일정이 많을 때 "+N more" 표시
+    dayMaxEvents: 3,
+    moreLinkClick: "popover",
+    moreLinkContent: function(args) {
+      return `+${args.num} 더보기`;
+    },
 
     eventTextColor: "#5a5a5a",
 

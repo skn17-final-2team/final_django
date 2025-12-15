@@ -274,12 +274,23 @@
   border: 1px solid #dbeafe;
   padding: 0.95rem 1.1rem;
   box-shadow: 0 6px 18px rgba(59, 130, 246, 0.12);
+  flex: 1;
+  min-height: 0;
+  overflow: visible;
+}
+
+.calendar-wrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
 }
 
 /* 풀캘린더 바깥 래퍼를 둥글게 */
 #home-calendar .fc-view-harness {
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid #3B82F6;
   box-shadow: 0 6px 18px rgba(59, 130, 246, 0.12);
   height: auto !important;
@@ -290,6 +301,8 @@
 /* 바깥 테두리는 위에서 이미 줬으니 scrollgrid쪽 테두리는 제거 */
 #home-calendar .fc-theme-standard .fc-scrollgrid {
   border: 0;
+  overflow: hidden;
+  border-radius: 12px;
 }
 
 /* 셀 경계선은 그대로 유지 (안쪽 가로/세로 선들) */
@@ -314,6 +327,7 @@
 .schedule-card {
     flex: 1 1 0;
     min-height: 0;
+    max-height: 380px;
     overflow: hidden;
     background: linear-gradient(135deg, #ffffff 0%, #fafeff 100%);
     border-radius: 12px;
@@ -338,13 +352,47 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+}
+
+/* 스크롤바 스타일링 */
+.schedule-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.schedule-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.schedule-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  border-radius: 10px;
+}
+
+.schedule-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
 }
 
 .schedule-item {
   display: flex;
   gap: 0.5rem;
   font-size: 0.85rem;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.25rem;
+  cursor: pointer;
+  padding: 5px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.schedule-item:hover {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.schedule-item:last-child {
+  margin-bottom: 0;
 }
 
 .schedule-date {
@@ -364,8 +412,23 @@
 }
 
 #home-calendar {
-  flex: 1 1 auto;
-  min-height: 0 !important;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+#home-calendar .fc {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+#home-calendar .fc-view-harness {
+  flex: 1;
+  min-height: 0;
 }
 
 /* 홈 화면에서만 세로 스크롤 제거 */
@@ -1051,4 +1114,66 @@ select.schedule-input:hover {
 /* 전체 캘린더 텍스트 일괄 적용 */
 #home-calendar .fc {
   color: #334155 !important;
+}
+
+/* "+N 더보기" 링크 스타일 */
+#home-calendar .fc-daygrid-more-link {
+  color: #3b82f6 !important;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+#home-calendar .fc-daygrid-more-link:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb !important;
+}
+
+/* 팝오버 스타일 */
+#home-calendar .fc-popover {
+  border-radius: 10px;
+  border: 2px solid #dbeafe;
+  box-shadow: 0 12px 28px rgba(59, 130, 246, 0.18);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+  z-index: 9999 !important;
+}
+
+#home-calendar .fc-popover-header {
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  color: #ffffff;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px 8px 0 0;
+}
+
+#home-calendar .fc-popover-body {
+  padding: 8px;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+/* 팝오버 스크롤바 */
+#home-calendar .fc-popover-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+#home-calendar .fc-popover-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+#home-calendar .fc-popover-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+#home-calendar .fc-popover-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+#home-calendar .fc-popover .fc-daygrid-event {
+  margin-bottom: 4px;
 }
