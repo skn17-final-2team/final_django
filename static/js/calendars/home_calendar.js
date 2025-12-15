@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   const currentDateEl = document.getElementById("home-current-date");
+  const homeCalendarFilter = document.getElementById("home-calendar-filter");
   const formatMonthLabel = (dateObj) =>
     new Intl.DateTimeFormat("ko-KR", {
       year: "numeric",
@@ -32,8 +33,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const eventIdInput = document.getElementById("schedule-event-id");
   const titleInput = document.getElementById("schedule-title");
   const calendarSelect = document.getElementById("schedule-calendar");
-  const startInput = document.getElementById("schedule-start");
-  const endInput = document.getElementById("schedule-end");
+  const startDateInput = document.getElementById("schedule-start-date");
+  const startTimeInput = document.getElementById("schedule-start-time");
+  const endDateInput = document.getElementById("schedule-end-date");
+  const endTimeInput = document.getElementById("schedule-end-time");
   const allDayInput = document.getElementById("schedule-all-day");
   const repeatSelect = document.getElementById("schedule-repeat");
   const descInput = document.getElementById("schedule-description");
@@ -237,20 +240,33 @@ document.addEventListener("DOMContentLoaded", function () {
         },
       }));
 
-      if (calendar) {
-        calendar.removeAllEvents();
-        calendar.addEventSource(eventsWithExtendedProps);
+      // 현재 선택된 캘린더 필터 적용
+      let filteredEvents = eventsWithExtendedProps;
+      if (homeCalendarFilter && homeCalendarFilter.value !== "all") {
+        const selectedCalendarId = homeCalendarFilter.value;
+        filteredEvents = eventsWithExtendedProps.filter(
+          (event) => event.extendedProps.calendarId === selectedCalendarId
+        );
       }
 
-      if (typeof renderTodaySchedules === "function") renderTodaySchedules(data);
-      if (typeof renderMonthSchedules === "function") renderMonthSchedules(data);
+      if (calendar) {
+        calendar.removeAllEvents();
+        calendar.addEventSource(filteredEvents);
+      }
+
+      // 필터링된 데이터로 오른쪽 카드도 업데이트
+      const filteredData = homeCalendarFilter && homeCalendarFilter.value !== "all"
+        ? data.filter((event) => event.calendarId === homeCalendarFilter.value)
+        : data;
+
+      if (typeof renderTodaySchedules === "function") renderTodaySchedules(filteredData);
+      if (typeof renderMonthSchedules === "function") renderMonthSchedules(filteredData);
     } catch (err) {
       console.error("일정 재로드 실패:", err);
     }
   }
 
   async function loadCalendarList() {
-    if (!calendarSelect) return;
     try {
       const res = await fetch("/api/google-calendars/");
       const data = await res.json();
@@ -258,17 +274,37 @@ document.addEventListener("DOMContentLoaded", function () {
         throw new Error(data.detail || data.error || "캘린더 목록을 불러오지 못했습니다.");
       }
 
-      calendarSelect.innerHTML = "";
-      data.forEach((cal) => {
-        const opt = document.createElement("option");
-        opt.value = cal.id;
-        opt.textContent = cal.summary || cal.id;
-        if (cal.primary) opt.textContent += " (기본)";
-        calendarSelect.appendChild(opt);
+      const filteredCalendars = data.filter((cal) => {
+        // "대한민국의 휴일" 캘린더는 제외
+        return !(cal.summary && cal.summary.includes("대한민국의 휴일"));
       });
 
-      if (!calendarSelect.value && calendarSelect.options.length > 0) {
-        calendarSelect.value = calendarSelect.options[0].value;
+      // 모달의 캘린더 선택 업데이트
+      if (calendarSelect) {
+        calendarSelect.innerHTML = "";
+        filteredCalendars.forEach((cal) => {
+          const opt = document.createElement("option");
+          opt.value = cal.id;
+          opt.textContent = cal.summary || cal.id;
+          if (cal.primary) opt.textContent += " (기본)";
+          calendarSelect.appendChild(opt);
+        });
+
+        if (!calendarSelect.value && calendarSelect.options.length > 0) {
+          calendarSelect.value = calendarSelect.options[0].value;
+        }
+      }
+
+      // 홈 화면 필터 업데이트
+      if (homeCalendarFilter) {
+        homeCalendarFilter.innerHTML = '<option value="all">전체 캘린더</option>';
+        filteredCalendars.forEach((cal) => {
+          const opt = document.createElement("option");
+          opt.value = cal.id;
+          opt.textContent = cal.summary || cal.id;
+          if (cal.primary) opt.textContent += " (기본)";
+          homeCalendarFilter.appendChild(opt);
+        });
       }
     } catch (err) {
       console.warn("캘린더 목록을 불러오는 중 오류가 발생했습니다.", err);
@@ -364,8 +400,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let selectedEvent = null;
 
-  function openModal(defaultDate, editEvent = null) {
+  async function openModal(defaultDate, editEvent = null) {
     if (!modal) return;
+
+    // 모달을 열 때마다 캘린더 목록 로드
+    await loadCalendarList();
 
     const pad = (n) => String(n).padStart(2, "0");
 
@@ -402,8 +441,10 @@ document.addEventListener("DOMContentLoaded", function () {
       const ehh = pad(end.getHours());
       const emi = pad(end.getMinutes());
 
-      if (startInput) startInput.value = `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
-      if (endInput) endInput.value = `${eyyyy}-${emm}-${edd}T${ehh}:${emi}`;
+      if (startDateInput) startDateInput.value = `${yyyy}-${mm}-${dd}`;
+      if (startTimeInput) startTimeInput.value = `${hh}:${mi}`;
+      if (endDateInput) endDateInput.value = `${eyyyy}-${emm}-${edd}`;
+      if (endTimeInput) endTimeInput.value = `${ehh}:${emi}`;
       if (allDayInput) allDayInput.checked = false;
       if (descInput) descInput.value = editEvent.extendedProps?.description || editEvent.description || "";
 
@@ -427,15 +468,18 @@ document.addEventListener("DOMContentLoaded", function () {
       const hh = pad(base.getHours());
       const mi = pad(base.getMinutes());
 
-      const startValue = `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
       const endDate = new Date(base.getTime() + 60 * 60 * 1000);
+      const eyyyy = endDate.getFullYear();
+      const emm = pad(endDate.getMonth() + 1);
+      const edd = pad(endDate.getDate());
       const ehh = pad(endDate.getHours());
       const emi = pad(endDate.getMinutes());
-      const endValue = `${yyyy}-${mm}-${dd}T${ehh}:${emi}`;
 
       if (titleInput) titleInput.value = "";
-      if (startInput) startInput.value = startValue;
-      if (endInput) endInput.value = endValue;
+      if (startDateInput) startDateInput.value = `${yyyy}-${mm}-${dd}`;
+      if (startTimeInput) startTimeInput.value = `${hh}:${mi}`;
+      if (endDateInput) endDateInput.value = `${eyyyy}-${emm}-${edd}`;
+      if (endTimeInput) endTimeInput.value = `${ehh}:${emi}`;
       if (allDayInput) allDayInput.checked = false;
       if (descInput) descInput.value = "";
       if (calendarSelect) {
@@ -630,9 +674,10 @@ document.addEventListener("DOMContentLoaded", function () {
           if (data.error === "not_authenticated") {
             console.warn("Google Calendar not authenticated");
             successCallback([]);
-            renderTodaySchedules([]);       // 인증 안 되어도 카드 상태 갱신
+            renderTodaySchedules([]);
+            renderMonthSchedules([]);
           } else {
-            // 이벤트 데이터에 반복 정보를 extendedProps에 포함
+            // 이벤트 데이터에 calendarId 포함하여 extendedProps에 저장
             const eventsWithExtendedProps = data.map(event => ({
               id: event.id,
               title: event.title,
@@ -641,12 +686,28 @@ document.addEventListener("DOMContentLoaded", function () {
               extendedProps: {
                 description: event.description || "",
                 repeat: event.repeat || "none",
+                calendarId: event.calendarId || "primary",
               }
             }));
 
-            successCallback(eventsWithExtendedProps);
-            renderTodaySchedules(data);     // 오늘의 일정 표시
-            renderMonthSchedules(data);  // 이번 달 일정
+            // 현재 선택된 캘린더 필터 적용
+            let filteredEvents = eventsWithExtendedProps;
+            if (homeCalendarFilter && homeCalendarFilter.value !== "all") {
+              const selectedCalendarId = homeCalendarFilter.value;
+              filteredEvents = eventsWithExtendedProps.filter(
+                (event) => event.extendedProps.calendarId === selectedCalendarId
+              );
+            }
+
+            successCallback(filteredEvents);
+
+            // 필터링된 데이터로 오른쪽 카드도 업데이트
+            const filteredData = homeCalendarFilter && homeCalendarFilter.value !== "all"
+              ? data.filter((event) => event.calendarId === homeCalendarFilter.value)
+              : data;
+
+            renderTodaySchedules(filteredData);
+            renderMonthSchedules(filteredData);
           }
         })
         .catch((err) => {
@@ -666,6 +727,9 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   calendar.render();
+
+  // 페이지 로드 시 캘린더 목록 불러오기
+  loadCalendarList();
 
   // === 달 선택 팝오버 로직 ===
   const calendarIconEl = document.getElementById("home-calendar-icon");
@@ -773,14 +837,16 @@ document.addEventListener("DOMContentLoaded", function () {
     submitBtn.addEventListener("click", async function (e) {
       e.preventDefault();
 
-      if (!titleInput || !startInput || !endInput) {
+      if (!titleInput || !startDateInput || !startTimeInput || !endDateInput || !endTimeInput) {
         alert("필수 입력 요소를 찾을 수 없습니다.");
         return;
       }
 
       const title = titleInput.value.trim();
-      const startVal = startInput.value;
-      const endVal = endInput.value;
+      const startDate = startDateInput.value;
+      const startTime = startTimeInput.value;
+      const endDate = endDateInput.value;
+      const endTime = endTimeInput.value;
       const description = descInput ? descInput.value.trim() : "";
       const allDay = allDayInput ? allDayInput.checked : false;
       const mode = modeInput ? modeInput.value : "create";
@@ -790,23 +856,27 @@ document.addEventListener("DOMContentLoaded", function () {
         alert("일정 제목을 입력해 주세요.");
         return;
       }
-      if (!startVal || !endVal) {
-        alert("시작/종료 일시를 입력해 주세요.");
+      if (!startDate || !endDate) {
+        alert("시작/종료 날짜를 입력해 주세요.");
+        return;
+      }
+      if (!allDay && (!startTime || !endTime)) {
+        alert("시작/종료 시간을 입력해 주세요.");
         return;
       }
 
       let start, end;
 
       if (allDay) {
-        const s = new Date(startVal);
-        const e2 = new Date(endVal);
+        const s = new Date(startDate);
+        const e2 = new Date(endDate);
         s.setHours(0, 0, 0, 0);
         e2.setHours(23, 59, 0, 0);
         start = s;
         end = e2;
       } else {
-        start = new Date(startVal);
-        end = new Date(endVal);
+        start = new Date(`${startDate}T${startTime}`);
+        end = new Date(`${endDate}T${endTime}`);
       }
 
       if (isNaN(start.getTime()) || isNaN(end.getTime())) {
@@ -903,6 +973,14 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error(err);
         alert("요청 실패");
       }
+    });
+  }
+
+  // 홈 캘린더 필터 변경 시
+  if (homeCalendarFilter) {
+    homeCalendarFilter.addEventListener("change", function () {
+      // 캘린더 이벤트를 다시 가져오기
+      calendar.refetchEvents();
     });
   }
 

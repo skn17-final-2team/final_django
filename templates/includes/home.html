@@ -53,6 +53,11 @@
 
 
       <div class="dashboard-header-right">
+        <div class="calendar-filter-wrapper">
+          <select id="home-calendar-filter" class="calendar-filter-select">
+            <option value="all">전체 캘린더</option>
+          </select>
+        </div>
         <button type="button" class="btn-add-schedule">
           <img src="{% static 'img/icon-plus.svg' %}" alt="추가" class="btn-add-icon">
           <span class="btn-add-text">일정 추가</span>
@@ -102,13 +107,15 @@
 
       <div class="schedule-field">
         <label for="schedule-calendar">캘린더</label>
-        <select id="schedule-calendar" class="schedule-input">
-          <option value="primary">기본 캘린더</option>
-        </select>
+        <div class="schedule-calendar-wrapper">
+          <select id="schedule-calendar" class="schedule-input schedule-calendar-select">
+            <option value="primary">기본 캘린더</option>
+          </select>
+        </div>
       </div>
 
       <div class="schedule-field">
-        <label for="schedule-title">일정 제목</label>
+        <label for="schedule-title">제목</label>
         <input
           type="text"
           id="schedule-title"
@@ -118,16 +125,32 @@
       </div>
 
       <div class="schedule-field">
-        <label>일시</label>
+        <label>시작 일시</label>
         <div class="schedule-datetime-row">
           <input
-            type="datetime-local"
-            id="schedule-start"
+            type="date"
+            id="schedule-start-date"
             class="schedule-input"
           />
           <input
-            type="datetime-local"
-            id="schedule-end"
+            type="time"
+            id="schedule-start-time"
+            class="schedule-input"
+          />
+        </div>
+      </div>
+
+      <div class="schedule-field">
+        <label>종료 일시</label>
+        <div class="schedule-datetime-row">
+          <input
+            type="date"
+            id="schedule-end-date"
+            class="schedule-input"
+          />
+          <input
+            type="time"
+            id="schedule-end-time"
             class="schedule-input"
           />
         </div>
@@ -136,7 +159,7 @@
       <div class="schedule-field schedule-all-day-row">
         <label class="schedule-checkbox-label">
           <input type="checkbox" id="schedule-all-day" />
-          <span>종일</span>
+          <span class="schedule-checkbox-text">종일</span>
         </label>
       </div>
 

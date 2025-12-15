@@ -236,15 +236,16 @@
 }
 
 .sidebar-collapsed-action {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #eef6ff;
+  width: 48px;
+  height: 48px;
+  margin: 0.25rem auto;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
   border: 1px solid #dbeafe;
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.12);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.12);
   padding: 0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -252,18 +253,8 @@
 
 .sidebar-collapsed-action:hover {
   background: #dbeafe;
-  box-shadow: 0 6px 14px rgba(59, 130, 246, 0.18);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.18);
   transform: translateY(-1px);
-}
-
-.sidebar.collapsed .collapsed-only {
-  display: inline-flex;
-  visibility: visible;
-  align-items: center;
-  justify-content: center;
-  width: auto;
-  height: auto;
-  gap: 6px;
 }
 
 .collapsed-menu-item {
@@ -288,16 +279,25 @@
   display: none;
 }
 
+/* 접힘 상태에서 collapsed-only 아이콘도 일반 .sidebar-link와 동일한 스타일 적용 */
 .sidebar.collapsed .collapsed-only {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: #eef6ff;
+  width: 48px;
+  height: 48px;
+  margin: 0.25rem auto;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
   border: 1px solid #dbeafe;
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.12);
+  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.12);
+  transition: all 0.2s ease;
+}
+
+.sidebar.collapsed .collapsed-only:hover {
+  background: #dbeafe;
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.18);
+  transform: translateY(-1px);
 }
 
 .sidebar.collapsed .collapsed-only .sidebar-icon {
