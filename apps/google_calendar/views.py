@@ -100,9 +100,23 @@ def oauth2callback(request):
         token_json = credentials.to_json()
 
     except Exception as e:
+        error_msg = str(e)
+        # 스코프 변경 에러인 경우 기존 토큰 삭제 안내
+        if "Scope has changed" in error_msg or "scope" in error_msg.lower():
+            try:
+                user = User.objects.get(user_id=login_user_id)
+                GoogleCalendarToken.objects.filter(user=user).delete()
+            except:
+                pass
+            return JsonResponse({
+                "error": "oauth_scope_changed",
+                "detail": "인증 범위가 변경되었습니다. 구글 계정 설정(https://myaccount.google.com/permissions)에서 이 앱의 액세스 권한을 삭제한 후 다시 로그인해주세요.",
+                "action_required": "revoke_google_permission"
+            }, status=400)
+
         return JsonResponse({
             "error": "oauth_error",
-            "detail": str(e)
+            "detail": error_msg
         }, status=500)
 
     try:
@@ -444,3 +458,36 @@ def google_calendars(request):
         result.append({"id": "primary", "summary": "기본 캘린더", "primary": True})
 
     return JsonResponse(result, safe=False)
+
+
+@csrf_exempt
+@require_POST
+def revoke_google_auth(request):
+    """
+    현재 로그인한 사용자의 구글 인증 토큰 삭제
+    - 스코프 변경 등으로 인한 에러 발생 시 재인증을 위해 사용
+    """
+    login_user_id = request.session.get("login_user_id")
+    if not login_user_id:
+        return JsonResponse(
+            {"error": "not_logged_in", "detail": "로그인이 필요합니다."},
+            status=400
+        )
+
+    try:
+        user = User.objects.get(user_id=login_user_id)
+        GoogleCalendarToken.objects.filter(user=user).delete()
+
+        # 세션에서도 제거
+        if "google_credentials" in request.session:
+            del request.session["google_credentials"]
+            request.session.save()
+
+        return JsonResponse({"success": True, "message": "구글 인증이 해제되었습니다. 다시 로그인해주세요."})
+    except User.DoesNotExist:
+        return JsonResponse({"error": "user_not_found"}, status=404)
+    except Exception as e:
+        return JsonResponse(
+            {"error": "revoke_failed", "detail": str(e)},
+            status=500
+        )

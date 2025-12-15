@@ -270,48 +270,13 @@
   display: none;
 }
 
-.sidebar.collapsed .collapsed-menu-item {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.sidebar.collapsed .collapsed-menu-item .sidebar-link {
-  width: 56px;
-  height: 56px;
-  padding: 0;
-  margin: 0.6rem auto 0;
-  justify-content: center;
-  align-items: center;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
-  border: 1px solid #dbeafe;
-  box-shadow: 0 6px 18px rgba(59, 130, 246, 0.12);
-  transition: all 0.2s ease;
-}
-
-.sidebar.collapsed .collapsed-menu-item .sidebar-link:hover {
-  background: #dbeafe;
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.18);
-  transform: translateY(-1px);
-}
-
-.sidebar.collapsed .collapsed-menu-item .sidebar-link-text {
-  display: none;
-}
-
-/* 접힘 상태 리스트 아이콘 스타일 정리 */
-.sidebar.collapsed .collapsed-menu-item .sidebar-link {
-  width: 40px;
-  height: 40px;
-  padding: 0;
-  margin: 0.5rem auto 0;
-  justify-content: center;
-  align-items: center;
-  border: 1px solid #dbeafe;
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 6px 14px rgba(59, 130, 246, 0.12);
+/* collapsed-only보다 더 구체적인 선택자로 덮어쓰기 */
+.sidebar.collapsed .sidebar-item.collapsed-menu-item {
+  display: list-item;
+  width: auto;
+  height: auto;
+  margin-bottom: 0.25rem;
+  /* 일반 .sidebar.collapsed .sidebar-link 스타일이 적용되도록 추가 스타일 제거 */
 }
 
 .sidebar.collapsed .collapsed-only .sidebar-icon {
