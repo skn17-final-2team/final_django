@@ -15,14 +15,4 @@ class Migration(migrations.Migration):
             name='login_fail_count',
             field=models.IntegerField(default=0),
         ),
-        migrations.AddField(
-            model_name='user',
-            name='is_locked',
-            field=models.BooleanField(default=False),
-        ),
-        migrations.AddField(
-            model_name='user',
-            name='locked_at',
-            field=models.DateTimeField(blank=True, null=True),
-        ),
     ]

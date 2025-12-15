@@ -94,7 +94,7 @@
               {{ m.title|truncatechars:13 }}
             </p>
             <p class="meeting-card-meta">
-              {{ m.meet_date_time|date:"Y.m.d H:i" }} · {{ m.meet_date_time|timesince }} 전
+              {{ m.meet_date_time|date:"Y.m.d H:i" }} · {{ m.time_ago }}
             </p>
           </div>
         </a>

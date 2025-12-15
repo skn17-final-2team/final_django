@@ -35,13 +35,13 @@ def login_api(request):
             status=400
         )
 
-    # 계정 잠금 확인
-    if user.is_locked:
+    # 계정 상태 확인 (비활성화된 계정은 로그인 불가)
+    if user.status == User.STATUS_INACTIVE:
         return JsonResponse(
             {
                 "ok": False,
                 "locked": True,
-                "errors": {"__all__": ["계정이 잠겼습니다. 관리자에게 비밀번호 초기화를 문의하세요."]}
+                "errors": {"__all__": ["계정이 비활성화되었습니다. 관리자에게 문의하세요."]}
             },
             status=403
         )
@@ -57,16 +57,15 @@ def login_api(request):
         # 로그인 실패 카운트 증가
         user.login_fail_count += 1
 
-        # 5회 이상 실패 시 계정 잠금
+        # 5회 이상 실패 시 계정 비활성화
         if user.login_fail_count >= 5:
-            user.is_locked = True
-            user.locked_at = timezone.now()
+            user.status = User.STATUS_INACTIVE
             user.save()
             return JsonResponse(
                 {
                     "ok": False,
                     "locked": True,
-                    "errors": {"__all__": ["비밀번호를 5회 이상 틀렸습니다. 계정이 잠겼습니다. 관리자에게 비밀번호 초기화를 문의하세요."]}
+                    "errors": {"__all__": ["비밀번호를 5회 이상 틀렸습니다. 계정이 비활성화되었습니다. 관리자에게 비밀번호 초기화를 문의하세요."]}
                 },
                 status=403
             )
@@ -319,13 +318,12 @@ def admin_reset_password(request):
     initial_password = target_user.birth_date.strftime("%y%m%d")
     target_user.password = make_password(initial_password)
 
-    # 계정 잠금 해제 및 실패 카운트 초기화
-    target_user.is_locked = False
+    # 계정 활성화 및 실패 카운트 초기화
+    target_user.status = User.STATUS_ACTIVE
     target_user.login_fail_count = 0
-    target_user.locked_at = None
     target_user.save()
 
     return JsonResponse({
         "ok": True,
-        "message": f"'{target_user_id}' 계정의 비밀번호가 초기화되었습니다. (초기 비밀번호: 생년월일 6자리)"
+        "message": f"'{target_user_id}' 계정의 비밀번호가 초기화되고 활성화되었습니다. (초기 비밀번호: 생년월일 6자리)"
     })

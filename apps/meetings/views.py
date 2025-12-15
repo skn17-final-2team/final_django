@@ -1178,6 +1178,8 @@ def today_meetings(request):
     모든 템플릿에서 'today_meetings'로
     meet_date_time 기준 '오늘 날짜'인 회의 목록에 접근할 수 있게 해주는 컨텍스트 프로세서
     """
+    from django.utils import timezone
+
     today = date.today()
 
     login_user_id = request.session.get("login_user_id")
@@ -1199,6 +1201,8 @@ def today_meetings(request):
     )
 
     meetings = []
+    now = timezone.now()
+
     for m in base_qs:
         attendees = list(m.attendees.all())
         is_host = login_user_id and str(m.host_id) == str(login_user_id)
@@ -1215,6 +1219,16 @@ def today_meetings(request):
                 )
             allowed = is_host or is_attendee or same_dept
         if allowed:
+            # 시간 차이 계산
+            time_diff = now - m.meet_date_time
+            total_minutes = int(time_diff.total_seconds() / 60)
+
+            if total_minutes < 60:
+                m.time_ago = f"{total_minutes}분 전"
+            else:
+                hours = total_minutes // 60
+                m.time_ago = f"{hours}시간 전"
+
             meetings.append(m)
         if len(meetings) >= 3:
             break

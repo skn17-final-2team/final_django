@@ -33,10 +33,13 @@ document.addEventListener("DOMContentLoaded", function () {
             e.target.closest(".sidebar-collapse-icon")) {
           nested.classList.toggle("is-collapsed");
           collapse.classList.toggle("collapsed");
-        } else {
-          // 화살표가 아닌 다른 부분을 클릭하면 페이지 이동
+        } else if (e.target.closest(".sidebar-collapse-left") ||
+                   e.target.classList.contains("sidebar-section-title") ||
+                   e.target.classList.contains("sidebar-icon-list")) {
+          // 텍스트나 아이콘 부분을 클릭하면 페이지 이동
           window.location.href = collapse.dataset.url || "/meetings/list/all/";
         }
+        // 빈 공간 클릭 시에는 아무 동작도 하지 않음
     });
   }
 
