@@ -22,6 +22,7 @@ ALLOWED_HOSTS = [
     os.getenv("AWS_ELASTIC_IP") or '',
     os.getenv("DOMAIN_URL") or '',
     'www.' + os.getenv("DOMAIN_URL") or '',
+    os.getenv("ALB_DNS_NAME") or '',
 ]
 
 # Application definition
