@@ -1249,7 +1249,6 @@ def meeting_sllm_prepare(request, meeting_id):
     domain_raw = (meeting.domain or "").strip()
     domain_map = {
         "마케팅": "Marketing / Economy",
-        "경영": "Marketing / Economy",
         "IT": "IT",
         "디자인": "Design",
         "회계": "Accounting",
