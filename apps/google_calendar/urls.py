@@ -9,4 +9,5 @@ urlpatterns = [
     path("api/google-events/<str:event_id>/update/", views.update_google_event, name="update_google_event"),
     path("api/google-events/<str:event_id>/delete/", views.google_events_delete, name="google_events_delete",),
     path("api/google-auth-status/", views.google_auth_status, name="google_auth_status"),
+    path("api/google-calendars/", views.google_calendars, name="google_calendars"),
 ]

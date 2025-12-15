@@ -82,7 +82,6 @@
                 id="emp-name"
                 name="name"
                 class="admin-form-input"
-                placeholder="김대로"
                 pattern="^[가-힣]{1,32}$"
                 title="한글만 입력 가능합니다 (1~32자)"
                 required
@@ -96,7 +95,6 @@
                 id="emp-id"
                 name="user_id"
                 class="admin-form-input"
-                placeholder="horse0219"
                 pattern="^[a-z0-9]{6,20}$"
                 title="영소문자와 숫자만 입력 가능합니다 (6~20자)"
                 required
@@ -113,7 +111,7 @@
                 id="emp-birth"
                 name="birth_date"
                 class="admin-form-input"
-                placeholder="1990.02.19"
+                placeholder="생년월일 8자리"
                 pattern="^\d{8}$"
                 title="8자리 숫자로 입력해주세요 (예: 19900101)"
                 maxlength="8"
@@ -142,7 +140,6 @@
               class="admin-form-input"
               required
             >
-              <option value="">IT 본부 - 개발부서</option>
               {% for dept in departments %}
                 <option value="{{ dept.dept_id }}">{{ dept.dept_name }}</option>
               {% endfor %}
@@ -156,7 +153,6 @@
               id="emp-role"
               name="work_part"
               class="admin-form-input"
-              placeholder="백엔드지 개발"
               pattern="^[가-힣a-zA-Z\s]{1,15}$"
               title="한글 또는 영어만 입력 가능합니다 (1~15자)"
               maxlength="15"

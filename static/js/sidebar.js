@@ -13,6 +13,18 @@ document.addEventListener("DOMContentLoaded", function () {
   const collapse = document.querySelector(".sidebar-collapse");
   const nested = document.querySelector(".sidebar-menu-nested");
 
+  // 로그아웃 안내 후 진행
+  const logoutLinks = document.querySelectorAll('a.sidebar-link-footer[href*="logout"]');
+  logoutLinks.forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const ok = window.confirm("로그아웃하시겠습니까?");
+      if (ok) {
+        window.location.href = link.href;
+      }
+    });
+  });
+
   // 회의 목록 접기 & 펼치기
   if (collapse && nested) {
     collapse.addEventListener("click", function (e) {
@@ -54,6 +66,10 @@ document.addEventListener("DOMContentLoaded", function () {
   // 관리자 사이드바 토글 기능
   const adminSidebar = document.getElementById("admin-sidebar");
   const adminSidebarToggle = document.getElementById("admin-sidebar-toggle");
+  const adminSearchInput = document.getElementById("admin-user-search");
+
+  // 접힘 상태 검색 버튼 (템플릿에 존재)
+  const adminSearchToggleBtn = document.getElementById("admin-sidebar-search-toggle");
 
   if (adminSidebar && adminSidebarToggle) {
     // localStorage에서 저장된 상태 불러오기
@@ -71,6 +87,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // 토글 버튼 위치 업데이트
       adminSidebarToggle.style.left = isCollapsed ? "56px" : "246px";
+    });
+  }
+
+  // 접힘 상태 검색 버튼 클릭 시 사이드바 열고 포커스
+  if (adminSidebar && adminSidebarToggle && adminSearchToggleBtn) {
+    adminSearchToggleBtn.addEventListener("click", () => {
+      adminSidebar.classList.remove("collapsed");
+      adminSidebarToggle.style.left = "246px";
+      localStorage.setItem("adminSidebarCollapsed", "false");
+      if (adminSearchInput) {
+        setTimeout(() => adminSearchInput.focus(), 50);
+      }
     });
   }
 

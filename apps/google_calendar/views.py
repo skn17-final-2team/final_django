@@ -140,39 +140,64 @@ def google_events(request):
 
     service = build("calendar", "v3", credentials=creds)
 
-    events_result = service.events().list(
-        calendarId="primary",
-        timeMin="2020-01-01T00:00:00Z",
-        timeMax="2030-12-31T23:59:59Z",
-        singleEvents=True,
-        orderBy="startTime",
-    ).execute()
-
     events = []
-    for e in events_result.get("items", []):
-        # 반복 규칙 파싱
-        repeat_type = "none"
-        if "recurrence" in e:
-            rrule = e["recurrence"][0] if e["recurrence"] else ""
-            if "FREQ=DAILY" in rrule:
-                repeat_type = "daily"
-            elif "FREQ=WEEKLY" in rrule:
-                repeat_type = "weekly"
-            elif "FREQ=MONTHLY" in rrule:
-                repeat_type = "monthly"
-            elif "FREQ=YEARLY" in rrule:
-                repeat_type = "yearly"
+    calendars = []
+    page_token = None
 
-        events.append(
-            {
-                "id": e["id"],
-                "title": e.get("summary", ""),
-                "start": e["start"].get("dateTime") or e["start"].get("date"),
-                "end": e["end"].get("dateTime") or e["end"].get("date"),
-                "description": e.get("description", ""),
-                "repeat": repeat_type,
-            }
+    try:
+        while True:
+            cal_list = service.calendarList().list(pageToken=page_token).execute()
+            calendars.extend(cal_list.get("items", []))
+            page_token = cal_list.get("nextPageToken")
+            if not page_token:
+                break
+    except Exception as e:
+        return JsonResponse(
+            {"error": "google_api_error", "detail": str(e)},
+            status=500,
         )
+
+    if not calendars:
+        calendars.append({"id": "primary", "summary": "기본 캘린더", "primary": True})
+
+    for cal in calendars:
+        try:
+            events_result = service.events().list(
+                calendarId=cal.get("id", "primary"),
+                timeMin="2020-01-01T00:00:00Z",
+                timeMax="2030-12-31T23:59:59Z",
+                singleEvents=True,
+                orderBy="startTime",
+            ).execute()
+        except Exception:
+            # 특정 캘린더 조회 실패 시 다른 캘린더는 계속 조회
+            continue
+
+        for e in events_result.get("items", []):
+            repeat_type = "none"
+            if "recurrence" in e:
+                rrule = e["recurrence"][0] if e["recurrence"] else ""
+                if "FREQ=DAILY" in rrule:
+                    repeat_type = "daily"
+                elif "FREQ=WEEKLY" in rrule:
+                    repeat_type = "weekly"
+                elif "FREQ=MONTHLY" in rrule:
+                    repeat_type = "monthly"
+                elif "FREQ=YEARLY" in rrule:
+                    repeat_type = "yearly"
+
+            events.append(
+                {
+                    "id": e["id"],
+                    "title": e.get("summary", ""),
+                    "start": e["start"].get("dateTime") or e["start"].get("date"),
+                    "end": e["end"].get("dateTime") or e["end"].get("date"),
+                    "description": e.get("description", ""),
+                    "repeat": repeat_type,
+                    "calendarId": cal.get("id", "primary"),
+                    "calendarSummary": cal.get("summary", ""),
+                }
+            )
 
     return JsonResponse(events, safe=False)
 
@@ -201,6 +226,7 @@ def create_google_event(request):
     end = data.get("end")
     description = data.get("description", "")
     repeat = data.get("repeat", "none")
+    calendar_id = data.get("calendarId") or "primary"
 
     if not title or not start or not end:
         return JsonResponse({"error": "missing_fields"}, status=400)
@@ -236,7 +262,7 @@ def create_google_event(request):
 
     try:
         created_event = service.events().insert(
-            calendarId="primary",
+            calendarId=calendar_id,
             body=event_body,
         ).execute()
     except Exception as e:
@@ -289,6 +315,7 @@ def update_google_event(request, event_id):
     end = data.get("end")
     description = data.get("description", "")
     repeat = data.get("repeat", "none")
+    calendar_id = data.get("calendarId") or "primary"
 
     if not title or not start or not end:
         return JsonResponse({"error": "missing_fields"}, status=400)
@@ -323,7 +350,7 @@ def update_google_event(request, event_id):
 
     try:
         updated_event = service.events().update(
-            calendarId="primary",
+            calendarId=calendar_id,
             eventId=event_id,
             body=event_body,
         ).execute()
@@ -357,9 +384,16 @@ def google_events_delete(request, event_id):
 
     service = build("calendar", "v3", credentials=creds)
 
+    calendar_id = "primary"
+    try:
+        body_data = json.loads(request.body.decode("utf-8"))
+        calendar_id = body_data.get("calendarId") or "primary"
+    except json.JSONDecodeError:
+        pass
+
     try:
         service.events().delete(
-            calendarId="primary",
+            calendarId=calendar_id,
             eventId=event_id,
         ).execute()
     except Exception as e:
@@ -369,3 +403,44 @@ def google_events_delete(request, event_id):
         )
 
     return JsonResponse({"success": True})
+
+
+def google_calendars(request):
+    """
+    사용자가 접근 가능한 Google 캘린더 목록 조회
+    """
+    creds = get_google_credentials(request)
+    if not creds:
+        return JsonResponse({"error": "not_authenticated"}, status=401)
+
+    service = build("calendar", "v3", credentials=creds)
+    calendars = []
+    page_token = None
+
+    try:
+        while True:
+            cal_list = service.calendarList().list(pageToken=page_token).execute()
+            calendars.extend(cal_list.get("items", []))
+            page_token = cal_list.get("nextPageToken")
+            if not page_token:
+                break
+    except Exception as e:
+        return JsonResponse(
+            {"error": "google_api_error", "detail": str(e)},
+            status=500,
+        )
+
+    result = []
+    for cal in calendars:
+        result.append(
+            {
+                "id": cal.get("id"),
+                "summary": cal.get("summary", ""),
+                "primary": cal.get("primary", False),
+            }
+        )
+
+    if not result:
+        result.append({"id": "primary", "summary": "기본 캘린더", "primary": True})
+
+    return JsonResponse(result, safe=False)
