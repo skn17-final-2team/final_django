@@ -10,7 +10,7 @@ import re
 
 def login_view(request):
     form = LoginForm()
-    return render(request, "accounts/login.html", {"form": form})
+    return render(request, "users/login.html", {"form": form})
 
 
 @require_POST

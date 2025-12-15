@@ -1,0 +1,556 @@
+/* ===== 페이지 전체 컨테이너 ===== */
+.meeting-create-page {
+  padding: 20px 32px;
+  background-color: transparent;
+  box-sizing: border-box;
+}
+
+/* 메인 폼 */
+.meeting-form {
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+/* 좌우 2컬럼 */
+.meeting-columns {
+  display: grid;
+  grid-template-columns: 1.05fr 1.05fr;
+  column-gap: 24px;
+}
+
+/* 각 컬럼 */
+.meeting-left,
+.meeting-right {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px 24px;
+  border-radius: 16px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 4px #00000040;
+}
+
+/* ========== 공통 필드 ========== */
+.field-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.privacy-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.privacy-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #475569;
+}
+.field-help {
+  margin: 0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.field-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 16px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-label {
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1E3A8A;
+  margin-bottom: 4px;
+}
+
+.field-input {
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid #dbeafe;
+  background: linear-gradient(180deg, #f8fbff 0%, #f1f7ff 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  padding: 0 14px;
+  font-size: 15px;
+  color: #334155;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.field-input::placeholder {
+  color: #94a3b8;
+}
+
+.field-input:focus {
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.datetime-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+}
+
+.datetime-inline-input {
+  flex: 1 1 auto;
+  height: 44px;
+  border: 1px solid #dbeafe;
+  background: #eef4ff;
+  border-radius: 10px;
+  padding: 0 14px;
+  font-size: 15px;
+  color: #334155;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.datetime-inline-input:focus {
+  outline: none;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.datetime-inline-input::-webkit-calendar-picker-indicator {
+  color: transparent;
+  opacity: 1;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='4' ry='4'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3Cpath d='M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01'/%3E%3C/svg%3E") center/18px no-repeat;
+  cursor: pointer;
+}
+
+.datetime-inline-icon {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='4' ry='4'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3Cpath d='M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01'/%3E%3C/svg%3E") center/22px 22px no-repeat;
+  pointer-events: none;
+}
+
+/* 일정 추가 모달과 동일한 datepicker 스타일 */
+.field-input[type="datetime-local"] {
+  background: linear-gradient(180deg, #f8fbff 0%, #f1f7ff 100%);
+  border: 1px solid #dbeafe;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.field-input[type="datetime-local"]:focus {
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.field-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  color: transparent;
+  opacity: 1;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='4' ry='4'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3Cpath d='M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01'/%3E%3C/svg%3E") center/18px no-repeat;
+  cursor: pointer;
+}
+
+.field-input[type="datetime-local"]::-webkit-datetime-edit {
+  padding-left: 2px;
+}
+
+/* ========== 도메인 영역 ========== */
+.domain-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.domain-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.domain-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.domain-sub {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.domain-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 업로드 카드 */
+.domain-upload-card {
+  width: 280px;
+  height: 110px;
+  border-radius: 16px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 4px #00000040;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.domain-upload-input {
+  display: none;
+}
+
+.domain-upload-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #475569;
+}
+
+.domain-upload-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.domain-upload-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.domain-upload-sub {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* 도메인 라디오 버튼 리스트 */
+.domain-radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.domain-radio-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  color: #475569;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.domain-radio-item:hover {
+  background-color: #f0f9ff;
+}
+
+.domain-radio-item input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+/* ========== 참석자 영역 ========== */
+.attendee-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.attendee-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.attendee-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.attendee-sub {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.attendee-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 0.4fr 1.2fr;
+  column-gap: 12px;
+  align-items: stretch;
+  height: 260px;
+}
+
+/* 조직도 */
+.attendee-tree {
+  border-radius: 12px;
+  border: 1px solid #e0f2fe;
+  background-color: #f0f9ff;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #475569;
+  overflow-y: auto;
+}
+
+/* 간단 트리 스타일 */
+.tree-root,
+.tree-root ul {
+  list-style: none;
+  padding-left: 12px;
+  margin: 0;
+}
+
+.tree-label {
+  display: inline-block;
+  margin: 3px 0;
+}
+
+.root-label {
+  font-weight: 600;
+}
+
+.tree-user {
+  margin: 4px 0;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.tree-user:hover {
+  background-color: #e0f2fe;
+}
+
+/*로그인 유저는 참석자로 선택불가(이미 선택되어있음)*/
+.tree-user-disabled {
+  opacity: 0.5;
+  pointer-events: none;   /* 클릭 완전 불가 */
+}
+
+/* 가운데 버튼 */
+.attendee-middle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-reset-attendee {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+}
+
+/* 선택된 참석자 */
+.attendee-selected {
+  border-radius: 12px;
+  border: 1px solid #e0f2fe;
+  background-color: #f0f9ff;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+.attendee-selected-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.attendee-selected-title {
+  font-size: 13px;
+  color: #475569;
+}
+
+.attendee-count-badge {
+  min-width: 40px;
+  height: 20px;
+  border-radius: 999px;
+  background-color: #eef2ff;
+  color: #3730a3;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.attendee-list {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.attendee-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.attendee-list-item:last-child {
+  margin-bottom: 0;
+}
+
+.attendee-list-item:nth-child(odd) {
+  background-color: #e0f2fe;
+}
+
+.attendee-remove-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  color: #3B82F6;
+}
+
+.attendee-validator-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  border: none;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none; /* 클릭 안 되도록 */
+}
+.field-error {
+    color: #d93025; /* 구글 폼 에러 색상 */
+    font-size: 14px;
+    margin-top: 4px;
+    display: block;
+}
+
+/* ========== 오른쪽 하단: 비공개 + 버튼 ========== */
+.right-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.private-block {
+  max-width: 100%;
+  margin-bottom: 24px;
+}
+
+.private-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    color: #334155;
+}
+
+.private-icon-wrapper {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 2px solid #cbd5e1;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.private-icon {
+  width: 0;
+  height: 0;
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.private-checkbox {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+
+
+.private-checkbox:checked ~ .private-icon-wrapper .private-icon {
+    width: 12px;
+    height: 12px;
+    opacity: 1;
+    background-color: #ffffff;
+    border-radius: 2px;
+    position: relative;
+}
+
+.private-checkbox:checked ~ .private-icon-wrapper .private-icon::before {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #3b82f6;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.private-desc {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.btn-start-meeting {
+  align-self: flex-end;
+  width: 200px;
+  height: 44px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  transition: all 0.2s ease;
+}
+
+.btn-start-meeting:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);
+  transform: translateY(-2px);
+}
+
+.btn-start-meeting:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
