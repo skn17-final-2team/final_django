@@ -18,6 +18,22 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   /* ===== 참석자 선택 ===== */
+  // 부서 토글(열기/닫기) 처리: .tree-label을 클릭하면 해당 부서의 사용자 리스트를 숨김/표시
+  const deptNodes = document.querySelectorAll('.attendee-tree .tree-root li > ul > li');
+  deptNodes.forEach(function(deptLi){
+    const label = deptLi.querySelector('.tree-label');
+    if (!label) return;
+    label.classList.add('dept-toggle');
+    // 초기 상태: 접힘 (collapsed)으로 시작
+    deptLi.classList.add('dept-collapsed');
+    label.setAttribute('aria-expanded', 'false');
+    label.addEventListener('click', function(e){
+      // 토글 클래스
+      const collapsed = deptLi.classList.toggle('dept-collapsed');
+      label.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    });
+  });
+
   const treeUsers = document.querySelectorAll(".tree-user");
   const selectedList = document.getElementById("selected-attendee-list");
   const attendeeCount = document.getElementById("attendee-count");

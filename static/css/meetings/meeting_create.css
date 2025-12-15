@@ -331,6 +331,28 @@
   margin: 3px 0;
 }
 
+/* 부서(토글 가능한 항목) 표시 및 collapsed 상태 스타일 */
+.tree-label.dept-toggle {
+  cursor: pointer;
+  position: relative;
+  padding-left: 18px;
+}
+.tree-label.dept-toggle::before {
+  content: "▾";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #475569;
+}
+.dept-collapsed > .tree-label.dept-toggle::before {
+  content: "▸";
+}
+.dept-collapsed > ul {
+  display: none;
+}
+
 .root-label {
   font-weight: 600;
 }
