@@ -20,7 +20,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
     os.getenv("AWS_ELASTIC_IP") or '',
-    # os.getenv("DOMAIN_URL") or '',
+    os.getenv("DOMAIN_URL") or '',
+    'www.' + os.getenv("DOMAIN_URL") or '',
 ]
 
 # Application definition
