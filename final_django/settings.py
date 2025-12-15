@@ -19,7 +19,6 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    os.getenv("AWS_ELASTIC_IP") or '',
 ]
 
 AWS_ELASTIC_IP = os.getenv("AWS_ELASTIC_IP")
@@ -33,6 +32,8 @@ if DOMAIN_URL:
 ALB_DNS_NAME = os.getenv("ALB_DNS_NAME")
 if ALB_DNS_NAME:
     ALLOWED_HOSTS.append(ALB_DNS_NAME)
+
+ALLOWED_HOSTS.append(".compute.internal")
 
 # Application definition
 INSTALLED_APPS = [
