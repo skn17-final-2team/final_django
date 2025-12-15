@@ -1255,7 +1255,7 @@ def meeting_sllm_prepare(request, meeting_id):
     domain_payload = [domain_for_api] if domain_for_api else []
 
     try:
-        res = get_sllm(transcript_plain, domain=domain_payload)
+        res = get_sllm(meeting.transcript, domain=domain_payload)
     except requests.RequestException as e:
         return JsonResponse(
             {"status": "error", "message": f"SLLM 호출 중 통신 오류가 발생했습니다: {e}"},
@@ -1278,10 +1278,25 @@ def meeting_sllm_prepare(request, meeting_id):
     if res.status_code != 200 or res_json.get("success") is False or not payload:
         body_preview = ""
         try:
-            body_preview = res.text[:300]
+            body_preview = res.text[:1000]
         except Exception:
             body_preview = ""
-        message = res_json.get("message") or res_json.get("error") or body_preview or "SLLM 호출 중 오류가 발생했습니다."
+
+        # 응답 JSON에서 에러 메시지를 찾기 위해 여러 위치를 검사
+        message = None
+        if isinstance(res_json, dict):
+            message = res_json.get("message") or res_json.get("error")
+            detail = res_json.get("detail")
+            if not message and isinstance(detail, dict):
+                message = detail.get("message") or detail.get("error")
+
+        # payload 안의 에러 필드도 확인
+        if not message and isinstance(payload, dict):
+            message = payload.get("message") or payload.get("error")
+
+        if not message:
+            message = body_preview or "SLLM 호출 중 오류가 발생했습니다."
+
         print(f"[SLLM][error] status={res.status_code} url={req_url} message={message}")
         return JsonResponse(
             {
