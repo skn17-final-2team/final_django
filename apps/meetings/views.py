@@ -686,6 +686,55 @@ class MeetingCreateView(LoginRequiredSessionMixin, TemplateView):
 class MeetingRecordView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_record.html"
 
+    def get(self, request, *args, **kwargs):
+        # 권한 검사: 상세 보기와 동일한 정책을 적용하여 불허 시 리다이렉트
+        meeting_id = kwargs.get("meeting_id") or self.kwargs.get("meeting_id")
+        meeting = (
+            Meeting.objects
+            .select_related("host")
+            .prefetch_related("attendees__user__dept")
+            .filter(pk=meeting_id)
+            .first()
+        )
+        if not meeting:
+            raise Http404()
+
+        session_user_id = request.session.get("login_user_id")
+        login_user_obj = None
+        login_user_dept_id = None
+        if session_user_id:
+            try:
+                login_user_obj = User.objects.select_related("dept").get(user_id=session_user_id)
+                login_user_dept_id = getattr(login_user_obj, "dept_id", None)
+            except User.DoesNotExist:
+                login_user_obj = None
+
+        attendees_list = list(meeting.attendees.all())
+        is_host = session_user_id and str(meeting.host_id) == str(session_user_id)
+        is_attendee = any(str(a.user_id) == str(session_user_id) for a in attendees_list) if session_user_id else False
+        privacy = _get_privacy(meeting)
+        if privacy == "private":
+            allowed = is_host or is_attendee
+        else:
+            same_dept = False
+            if login_user_dept_id:
+                same_dept = any(
+                    getattr(a.user, "dept_id", None) == login_user_dept_id
+                    for a in attendees_list
+                )
+            allowed = is_host or is_attendee or same_dept
+        if not allowed:
+            referer = request.META.get("HTTP_REFERER")
+            if referer:
+                return redirect(referer)
+            try:
+                fallback = reverse("meetings:meeting_list_dept")
+            except Exception:
+                fallback = "/"
+            return redirect(fallback)
+
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         meeting_id = self.kwargs.get("meeting_id")
@@ -716,6 +765,55 @@ class MeetingRecordView(LoginRequiredSessionMixin, TemplateView):
 
 class MeetingTranscriptView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_transcript.html"
+
+    def get(self, request, *args, **kwargs):
+        # 권한 검사: 상세 보기와 동일한 정책을 적용하여 불허 시 리다이렉트
+        meeting_id = kwargs.get("meeting_id") or self.kwargs.get("meeting_id")
+        meeting = (
+            Meeting.objects
+            .select_related("host")
+            .prefetch_related("attendees__user__dept")
+            .filter(pk=meeting_id)
+            .first()
+        )
+        if not meeting:
+            raise Http404()
+
+        session_user_id = request.session.get("login_user_id")
+        login_user_obj = None
+        login_user_dept_id = None
+        if session_user_id:
+            try:
+                login_user_obj = User.objects.select_related("dept").get(user_id=session_user_id)
+                login_user_dept_id = getattr(login_user_obj, "dept_id", None)
+            except User.DoesNotExist:
+                login_user_obj = None
+
+        attendees_list = list(meeting.attendees.all())
+        is_host = session_user_id and str(meeting.host_id) == str(session_user_id)
+        is_attendee = any(str(a.user_id) == str(session_user_id) for a in attendees_list) if session_user_id else False
+        privacy = _get_privacy(meeting)
+        if privacy == "private":
+            allowed = is_host or is_attendee
+        else:
+            same_dept = False
+            if login_user_dept_id:
+                same_dept = any(
+                    getattr(a.user, "dept_id", None) == login_user_dept_id
+                    for a in attendees_list
+                )
+            allowed = is_host or is_attendee or same_dept
+        if not allowed:
+            referer = request.META.get("HTTP_REFERER")
+            if referer:
+                return redirect(referer)
+            try:
+                fallback = reverse("meetings:meeting_list_dept")
+            except Exception:
+                fallback = "/"
+            return redirect(fallback)
+
+        return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -852,6 +950,55 @@ def meeting_transcript_save(request, meeting_id):
 class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
     template_name = "meetings/meeting_detail.html"
 
+    def get(self, request, *args, **kwargs):
+        # 권한 검사 로직을 get()에서 처리하여 리다이렉트 응답을 반환하도록 함
+        meeting_id = kwargs.get("meeting_id") or self.kwargs.get("meeting_id")
+        meeting = (
+            Meeting.objects
+            .select_related("host")
+            .prefetch_related("attendees__user__dept")
+            .filter(pk=meeting_id)
+            .first()
+        )
+        if not meeting:
+            raise Http404()
+
+        session_user_id = request.session.get("login_user_id")
+        login_user_obj = None
+        login_user_dept_id = None
+        if session_user_id:
+            try:
+                login_user_obj = User.objects.select_related("dept").get(user_id=session_user_id)
+                login_user_dept_id = getattr(login_user_obj, "dept_id", None)
+            except User.DoesNotExist:
+                login_user_obj = None
+
+        attendees_list = list(meeting.attendees.all())
+        is_host = session_user_id and str(meeting.host_id) == str(session_user_id)
+        is_attendee = any(str(a.user_id) == str(session_user_id) for a in attendees_list) if session_user_id else False
+        privacy = _get_privacy(meeting)
+        if privacy == "private":
+            allowed = is_host or is_attendee
+        else:
+            same_dept = False
+            if login_user_dept_id:
+                same_dept = any(
+                    getattr(a.user, "dept_id", None) == login_user_dept_id
+                    for a in attendees_list
+                )
+            allowed = is_host or is_attendee or same_dept
+        if not allowed:
+            referer = request.META.get("HTTP_REFERER")
+            if referer:
+                return redirect(referer)
+            try:
+                fallback = reverse("meetings:meeting_list_dept")
+            except Exception:
+                fallback = "/"
+            return redirect(fallback)
+
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -891,7 +1038,15 @@ class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
                 )
             allowed = is_host or is_attendee or same_dept
         if not allowed:
-            return HttpResponse("접근 권한이 없습니다.", status=403)
+            # 이전 페이지가 있으면 그쪽으로 리다이렉트, 없으면 부서 회의 목록으로 이동
+            referer = self.request.META.get("HTTP_REFERER")
+            if referer:
+                return redirect(referer)
+            try:
+                fallback = reverse("meetings:meeting_list_dept")
+            except Exception:
+                fallback = "/"
+            return redirect(fallback)
 
         # 템플릿에서 사용할 데이터 주입
         context["meeting"] = meeting
