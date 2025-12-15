@@ -139,6 +139,10 @@ document.addEventListener("DOMContentLoaded", function () {
       initPwOk.classList.remove("visible");
       initPwErr.classList.remove("visible");
 
+      // 첫 번째 비밀번호 변경 시 두 번째 입력란 메시지도 초기화
+      if (initPw2Ok) initPw2Ok.classList.remove("visible");
+      if (initPw2Err) initPw2Err.classList.remove("visible");
+
       if (!val) return;
 
       if (pwPattern.test(val)) {
@@ -162,11 +166,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (!v2) return;
 
+      // 첫 번째 비밀번호가 형식에 맞지 않으면 아무것도 표시하지 않음
+      if (!pwPattern.test(v1)) {
+        return;
+      }
+
+      // 형식이 맞을 때만 일치 여부 확인
       if (v1 === v2) {
         initPw2Ok.textContent = "비밀번호가 일치합니다.";
         initPw2Ok.classList.add("visible");
       } else {
-        initPw2Err.textContent = "비밀번호를 확인해주세요.";
+        initPw2Err.textContent = "비밀번호가 일치하지 않습니다.";
         initPw2Err.classList.add("visible");
       }
     });
@@ -179,6 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const n1 = initPw1 ? initPw1.value.trim() : "";
       const n2 = initPw2 ? initPw2.value.trim() : "";
 
+      // 모든 에러 메시지 초기화
       [initPwOk, initPwErr, initPw2Ok, initPw2Err].forEach((el) => {
         if (el) el.classList.remove("visible");
       });
@@ -197,7 +208,10 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       if (!pwPattern.test(n1)) {
-        if (initPwErr) initPwErr.classList.add("visible");
+        if (initPwErr) {
+          initPwErr.textContent = "비밀번호 형식을 맞추어주세요.";
+          initPwErr.classList.add("visible");
+        }
         if (initPwError) {
           initPwError.textContent = "비밀번호 형식을 맞추어주세요.";
           initPwError.classList.add("visible");
@@ -206,12 +220,21 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       if (n1 !== n2) {
-        if (initPw2Err) initPw2Err.classList.add("visible");
-        if (initPwError) {
-          initPwError.textContent = "비밀번호를 확인해주세요.";
-          initPwError.classList.add("visible");
+        if (initPw2Err) {
+          initPw2Err.textContent = "비밀번호가 일치하지 않습니다.";
+          initPw2Err.classList.add("visible");
         }
         return;
+      }
+
+      // 유효성 검사 통과 - 성공 메시지 표시
+      if (initPwOk) {
+        initPwOk.textContent = "올바른 형식입니다.";
+        initPwOk.classList.add("visible");
+      }
+      if (initPw2Ok) {
+        initPw2Ok.textContent = "비밀번호가 일치합니다.";
+        initPw2Ok.classList.add("visible");
       }
 
       const formData = new FormData(initForm);
