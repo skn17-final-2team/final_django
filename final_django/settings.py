@@ -80,7 +80,7 @@ WSGI_APPLICATION = 'final_django.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'testdb',          # 실제 DB 이름으로 수정
+        'NAME': 'proddb',          # 실제 DB 이름으로 수정
         'USER': 'admin',           # 실제 유저명으로 수정
         'PASSWORD': os.getenv('DATABASES_PASSWORD'),
         'HOST': os.getenv('DATABASES_HOST'),
