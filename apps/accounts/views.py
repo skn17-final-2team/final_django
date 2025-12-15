@@ -89,9 +89,6 @@ def login_api(request):
     pw_pattern = re.compile(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,15}$")
     if not pw_pattern.match(password):
         request.session["login_user_id"] = user.user_id
-        request.session["login_user_name"] = user.name
-        request.session["login_user_dept_name"] = getattr(user.dept, "dept_name", "")
-        request.session["login_user_admin"] = user.admin_yn
         request.session.save()
         return JsonResponse(
             {

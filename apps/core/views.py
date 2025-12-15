@@ -16,7 +16,7 @@ class LoginRequiredSessionMixin:
 
     @method_decorator(never_cache)
     def dispatch(self, request, *args, **kwargs):
-        if not request.session.get("login_user_id"):
+        if not request.session.get("login_user_id") or not request.session.get("login_user_name"):
             return redirect(self.login_url)
         return super().dispatch(request, *args, **kwargs)
 
