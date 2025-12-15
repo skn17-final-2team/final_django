@@ -319,17 +319,15 @@
                 class="detail-minutes-btn"
                 id="btn-minutes-download-pdf"
                 {% if not meeting.meeting_notes %}style="display: none;"{% endif %}
-              >
-                pdf 다운로드
-              </a>
-              <a
+              >pdf 다운로드</a>
+              <!-- <a
                 href="{% url 'meetings:minutes_download' meeting.meeting_id 'docx' %}"
                 class="detail-minutes-btn"
                 id="btn-minutes-download-word"
                 {% if not meeting.meeting_notes %}style="display: none;"{% endif %}
               >
                 word 다운로드
-              </a>
+              </a> -->
             </div>
           </div>
         </div>

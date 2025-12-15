@@ -180,6 +180,7 @@ def google_events(request):
                 calendarId=cal.get("id", "primary"),
                 timeMin="2020-01-01T00:00:00Z",
                 timeMax="2030-12-31T23:59:59Z",
+                maxResults=500,
                 singleEvents=True,
                 orderBy="startTime",
             ).execute()

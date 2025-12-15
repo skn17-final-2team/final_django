@@ -5,8 +5,11 @@
   border: 1px solid #e0f2fe;
   padding: 24px 32px;
   box-sizing: border-box;
-  min-height: calc(100vh - 120px);
+  height: 100%;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.06);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* 상단 제목 + 우측 라인 */
@@ -15,6 +18,7 @@
   align-items: flex-end;
   gap: 24px;
   margin-bottom: 18px;
+  flex-shrink: 0;
 }
 
 .record-title {
@@ -36,6 +40,9 @@
   grid-template-columns: 1.1fr 1.1fr;
   column-gap: 40px;
   align-items: flex-start;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* 공통 라벨 */
@@ -43,6 +50,7 @@
   font-size: 14px;
   color: #475569;
   margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 /* ========== 왼쪽 : 전문 ========== */
@@ -50,7 +58,9 @@
 .transcript-left {
   display: flex;
   flex-direction: column;
-  min-height: 520px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .assign-transcript-box {
@@ -63,12 +73,14 @@
   border: 1px solid #e0f2fe;
   padding: 10px 12px;
   box-sizing: border-box;
-  min-height: 420px;
-  max-height: 640px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .assign-transcript-scroll {
-  flex: 1 1 auto;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   font-size: 14px;
   line-height: 1.6;
@@ -117,6 +129,7 @@
   gap: 24px;
   margin-top: 12px;
   font-size: 14px;
+  flex-shrink: 0;
 }
 
 .text-link-button {
@@ -141,18 +154,21 @@
 .transcript-right {
   display: flex;
   flex-direction: column;
-  min-height: 520px;
-  padding-right: 32px;    /* 추가: 브라우저 스크롤바 들어갈 공간 확보 */
+  height: 100%;
+  min-height: 0;
+  padding-right: 32px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* 발화자 지정 영역 */
 .speaker-assign-block {
   position: relative;
-  padding: 16px 40px 16px 0;     /* 오른쪽에 40px 공간 확보 */
+  padding: 16px 40px 16px 0;
   margin-bottom: 16px;
-  box-sizing: border-box;        /* 패딩 포함 폭 계산 */
+  box-sizing: border-box;
   margin-top: -12px;
+  flex-shrink: 0;
 }
 
 .speaker-assign-grid {
@@ -244,6 +260,7 @@
 /* 미리보기 영역 */
 .preview-header-row {
   margin-bottom: 8px;
+  flex-shrink: 0;
 }
 
 .preview-box {
@@ -252,11 +269,13 @@
   border: 1px solid #e0f2fe;
   padding: 12px 14px;
   box-sizing: border-box;
-  max-height: 230px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .preview-scroll {
-  max-height: 200px;
+  height: 100%;
   overflow-y: auto;
   font-size: 14px;
   line-height: 1.6;
@@ -268,6 +287,7 @@
   margin-top: 18px;
   display: flex;
   justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .btn-transcript-save {
@@ -287,5 +307,28 @@
 .btn-transcript-save:hover {
   background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+}
+
+/* ========== 커스텀 스크롤바 ========== */
+.assign-transcript-scroll::-webkit-scrollbar,
+.preview-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.assign-transcript-scroll::-webkit-scrollbar-track,
+.preview-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.assign-transcript-scroll::-webkit-scrollbar-thumb,
+.preview-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  border-radius: 10px;
+}
+
+.assign-transcript-scroll::-webkit-scrollbar-thumb:hover,
+.preview-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
 }
 
