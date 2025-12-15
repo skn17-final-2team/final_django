@@ -1,20 +1,28 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load static %}
 
-{% block title %}전체 회의 목록{% endblock %}
+{% block title %}
+{% with meeting_list_type|default:"all" as list_type %}
+  {% if list_type == "mine" %}
+    내가 참여한 회의
+  {% elif list_type == "dept" %}
+    부서원이 참여한 회의
+  {% else %}
+    전체 회의 목록
+  {% endif %}
+{% endwith %}
+{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/meetings/meeting_list.css' %}">
 {% endblock %}
 
 {% block content %}
+{% with meeting_list_type|default:"all" as list_type %}
 <div class="meeting-list-page">
-
-  <!-- 검색 영역 -->
   <div class="meeting-list-toolbar">
     <div class="meeting-search">
       <div class="meeting-search-box">
-        <!-- 필터 버튼 (왼쪽) -->
         <button
           type="button"
           id="search-filter-toggle"
@@ -29,12 +37,10 @@
           />
         </button>
 
-        <!-- ✅ 선택된 필터 라벨을 검색창 안에 표시 -->
         <span id="search-filter-label" class="search-filter-label">
           제목
         </span>
 
-        <!-- 검색 입력 -->
         <input
           id="search-input"
           type="text"
@@ -42,7 +48,6 @@
           autocomplete="off"
         />
 
-        <!-- 초기화 버튼 (검색어가 있을 때만 표시) -->
         <button
           type="button"
           id="search-clear-btn"
@@ -50,17 +55,15 @@
           style="display: none;"
           aria-label="검색어 초기화"
         >
-          ✕
+          x
         </button>
 
-        <!-- 돋보기 아이콘 (오른쪽) -->
         <img
           src="{% static 'img/icon-search.svg' %}"
           alt="검색"
           class="search-icon"
         />
 
-        <!-- 검색 조건 드롭다운 -->
         <div
           id="search-filter-dropdown"
           class="search-filter-dropdown"
@@ -83,14 +86,11 @@
     </div>
   </div>
 
-  <!-- 테이블 영역 -->
   <div class="meeting-list-table-wrapper">
     <table class="meeting-table">
       <thead>
         <tr>
           <th class="col-no">번호</th>
-
-          <!-- 일시 정렬 -->
           <th class="col-datetime">
             <button
               type="button"
@@ -105,8 +105,6 @@
               ></span>
             </button>
           </th>
-
-          <!-- 제목 정렬 -->
           <th class="col-title">
             <button
               type="button"
@@ -122,12 +120,12 @@
               ></span>
             </button>
           </th>
-
           <th class="col-place">장소</th>
           <th class="col-host">주최자</th>
           <th class="col-count">참여 인원</th>
-
+          {% if list_type == "all" %}
           <th class="col-join">참여 여부</th>
+          {% endif %}
         </tr>
       </thead>
       <tbody id="meeting-table-body">
@@ -141,17 +139,16 @@
           data-datetime-display="{{ meeting.meet_date_time|date:'Y.m.d H:i' }}"
           data-place="{{ meeting.place|default:''|escape }}"
           data-host="{{ meeting.host_name|escape }}"
+          {% if list_type == "all" %}
           data-joined="{% if meeting.is_joined %}true{% else %}false{% endif %}"
+          {% endif %}
         >
-          <!-- 번호는 화면상 index, DB PK와 무관 -->
           <td class="col-no">
             {{ forloop.counter }}
           </td>
-
           <td class="col-datetime">
             {{ meeting.meet_date_time|date:"Y.m.d H:i" }}
           </td>
-
           <td class="col-title">
             <a
               href="{% url 'meetings:meeting_detail' meeting_id=meeting.meeting_id %}"
@@ -160,19 +157,16 @@
               {{ meeting.title|truncatechars:20 }}
             </a>
           </td>
-
           <td class="col-place">
             {{ meeting.place|truncatechars:10 }}
           </td>
-
           <td class="col-host">
             {{ meeting.host_name|truncatechars:10 }}
           </td>
-
           <td class="col-count">
             {{ meeting.attendee_count }}명
           </td>
-
+          {% if list_type == "all" %}
           <td class="col-join" data-join-text>
             {% if meeting.is_joined %}
               참여
@@ -180,39 +174,46 @@
               미참여
             {% endif %}
           </td>
+          {% endif %}
         </tr>
         {% empty %}
         <tr class="meeting-row-empty">
-          <td colspan="7" class="no-data-cell">
-            등록된 회의가 없습니다.
+          <td colspan="{% if list_type == "all" %}7{% else %}6{% endif %}" class="no-data-cell">
+            {% if list_type == "mine" %}
+              내가 참여한 회의가 없습니다.
+            {% elif list_type == "dept" %}
+              부서원이 참여한 회의가 없습니다.
+            {% else %}
+              등록된 회의가 없습니다.
+            {% endif %}
           </td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
 
-        <!-- 페이지네이션 -->
-        <div class="meeting-pagination" id="meeting-pagination">
-        <button
-            type="button"
-            class="page-btn page-prev"
-            id="page-prev"
-        >
-            ◀
-        </button>
+    <div class="meeting-pagination" id="meeting-pagination">
+      <button
+        type="button"
+        class="page-btn page-prev"
+        id="page-prev"
+      >
+        ◀
+      </button>
 
-        <div class="page-numbers" id="page-numbers"></div>
+      <div class="page-numbers" id="page-numbers"></div>
 
-        <button
-            type="button"
-            class="page-btn page-next"
-            id="page-next"
-        >
-            ▶
-        </button>
-        </div>
+      <button
+        type="button"
+        class="page-btn page-next"
+        id="page-next"
+      >
+        ▶
+      </button>
+    </div>
   </div>
 </div>
+{% endwith %}
 {% endblock %}
 
 {% block extra_script %}
