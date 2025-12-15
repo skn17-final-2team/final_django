@@ -9,9 +9,14 @@ def get_google_credentials(request):
     token_json = request.session.get("google_credentials")
     if token_json:
         info = json.loads(token_json)
-        creds = Credentials.from_authorized_user_info(
-            info, settings.GOOGLE_OAUTH2_SCOPES
-        )
+        try:
+            creds = Credentials.from_authorized_user_info(
+                info, settings.GOOGLE_OAUTH2_SCOPES
+            )
+        except ValueError:
+            # 저장된 스코프와 현재 설정 스코프가 다르면 재인증 유도
+            request.session.pop("google_credentials", None)
+            return None
         # 토큰이 만료되었거나 유효하지 않으면 None 반환
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
@@ -50,9 +55,14 @@ def get_google_credentials(request):
         return None
 
     info = json.loads(token_obj.token_json)
-    creds = Credentials.from_authorized_user_info(
-        info, settings.GOOGLE_OAUTH2_SCOPES
-    )
+    try:
+        creds = Credentials.from_authorized_user_info(
+            info, settings.GOOGLE_OAUTH2_SCOPES
+        )
+    except ValueError:
+        # 스코프가 달라지면 기존 토큰을 폐기하고 재인증이 필요함
+        token_obj.delete()
+        return None
 
     # 토큰이 만료되었거나 유효하지 않으면 None 반환
     if not creds or not creds.valid:

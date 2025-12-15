@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const modeInput = document.getElementById("schedule-mode");
   const eventIdInput = document.getElementById("schedule-event-id");
   const titleInput = document.getElementById("schedule-title");
+  const calendarSelect = document.getElementById("schedule-calendar");
   const startInput = document.getElementById("schedule-start");
   const endInput = document.getElementById("schedule-end");
   const allDayInput = document.getElementById("schedule-all-day");
@@ -209,28 +210,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // 오늘·이번 달 일정 전체를 다시 불러와서
   // 캘린더와 오른쪽 카드(오늘/이번 달)를 한 번에 갱신
+  // ---- override: 정리된 캘린더 로딩 & 일정 재로드 ----
   async function reloadAllSchedules() {
     try {
+      await loadCalendarList();
       const res = await fetch("/api/google-events/");
       const data = await res.json();
 
       if (data.error) {
         console.warn("google-events error:", data.error);
-        // 인증 안 됐거나 에러면 모두 비우기
-        if (typeof renderTodaySchedules === "function") {
-          renderTodaySchedules([]);
-        }
-        if (typeof renderMonthSchedules === "function") {
-          renderMonthSchedules([]);
-        }
-        if (calendar) {
-          calendar.removeAllEvents();
-        }
+        if (typeof renderTodaySchedules === "function") renderTodaySchedules([]);
+        if (typeof renderMonthSchedules === "function") renderMonthSchedules([]);
+        if (calendar) calendar.removeAllEvents();
         return;
       }
 
-      // 이벤트 데이터에 반복 정보를 extendedProps에 포함
-      const eventsWithExtendedProps = data.map(event => ({
+      const eventsWithExtendedProps = data.map((event) => ({
         id: event.id,
         title: event.title,
         start: event.start,
@@ -238,24 +233,51 @@ document.addEventListener("DOMContentLoaded", function () {
         extendedProps: {
           description: event.description || "",
           repeat: event.repeat || "none",
-        }
+          calendarId: event.calendarId || "primary",
+        },
       }));
 
-      // 캘린더 이벤트 전체 갈아끼우기
       if (calendar) {
         calendar.removeAllEvents();
         calendar.addEventSource(eventsWithExtendedProps);
       }
 
-      // 오른쪽 카드 갱신
-      if (typeof renderTodaySchedules === "function") {
-        renderTodaySchedules(data);
-      }
-      if (typeof renderMonthSchedules === "function") {
-        renderMonthSchedules(data);
-      }
+      if (typeof renderTodaySchedules === "function") renderTodaySchedules(data);
+      if (typeof renderMonthSchedules === "function") renderMonthSchedules(data);
     } catch (err) {
       console.error("일정 재로드 실패:", err);
+    }
+  }
+
+  async function loadCalendarList() {
+    if (!calendarSelect) return;
+    try {
+      const res = await fetch("/api/google-calendars/");
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.detail || data.error || "캘린더 목록을 불러오지 못했습니다.");
+      }
+
+      calendarSelect.innerHTML = "";
+      data.forEach((cal) => {
+        const opt = document.createElement("option");
+        opt.value = cal.id;
+        opt.textContent = cal.summary || cal.id;
+        if (cal.primary) opt.textContent += " (기본)";
+        calendarSelect.appendChild(opt);
+      });
+
+      if (!calendarSelect.value && calendarSelect.options.length > 0) {
+        calendarSelect.value = calendarSelect.options[0].value;
+      }
+    } catch (err) {
+      console.warn("캘린더 목록을 불러오는 중 오류가 발생했습니다.", err);
+      if (!calendarSelect.querySelector("option")) {
+        const opt = document.createElement("option");
+        opt.value = "primary";
+        opt.textContent = "기본 캘린더";
+        calendarSelect.appendChild(opt);
+      }
     }
   }
 
@@ -356,6 +378,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // 기존 일정 정보로 채우기
       if (titleInput) titleInput.value = editEvent.title || "";
+      if (calendarSelect) {
+        const calId =
+          editEvent.extendedProps?.calendarId ||
+          editEvent.calendarId ||
+          "primary";
+        calendarSelect.value = calId;
+      }
 
       // 시작/종료 시간 설정
       const start = editEvent.start instanceof Date ? editEvent.start : new Date(editEvent.start);
@@ -409,6 +438,10 @@ document.addEventListener("DOMContentLoaded", function () {
       if (endInput) endInput.value = endValue;
       if (allDayInput) allDayInput.checked = false;
       if (descInput) descInput.value = "";
+      if (calendarSelect) {
+        const firstOpt = calendarSelect.querySelector("option");
+        calendarSelect.value = firstOpt ? firstOpt.value : "primary";
+      }
 
       // 반복 초기화
       if (repeatSelect) repeatSelect.value = "none";
@@ -451,6 +484,7 @@ document.addEventListener("DOMContentLoaded", function () {
       extendedProps: eventLike.extendedProps || {
         description: eventLike.description || "",
         repeat: eventLike.repeat || "none",
+        calendarId: eventLike.calendarId || "primary",
       },
     };
 
@@ -524,7 +558,11 @@ document.addEventListener("DOMContentLoaded", function () {
             "X-CSRFToken": csrftoken,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ id: eventId }),
+          body: JSON.stringify({
+            id: eventId,
+            calendarId:
+              selectedEvent.extendedProps?.calendarId || selectedEvent.calendarId || "primary",
+          }),
         });
 
         if (!res.ok) {
@@ -784,6 +822,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // 반복 값 가져오기
       const repeat = repeatSelect ? repeatSelect.value : "none";
+      const calendarId = calendarSelect ? calendarSelect.value : "primary";
 
       const payload = {
         title: title,
@@ -792,6 +831,7 @@ document.addEventListener("DOMContentLoaded", function () {
         description: description,
         all_day: allDay,
         repeat: repeat,
+        calendarId,
       };
 
       try {
@@ -832,27 +872,29 @@ document.addEventListener("DOMContentLoaded", function () {
           if (mode === "edit") {
             // 수정: 기존 이벤트 업데이트
             const calEvent = calendar.getEventById(eventId);
-            if (calEvent) {
-              calEvent.setProp("title", title);
-              calEvent.setStart(start);
-              calEvent.setEnd(end);
-              calEvent.setExtendedProp("description", description);
-              calEvent.setExtendedProp("repeat", repeat);
-            }
-          } else {
-            // 생성: 새 이벤트 추가
-            calendar.addEvent({
-              id: data.id,
-              title: title,
-              start: start,
-              end: end,
-              allDay: allDay,
-              extendedProps: {
-                description: description,
-                repeat: repeat,
-              },
-            });
+          if (calEvent) {
+            calEvent.setProp("title", title);
+            calEvent.setStart(start);
+            calEvent.setEnd(end);
+            calEvent.setExtendedProp("description", description);
+            calEvent.setExtendedProp("repeat", repeat);
+            calEvent.setExtendedProp("calendarId", calendarId);
           }
+        } else {
+          // 생성: 새 이벤트 추가
+          calendar.addEvent({
+            id: data.id,
+            title: title,
+            start: start,
+            end: end,
+            allDay: allDay,
+            extendedProps: {
+              description: description,
+              repeat: repeat,
+              calendarId: calendarId,
+            },
+          });
+        }
 
           reloadAllSchedules();
           closeModal();

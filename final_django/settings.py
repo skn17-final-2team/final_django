@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 GOOGLE_OAUTH2_CLIENT_SECRETS_JSON = BASE_DIR / "client_secret.json"
 GOOGLE_OAUTH2_SCOPES = [
     "https://www.googleapis.com/auth/calendar",
-    "https://www.googleapis.com/auth/calendar.readonly",
+    # "https://www.googleapis.com/auth/tasks",
 ]
 GOOGLE_OAUTH2_REDIRECT_URI = "http://localhost:8000/oauth2callback/"
 
