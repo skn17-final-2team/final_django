@@ -86,9 +86,13 @@ def login_api(request):
     user.save()
 
     # 비밀번호 정책(8~15자, 영문+숫자) 미충족 시 로그인 막고 변경 플래그 반환
+    # 주의: 세션에 정상 로그인 키(`login_user_id`)를 넣으면 사이트 접근이 허용되므로
+    # 강제 변경 흐름은 별도 세션 키 `pending_pw_change_user_id`를 사용한다.
     pw_pattern = re.compile(r"^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,15}$")
     if not pw_pattern.match(password):
-        request.session["login_user_id"] = user.user_id
+        # 로그인 상태로 처리하지 않음 — 변경 전에는 일반 접근 불가
+        request.session["pending_pw_change_user_id"] = user.user_id
+        request.session["pending_pw_change_user_name"] = user.name
         request.session.save()
         return JsonResponse(
             {
@@ -227,14 +231,20 @@ def modify_pw_initial(request):
     로그인 시 비밀번호 정책이 맞지 않아 막힌 경우,
     기존 비밀번호 입력 없이 새 비밀번호로만 변경
     """
+    # allow flow both for fully-logged-in users and for pending initial-change users
     login_user_id = request.session.get("login_user_id")
-    if not login_user_id:
+    pending_user_id = request.session.get("pending_pw_change_user_id")
+    if not login_user_id and not pending_user_id:
         return JsonResponse(
             {"ok": False, "field": "common", "message": "로그인이 필요합니다."},
             status=401,
         )
 
-    user = get_object_or_404(User, user_id=login_user_id)
+    user = None
+    if login_user_id:
+        user = get_object_or_404(User, user_id=login_user_id)
+    else:
+        user = get_object_or_404(User, user_id=pending_user_id)
 
     new_password = request.POST.get("new_password", "").strip()
     new_password2 = request.POST.get("new_password2", "").strip()
@@ -267,6 +277,16 @@ def modify_pw_initial(request):
 
     user.password = make_password(new_password)
     user.save()
+
+    # 초기 변경 흐름으로 왔다면 정상 로그인 세션으로 전환하고 pending 키 제거
+    if pending_user_id:
+        request.session.pop("pending_pw_change_user_id", None)
+        request.session.pop("pending_pw_change_user_name", None)
+        request.session["login_user_id"] = user.user_id
+        request.session["login_user_name"] = user.name
+        request.session["login_user_dept_name"] = getattr(user.dept, "dept_name", "")
+        request.session["login_user_admin"] = user.admin_yn
+        request.session.save()
 
     return JsonResponse({"ok": True, "redirect_url": "/"})
 
