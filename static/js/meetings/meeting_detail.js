@@ -393,8 +393,8 @@ function bindRowAddButton(row) {
     };
   }
 
-  async function createGoogleCalendarEvent(payload) {
-    const res = await fetch("/api/google-events/create/", {
+  async function createGoogleTask(payload) {
+    const res = await fetch("/api/google-tasks/create/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
@@ -412,7 +412,7 @@ function bindRowAddButton(row) {
       }
       const msg =
         (data && (data.detail || data.error)) ||
-        "구글 캘린더 일정 추가에 실패했습니다.";
+        "구글 Tasks 추가에 실패했습니다.";
       throw new Error(msg);
     }
     return data;
@@ -612,12 +612,12 @@ document
         <input type="date" class="task-calendar-date" />
         <div class="task-calendar-time-row">
           <div>
-            <label class="task-calendar-label">시작 시간</label>
-            <input type="time" class="task-calendar-start" />
+            <label class="task-calendar-label" for="task-calendar-start">시작 시간</label>
+            <input type="time" id="task-calendar-start" class="task-calendar-start" />
           </div>
           <div>
-            <label class="task-calendar-label">종료 시간</label>
-            <input type="time" class="task-calendar-end" />
+            <label class="task-calendar-label" for="task-calendar-end">종료 시간</label>
+            <input type="time" id="task-calendar-end" class="task-calendar-end" />
           </div>
         </div>
       </div>
@@ -657,6 +657,7 @@ document
   function showCalendarPopover(targetBtn, row) {
     ensureCalendarPopover();
     calendarCurrentRow = row;
+
     const rect = targetBtn.getBoundingClientRect();
     const popoverWidth = 280;
     const centerOffset = rect.left + rect.width / 2 - popoverWidth / 2;
@@ -709,17 +710,20 @@ document
     }
 
     try {
-      await createGoogleCalendarEvent({
+      const notes = meetingTitle ? `회의: ${meetingTitle}` : "";
+      const due = start || end;
+
+      await createGoogleTask({
         title,
-        start,
-        end,
-        description: meetingTitle || title,
+        due,
+        notes,
+        tasklist_id: "@default",
       });
-      alert("구글 캘린더에 일정이 추가되었습니다.");
+      alert("구글 Tasks(Tasks 캘린더)에 일정이 추가되었습니다.");
       hideCalendarPopover();
     } catch (err) {
-      console.error("google calendar create error:", err);
-      alert(err.message || "일정 추가에 실패했습니다.");
+      console.error("google tasks create error:", err);
+      alert(err.message || "Tasks 일정 추가에 실패했습니다.");
     } finally {
       if (addBtn) {
         addBtn.disabled = false;

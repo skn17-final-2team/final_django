@@ -1,5 +1,6 @@
 import os
 import json
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.http import JsonResponse
@@ -153,6 +154,7 @@ def google_events(request):
         return JsonResponse({"error": "not_authenticated"}, status=401)
 
     service = build("calendar", "v3", credentials=creds)
+    tasks_service = None
 
     events = []
     calendars = []
@@ -213,6 +215,81 @@ def google_events(request):
                     "calendarSummary": cal.get("summary", ""),
                 }
             )
+
+    # Google Tasks -> FullCalendar 이벤트 형태로 변환하여 추가
+    try:
+        tasks_service = build("tasks", "v1", credentials=creds)
+        default_tasklist = tasks_service.tasklists().get(tasklist="@default").execute()
+        task_calendar_id = default_tasklist.get("id") or "@default"
+        task_calendar_summary = default_tasklist.get("title") or "Tasks"
+
+        task_page_token = None
+        while True:
+            task_list = tasks_service.tasks().list(
+                tasklist="@default",
+                pageToken=task_page_token,
+                showCompleted=False,
+                showDeleted=False,
+                maxResults=100,
+            ).execute()
+
+            for t in task_list.get("items", []):
+                due = t.get("due")
+                if not due:
+                    continue  # 마감일이 없는 태스크는 달력에 표시하지 않음
+
+                start_iso = due
+                end_iso = due
+
+                # notes에 start/end를 JSON 형태로 저장했다면 그것을 우선 사용
+                notes_raw = t.get("notes") or ""
+                parsed_start = None
+                parsed_end = None
+                try:
+                    notes_json = json.loads(notes_raw)
+                    parsed_start = notes_json.get("start") or None
+                    parsed_end = notes_json.get("end") or None
+                except Exception:
+                    parsed_start = None
+                    parsed_end = None
+
+                if parsed_start:
+                    start_iso = parsed_start
+                if parsed_end:
+                    end_iso = parsed_end
+
+                # end 시간이 없으면 +1시간 기본 설정
+                is_timed = "T" in start_iso if start_iso else False
+                if not parsed_end and is_timed:
+                    try:
+                        parsed = datetime.fromisoformat(start_iso.replace("Z", "+00:00"))
+                        end_iso = (parsed + timedelta(hours=1)).isoformat()
+                    except Exception:
+                        end_iso = start_iso
+                # 시각이 없으면 종일 이벤트로 취급
+                if not is_timed:
+                    end_iso = start_iso
+
+                events.append(
+                    {
+                        "id": f"task-{t.get('id')}",
+                        "title": t.get("title", ""),
+                        "start": start_iso,
+                        "end": end_iso,
+                        "allDay": not is_timed,
+                        "description": notes_raw,
+                        "repeat": "none",
+                        "calendarId": task_calendar_id,
+                        "calendarSummary": task_calendar_summary,
+                    }
+                )
+
+            task_page_token = task_list.get("nextPageToken")
+            if not task_page_token:
+                break
+    except Exception:
+        # Tasks 연동 실패 시에도 기존 캘린더 이벤트 반환
+        pass
 
     return JsonResponse(events, safe=False)
 
@@ -292,6 +369,58 @@ def create_google_event(request):
             "status": created_event.get("status"),
         }
     )
+
+
+# -------------------------------------------------------------------
+# Google Tasks 생성
+#  - /api/google-tasks/create/
+# -------------------------------------------------------------------
+@csrf_exempt
+@require_POST
+def create_google_task(request):
+    """
+    회의 상세 Add 버튼에서 전달한 태스크를 Google Tasks에 생성한다.
+    기대 payload:
+      {
+        "title": "...",           # 필수
+        "notes": "...",           # 선택
+        "due": "RFC3339 string",  # 필수: 2024-12-20T15:00:00+09:00
+        "tasklist_id": "@default" # 선택
+      }
+    """
+    creds = get_google_credentials(request)
+    if not creds:
+        return JsonResponse({"error": "not_authenticated"}, status=401)
+
+    try:
+        data = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "invalid_json"}, status=400)
+
+    title = (data.get("title") or "").strip()
+    due = (data.get("due") or "").strip()
+    notes = (data.get("notes") or "").strip()
+    tasklist_id = (data.get("tasklist_id") or "@default").strip() or "@default"
+
+    if not title or not due:
+        return JsonResponse({"error": "missing_fields"}, status=400)
+
+    try:
+        service = build("tasks", "v1", credentials=creds)
+        body = {
+            "title": title,
+            "due": due,
+        }
+        if notes:
+            body["notes"] = notes
+
+        task = service.tasks().insert(tasklist=tasklist_id, body=body).execute()
+        return JsonResponse({"ok": True, "task_id": task.get("id")})
+    except Exception as e:
+        return JsonResponse(
+            {"error": "google_api_error", "detail": str(e)},
+            status=500,
+        )
 
 
 # -------------------------------------------------------------------
@@ -397,8 +526,6 @@ def google_events_delete(request, event_id):
     if not creds:
         return JsonResponse({"error": "not_authenticated"}, status=401)
 
-    service = build("calendar", "v3", credentials=creds)
-
     calendar_id = "primary"
     try:
         body_data = json.loads(request.body.decode("utf-8"))
@@ -406,16 +533,30 @@ def google_events_delete(request, event_id):
     except json.JSONDecodeError:
         pass
 
-    try:
-        service.events().delete(
-            calendarId=calendar_id,
-            eventId=event_id,
-        ).execute()
-    except Exception as e:
-        return JsonResponse(
-            {"error": "google_api_error", "detail": str(e)},
-            status=500,
-        )
+    # task- 로 시작하면 Google Tasks API로 삭제, 아니면 Calendar 이벤트 삭제
+    if event_id.startswith("task-"):
+        task_id = event_id.replace("task-", "", 1)
+        tasklist_id = calendar_id or "@default"
+        try:
+            tasks_service = build("tasks", "v1", credentials=creds)
+            tasks_service.tasks().delete(tasklist=tasklist_id, task=task_id).execute()
+        except Exception as e:
+            return JsonResponse(
+                {"error": "google_api_error", "detail": str(e)},
+                status=500,
+            )
+    else:
+        service = build("calendar", "v3", credentials=creds)
+        try:
+            service.events().delete(
+                calendarId=calendar_id,
+                eventId=event_id,
+            ).execute()
+        except Exception as e:
+            return JsonResponse(
+                {"error": "google_api_error", "detail": str(e)},
+                status=500,
+            )
 
     return JsonResponse({"success": True})
 
@@ -454,6 +595,21 @@ def google_calendars(request):
                 "primary": cal.get("primary", False),
             }
         )
+
+    # 기본 Tasks 리스트도 별도 캘린더로 노출
+    try:
+        tasks_service = build("tasks", "v1", credentials=creds)
+        default_tasklist = tasks_service.tasklists().get(tasklist="@default").execute()
+        result.append(
+            {
+                "id": default_tasklist.get("id") or "@default",
+                "summary": default_tasklist.get("title") or "Tasks",
+                "primary": False,
+                "is_task_list": True,
+            }
+        )
+    except Exception:
+        pass
 
     if not result:
         result.append({"id": "primary", "summary": "기본 캘린더", "primary": True})
