@@ -640,7 +640,7 @@ def revoke_google_auth(request):
             del request.session["google_credentials"]
             request.session.save()
 
-        return JsonResponse({"success": True, "message": "구글 인증이 해제되었습니다. 다시 로그인해주세요."})
+        return JsonResponse({"success": True, "message": "구글 연동이 해제되었습니다. 다시 로그인해주세요."})
     except User.DoesNotExist:
         return JsonResponse({"error": "user_not_found"}, status=404)
     except Exception as e:

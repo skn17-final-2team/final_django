@@ -830,7 +830,7 @@ document.addEventListener("DOMContentLoaded", function () {
         openModal();
       } catch (err) {
         console.error(err);
-        alert("구글 인증 상태 확인 중 오류가 발생했습니다.");
+        alert("구글 연동 상태 확인 중 오류가 발생했습니다.");
       }
     });
   }

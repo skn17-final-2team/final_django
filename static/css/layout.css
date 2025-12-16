@@ -604,6 +604,18 @@
   letter-spacing: -0.02em;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.google-auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* 오른쪽 유저 정보 */
 .header-user {
   display: flex;
