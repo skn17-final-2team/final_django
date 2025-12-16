@@ -19,10 +19,21 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '127.0.0.1',
     'localhost',
-    os.getenv("AWS_ELASTIC_IP") or '',
-    os.getenv("DOMAIN_URL") or '',
-    'www.' + os.getenv("DOMAIN_URL") or '',
 ]
+
+AWS_ELASTIC_IP = os.getenv("AWS_ELASTIC_IP")
+if AWS_ELASTIC_IP:
+    ALLOWED_HOSTS.append(AWS_ELASTIC_IP)
+
+DOMAIN_URL = os.getenv("DOMAIN_URL")
+if DOMAIN_URL:
+    ALLOWED_HOSTS += [DOMAIN_URL, f"www.{DOMAIN_URL}"]
+
+ALB_DNS_NAME = os.getenv("ALB_DNS_NAME")
+if ALB_DNS_NAME:
+    ALLOWED_HOSTS.append(ALB_DNS_NAME)
+
+ALLOWED_HOSTS.append("172.31.37.73")
 
 # Application definition
 INSTALLED_APPS = [
@@ -81,7 +92,7 @@ WSGI_APPLICATION = 'final_django.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'testdb',          # 실제 DB 이름으로 수정
+        'NAME': 'proddb',          # 실제 DB 이름으로 수정
         'USER': 'admin',           # 실제 유저명으로 수정
         'PASSWORD': os.getenv('DATABASES_PASSWORD'),
         'HOST': os.getenv('DATABASES_HOST'),
@@ -151,4 +162,5 @@ POD_ID = os.getenv("POD_ID")
 
 CSRF_TRUSTED_ORIGINS = [
     "http://" + os.getenv("AWS_ELASTIC_IP") + ":8080",
+    "https://" + os.getenv("DOMAIN_URL")
 ]
