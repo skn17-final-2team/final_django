@@ -7,7 +7,8 @@ GOOGLE_OAUTH2_CLIENT_SECRETS_JSON = BASE_DIR / "client_secret.json"
 GOOGLE_OAUTH2_SCOPES = [
     "https://www.googleapis.com/auth/calendar",
 ]
-GOOGLE_OAUTH2_REDIRECT_URI = "http://localhost:8000/oauth2callback/"
+# GOOGLE_OAUTH2_REDIRECT_URI = "http://localhost:8000/oauth2callback/"
+GOOGLE_OAUTH2_REDIRECT_URI = "https://malhaneundaero.com/oauth2callback/"
 
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 
