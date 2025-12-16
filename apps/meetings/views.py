@@ -479,7 +479,7 @@ def build_meeting_list_context(meeting_qs, login_user_id=None):
     return meetings_data, login_user
 
 class MeetingListAllView(LoginRequiredSessionMixin, TemplateView):
-    template_name = "meetings/meeting_list_all.html"
+    template_name = "meetings/meeting_list.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -504,15 +504,17 @@ class MeetingListAllView(LoginRequiredSessionMixin, TemplateView):
 
         context["login_user"] = login_user
         context["meetings"] = meetings_data
+        context["meeting_list_type"] = "all"
         return context
 
 
 class MeetingListMineView(LoginRequiredSessionMixin, TemplateView):
-    template_name = "meetings/meeting_list_mine.html"
+    template_name = "meetings/meeting_list.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        context["meeting_list_type"] = "mine"
         login_user_id = self.request.session.get("login_user_id")
         if not login_user_id:
             # 이 View는 LoginRequiredMixin 이라 실제로는 여기 안 오겠지만 방어 코드
@@ -545,7 +547,7 @@ class MeetingListMineView(LoginRequiredSessionMixin, TemplateView):
         return context
 
 class MeetingListDeptView(LoginRequiredSessionMixin, TemplateView):
-    template_name = "meetings/meeting_list_dept.html"
+    template_name = "meetings/meeting_list.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -553,6 +555,7 @@ class MeetingListDeptView(LoginRequiredSessionMixin, TemplateView):
         # 1) 로그인 사용자
         login_user_id = self.request.session.get("login_user_id")
         login_user = None
+        context["meeting_list_type"] = "dept"
         if login_user_id:
             login_user = User.objects.select_related("dept").get(user_id=login_user_id)
 
@@ -1246,7 +1249,6 @@ def meeting_sllm_prepare(request, meeting_id):
     domain_raw = (meeting.domain or "").strip()
     domain_map = {
         "마케팅": "Marketing / Economy",
-        "경영": "Marketing / Economy",
         "IT": "IT",
         "디자인": "Design",
         "회계": "Accounting",
