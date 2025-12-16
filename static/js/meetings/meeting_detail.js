@@ -144,47 +144,8 @@
 
   if (btnAudioDownload && meetingId) {
     btnAudioDownload.addEventListener("click", async () => {
-      try {
-        // 음성 파일 다운로드 API 호출
-        const response = await fetch(`/meetings/${meetingId}/audio/download/`, {
-          method: 'GET',
-          headers: {
-            'X-CSRFToken': csrftoken,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('음성 파일 다운로드에 실패했습니다.');
-        }
-
-        // Blob으로 변환
-        const blob = await response.blob();
-
-        // 파일명 추출 (Content-Disposition 헤더에서)
-        const contentDisposition = response.headers.get('Content-Disposition');
-        let filename = 'meeting_audio.wav';
-        if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-          if (filenameMatch && filenameMatch[1]) {
-            filename = filenameMatch[1].replace(/['"]/g, '');
-          }
-        }
-
-        // 다운로드 링크 생성 및 클릭
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-
-        // 정리
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } catch (err) {
-        console.error('Audio download error:', err);
-        alert(err.message || '음성 파일 다운로드 중 오류가 발생했습니다.');
-      }
+      // 서버에서 Content-Disposition을 내려주므로 바로 이동시켜 브라우저 기본 다운로드 흐름 사용
+      window.location.href = `/meetings/${meetingId}/audio/download/`;
     });
   }
 

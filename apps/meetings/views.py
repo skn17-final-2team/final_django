@@ -5,10 +5,10 @@ from apps.accounts.models import Dept, User
 from django.db.models import Prefetch, Q
 
 from django.shortcuts import get_object_or_404
-from django.http import JsonResponse, HttpResponse, Http404
+from django.http import JsonResponse, HttpResponse, Http404, StreamingHttpResponse
 from django.urls import reverse
 
-from .models import Meeting, Attendee, Task
+from .models import Meeting, Attendee, Task, S3File
 from django.contrib import messages
 from django.db import transaction
 
@@ -33,6 +33,7 @@ import re
 import ast
 from typing import Dict
 import requests
+from urllib.parse import quote
 
 from django.conf import settings
 from pathlib import Path
@@ -366,6 +367,33 @@ def _get_privacy(meeting: Meeting):
     if getattr(meeting, "private_yn", False):
         return "private"
     return _get_privacy_from_domain(getattr(meeting, "domain", None))
+
+
+def _has_meeting_view_permission(
+    meeting: Meeting,
+    attendees_list,
+    session_user_id,
+    login_user_dept_id,
+):
+    """
+    상세/다운로드 공통 접근 권한 체크.
+    """
+    is_host = session_user_id and str(meeting.host_id) == str(session_user_id)
+    is_attendee = (
+        session_user_id
+        and any(str(a.user_id) == str(session_user_id) for a in attendees_list)
+    )
+    privacy = _get_privacy(meeting)
+    if privacy == "private":
+        return bool(is_host or is_attendee)
+
+    same_dept = False
+    if login_user_dept_id:
+        same_dept = any(
+            getattr(a.user, "dept_id", None) == login_user_dept_id
+            for a in attendees_list
+        )
+    return bool(is_host or is_attendee or same_dept)
 
 
 def _task_to_display(task):
@@ -1164,6 +1192,88 @@ class MeetingDetailView(LoginRequiredSessionMixin, TemplateView):
         context["can_edit_minutes"] = is_host # 이름 하나 더 두고 싶으면
         return context
 
+
+@require_GET
+def meeting_audio_download(request, meeting_id):
+    meeting = (
+        Meeting.objects.select_related("record_url", "host")
+        .prefetch_related("attendees__user__dept")
+        .filter(pk=meeting_id)
+        .first()
+    )
+    if not meeting:
+        raise Http404()
+
+    session_user_id = request.session.get("login_user_id")
+    login_user_dept_id = None
+    if session_user_id:
+        login_user_obj = (
+            User.objects.select_related("dept")
+            .filter(user_id=session_user_id)
+            .first()
+        )
+        if login_user_obj:
+            login_user_dept_id = getattr(login_user_obj, "dept_id", None)
+
+    attendees_list = list(meeting.attendees.all())
+    if not _has_meeting_view_permission(
+        meeting,
+        attendees_list,
+        session_user_id,
+        login_user_dept_id,
+    ):
+        return JsonResponse(
+            {"ok": False, "error": "음성 파일을 다운로드할 권한이 없습니다."},
+            status=403,
+        )
+
+    if not meeting.record_url_id:
+        return JsonResponse(
+            {"ok": False, "error": "등록된 음성 파일이 없습니다."},
+            status=404,
+        )
+
+    presigned_url = get_presigned_url(str(meeting.record_url))
+    try:
+        s3_response = requests.get(presigned_url, stream=True, timeout=30)
+    except requests.RequestException:
+        return JsonResponse(
+            {"ok": False, "error": "음성 파일을 가져오는 중 오류가 발생했습니다."},
+            status=502,
+        )
+
+    if s3_response.status_code != 200:
+        s3_response.close()
+        return JsonResponse(
+            {"ok": False, "error": "음성 파일을 가져오는 데 실패했습니다."},
+            status=502,
+        )
+
+    def stream_file():
+        try:
+            for chunk in s3_response.iter_content(chunk_size=8192):
+                if chunk:
+                    yield chunk
+        finally:
+            s3_response.close()
+
+    filename = (
+        getattr(meeting.record_url, "original_name", None)
+        or f"meeting_{meeting_id}.wav"
+    )
+    fallback_filename = "meeting_audio.wav"
+    quoted_filename = quote(filename)
+    content_type = s3_response.headers.get("Content-Type") or "audio/wav"
+    content_length = s3_response.headers.get("Content-Length")
+
+    response = StreamingHttpResponse(stream_file(), content_type=content_type)
+    if content_length:
+        response["Content-Length"] = content_length
+    response["Content-Disposition"] = (
+        f"attachment; filename*=UTF-8''{quoted_filename}; filename=\"{fallback_filename}\""
+    )
+    return response
+
 def meeting_record_upload(request, meeting_id):
     # 1) 메소드 체크
     if request.method != "POST":
@@ -1210,6 +1320,76 @@ def meeting_record_upload(request, meeting_id):
         "ok": True,
         "s3_key": s3_key,
     })
+
+
+@require_POST
+def meeting_record_url_set(request, meeting_id):
+    """
+    업로드가 아닌 이미 존재하는 S3 키를 회의에 직접 연결할 때 사용.
+    주최자만 설정 가능.
+    """
+    meeting = get_object_or_404(Meeting, pk=meeting_id)
+
+    session_user_id = request.session.get("login_user_id")
+    request_user_id = None
+    if hasattr(request, "user") and request.user.is_authenticated:
+        request_user_id = getattr(request.user, "user_id", None) or request.user.id
+
+    host_user_id = str(meeting.host_id) if meeting.host_id else None
+    has_permission = False
+    if host_user_id:
+        if session_user_id and str(session_user_id) == host_user_id:
+            has_permission = True
+        elif request_user_id and str(request_user_id) == host_user_id:
+            has_permission = True
+
+    if not has_permission:
+        return JsonResponse(
+            {"ok": False, "error": "녹음 파일을 설정할 권한이 없습니다."},
+            status=403,
+        )
+
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({"ok": False, "error": "Invalid JSON"}, status=400)
+
+    s3_key = (payload.get("s3_key") or "").strip()
+    if not s3_key:
+        return JsonResponse({"ok": False, "error": "s3_key is required"}, status=400)
+
+    original_name = (payload.get("original_name") or "").strip()
+    if not original_name:
+        original_name = s3_key.split("/")[-1] or "audio.wav"
+
+    delete_after_seconds = payload.get("delete_after_seconds")
+    if not isinstance(delete_after_seconds, int) or delete_after_seconds <= 0:
+        delete_after_seconds = 60 * 60 * 24 * 30  # 기본 30일
+    delete_at = timezone.now() + timedelta(seconds=delete_after_seconds)
+
+    # S3File FK 보존을 위해 레코드가 없으면 생성/있으면 갱신
+    s3_obj, created = S3File.objects.get_or_create(
+        s3_key=s3_key,
+        defaults={
+            "original_name": original_name,
+            "delete_at": delete_at,
+        },
+    )
+    if not created:
+        update_fields = []
+        if original_name and s3_obj.original_name != original_name:
+            s3_obj.original_name = original_name
+            update_fields.append("original_name")
+        # 요청마다 삭제 시점을 연장할 수 있도록 덮어쓴다.
+        s3_obj.delete_at = delete_at
+        update_fields.append("delete_at")
+        if update_fields:
+            s3_obj.save(update_fields=update_fields)
+
+    meeting.record_url_id = s3_key
+    meeting.save(update_fields=["record_url"])
+
+    return JsonResponse({"ok": True, "s3_key": s3_key})
 
 def meeting_summary(request, meeting_id):
     # 별도 요약 화면 대신 상세 페이지로 이동
