@@ -198,6 +198,7 @@ if (btnRecord) {
 // 업로드 버튼 클릭 시 실행
 uploadBtn.addEventListener('click', async (e) => {
     e.preventDefault();
+    uploadBtn.disabled = true;
     if (!selectedFiles || selectedFiles.length === 0) {
         // 파일이 선택되지 않았으면 파일 선택 창을 연다
         if (hiddenInput) {
@@ -242,5 +243,8 @@ uploadBtn.addEventListener('click', async (e) => {
     } catch (err) {
         console.error(err);
         alert(`업로드 중 오류가 발생했습니다: ${err.message || err}`);
-    }
+    } finally {
+    // 완료 후 다시 활성화
+    uploadBtn.disabled = false;
+  }
 });

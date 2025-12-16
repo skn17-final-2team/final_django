@@ -230,6 +230,6 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
-  const date_time_input = document.getElementById("id_meet_date_time");
-  date_time_input.max = new Date().toLocaleDateString('sv').replace(/ /g,'') + "T23:59";
+  const date_time_input = document.getElementById("id_meet_date");
+  date_time_input.max = new Date().toLocaleDateString('sv').replace(/ /g,'');
 });
