@@ -34,21 +34,23 @@ import ast
 from typing import Dict
 import requests
 
+from django.conf import settings
+from pathlib import Path
+
 # 한글 폰트 등록 (맑은 고딕 사용)
-KOREAN_FONT_NAME = "MalgunGothic"
+KOREAN_FONT_NAME = settings.KOREAN_FONT_NAME
 
 def _register_korean_font():
-    from pathlib import Path
+    # 이미 등록되어 있으면 바로 종료
+    if KOREAN_FONT_NAME in pdfmetrics.getRegisteredFontNames():
+        return
 
-    # Windows 기본 맑은 고딕 경로
-    default_path = Path(r"C:\Windows\Fonts\malgun.ttf")
+    font_path: Path = settings.KOREAN_FONT_PATH
 
-    if default_path.exists():
-        try:
-            pdfmetrics.registerFont(TTFont(KOREAN_FONT_NAME, str(default_path)))
-        except Exception:
-            # 이미 등록되어 있거나 오류가 나도 앱 전체가 죽지 않게 함
-            pass
+    if not font_path.exists():
+        raise FileNotFoundError(f"Korean font file not found: {font_path}")
+
+    pdfmetrics.registerFont(TTFont(KOREAN_FONT_NAME, str(font_path)))
 
 # 모듈 import 시 한 번 호출
 _register_korean_font()

@@ -143,6 +143,10 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',  
 ]
 
+# 폰트 경로 (프로젝트 루트/static/font/malgun.ttf)
+KOREAN_FONT_NAME = "MalgunGothic"
+KOREAN_FONT_PATH = BASE_DIR / "static" / "font" / "malgun.ttf"
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # 파일은 S3에 저장
