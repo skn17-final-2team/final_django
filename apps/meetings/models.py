@@ -9,6 +9,8 @@ class Meeting(models.Model):
         "accounts.User",
         on_delete=models.PROTECT,
         related_name="hosted_meetings",
+        null=True,
+        blank=True,
     )
 
     transcript = models.TextField()
