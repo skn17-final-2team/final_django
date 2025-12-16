@@ -379,6 +379,26 @@ function bindRowAddButton(row) {
     return data;
   }
 
+  async function createGoogleEvent(payload) {
+    const res = await fetch("/api/google-events/create/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+    let data = null;
+    try {
+      data = await res.json();
+    } catch (_) {}
+    if (!res.ok) {
+      const msg =
+        (data && (data.detail || data.error)) ||
+        "구글 캘린더 추가에 실패했습니다.";
+      throw new Error(msg);
+    }
+    return data;
+  }
+
   // 태스크 추가 버튼으로 빈 행 추가
   const taskAddMainBtn = document.getElementById("btn-tasks-add-main");
   function addTaskRow() {
@@ -625,15 +645,18 @@ document
     calendarPopover.style.left = `${Math.max(8, centerOffset + window.scrollX)}px`;
     calendarPopover.style.top = `${rect.bottom + window.scrollY + 6}px`;
     calendarPopover.style.display = "block";
+    const savedDate = row.dataset.taskDate || "";
+    const savedStart = row.dataset.taskStart || "09:00";
+    const savedEnd = row.dataset.taskEnd || "10:00";
     if (calendarDateInput) {
-      calendarDateInput.value = "";
+      calendarDateInput.value = savedDate;
       calendarDateInput.focus();
     }
     if (calendarStartInput) {
-      calendarStartInput.value = "09:00";
+      calendarStartInput.value = savedStart;
     }
     if (calendarEndInput) {
-      calendarEndInput.value = "10:00";
+      calendarEndInput.value = savedEnd;
     }
   }
 
@@ -660,6 +683,12 @@ document
     const whatVal =
       calendarCurrentRow.querySelector('[data-task-field="what"]')?.value || "";
     const title = whatVal || "회의 태스크";
+
+    // 입력값을 row dataset에 보존하여 다음 열람 시 그대로 노출
+    calendarCurrentRow.dataset.taskDate = dateVal;
+    if (startTimeVal) calendarCurrentRow.dataset.taskStart = startTimeVal;
+    if (endTimeVal) calendarCurrentRow.dataset.taskEnd = endTimeVal;
+
     const { start, end } = buildCalendarDateRange(
       dateVal,
       startTimeVal,
@@ -671,20 +700,19 @@ document
     }
 
     try {
-      const notes = meetingTitle ? `회의: ${meetingTitle}` : "";
-      const due = start || end;
-
-      await createGoogleTask({
+      const description = meetingTitle ? `회의: ${meetingTitle}` : "";
+      await createGoogleEvent({
         title,
-        due,
-        notes,
-        tasklist_id: "@default",
+        start,
+        end,
+        description,
+        calendarId: "primary",
       });
-      alert("구글 Tasks(Tasks 캘린더)에 일정이 추가되었습니다.");
+      alert("구글 캘린더에 일정이 추가되었습니다.");
       hideCalendarPopover();
     } catch (err) {
-      console.error("google tasks create error:", err);
-      alert(err.message || "Tasks 일정 추가에 실패했습니다.");
+      console.error("google calendar create error:", err);
+      alert(err.message || "캘린더 일정 추가에 실패했습니다.");
     } finally {
       if (addBtn) {
         addBtn.disabled = false;
