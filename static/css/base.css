@@ -320,42 +320,54 @@ body {
 /* 버튼 영역 */
 .pw-actions {
   display: flex;
-  justify-content: center;
-  gap: 12px;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
   margin-top: 28px;
 }
 
 /* 모달 버튼 */
 .btn-modal {
   min-width: 120px;
-  height: 44px;
+  height: 48px;
+  padding: 0 16px;
   border-radius: 12px;
-  border: none;
+  border: 1px solid transparent;
   font-size: 15px;
+  font-weight: 700;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+  box-sizing: border-box;
+  margin: 0;
 }
 
 /* 변경 버튼 */
 .pw-actions .btn-primary {
   background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
   color: #ffffff;
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.18);
+  border: 1px solid transparent;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.12);
+  position: relative;
+  top: -4px;
 }
 
 .pw-actions .btn-primary:hover {
   background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-  transform: translateY(-1px);
+  top: -1px;
 }
 
-/* 취소 버튼 */
 .pw-actions .btn-secondary {
   background: #ffffff;
   color: #1f2937;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
 }
 
 .pw-actions .btn-secondary:hover {
   background: var(--color-accent-soft);
   color: #0f172a;
+  transform: translateY(-1px);
 }
