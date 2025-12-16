@@ -33,7 +33,7 @@ ALB_DNS_NAME = os.getenv("ALB_DNS_NAME")
 if ALB_DNS_NAME:
     ALLOWED_HOSTS.append(ALB_DNS_NAME)
 
-ALLOWED_HOSTS.append(".compute.internal")
+ALLOWED_HOSTS.append("172.31.37.73")
 
 # Application definition
 INSTALLED_APPS = [
@@ -162,4 +162,5 @@ POD_ID = os.getenv("POD_ID")
 
 CSRF_TRUSTED_ORIGINS = [
     "http://" + os.getenv("AWS_ELASTIC_IP") + ":8080",
+    "https://" + os.getenv("DOMAIN_URL")
 ]
