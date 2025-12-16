@@ -23,6 +23,7 @@ class Meeting(models.Model):
     record_url = models.ForeignKey(
         "meetings.S3File",
         on_delete=models.SET_NULL,
+        to_field="record_url",
         null=True,
         blank=True,
         db_column="record_url",
@@ -85,6 +86,7 @@ class S3File(models.Model):
     # s3_key (S3 객체 경로)
     s3_key = models.CharField(max_length=512, primary_key=True)
     original_name = models.CharField(max_length=255)
+    record_url = models.URLField(max_length=512, unique=True)
     delete_at = models.DateTimeField()      # 삭제 예정 시각
 
     class Meta:

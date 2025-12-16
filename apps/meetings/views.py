@@ -13,7 +13,7 @@ from django.contrib import messages
 from django.db import transaction
 
 
-from apps.meetings.utils.s3_upload import upload_raw_file_bytes, get_presigned_url
+from apps.meetings.utils.s3_upload import upload_raw_file_bytes
 from apps.meetings.utils.runpod import get_stt, get_sllm
 
 from django.views.decorators.http import require_GET, require_POST
@@ -964,7 +964,7 @@ def meeting_transcript_api(request, meeting_id):
             "transcript": raw_transcript,
             "transcript_plain": transcript_plain,
             "transcript_structured": structured_transcript,
-            "record_url": str(meeting.record_url) if meeting.record_url else "",
+            "record_url": str(meeting.record_url_id) if meeting.record_url_id else "",
             "attendees": attendees_payload,
             "speakers": speakers,
         }
@@ -1233,7 +1233,7 @@ def meeting_audio_download(request, meeting_id):
             status=404,
         )
 
-    presigned_url = get_presigned_url(str(meeting.record_url))
+    presigned_url = meeting.record_url_id
     try:
         s3_response = requests.get(presigned_url, stream=True, timeout=30)
     except requests.RequestException:
@@ -1258,7 +1258,7 @@ def meeting_audio_download(request, meeting_id):
             s3_response.close()
 
     filename = (
-        getattr(meeting.record_url, "original_name", None)
+        getattr(meeting.record_url_id, "original_name", None)
         or f"meeting_{meeting_id}.wav"
     )
     fallback_filename = "meeting_audio.wav"
@@ -1299,7 +1299,7 @@ def meeting_record_upload(request, meeting_id):
     # 5) 유틸 호출
     file_bytes = uploaded_file.read()
     try:
-        s3_key = upload_raw_file_bytes(
+        record_url = upload_raw_file_bytes(
             file_bytes=file_bytes,
             original_filename=filename,
             # delete_after_seconds=172800, # 48시간 뒤 삭제
@@ -1313,12 +1313,12 @@ def meeting_record_upload(request, meeting_id):
         )
 
     # 6) Meeting FK 연결 (record_url 이 ForeignKey(S3File, db_column="record_url") 일 때)
-    meeting.record_url_id = s3_key
+    meeting.record_url_id = record_url
     meeting.save(update_fields=["record_url"])
 
     return JsonResponse({
         "ok": True,
-        "s3_key": s3_key,
+        "record_url": record_url,
     })
 
 
@@ -1439,10 +1439,8 @@ def meeting_transcript_prepare(request, meeting_id):
 
     if not transcript_html:
         # STT 호출
-        print(str(meeting.record_url))
-        presigned_url = get_presigned_url(str(meeting.record_url))
-        print(presigned_url)
-        res = get_stt(presigned_url)
+        print(str(meeting.record_url_id))
+        res = get_stt(str(meeting.record_url_id))
 
         if res.status_code != 200 or not res.json().get("success"):
             # 실패 시 프론트에서 메시지 보여줄 수 있도록 에러 내려줌

@@ -145,6 +145,7 @@
   if (btnAudioDownload && meetingId) {
     btnAudioDownload.addEventListener("click", async () => {
       // 서버에서 Content-Disposition을 내려주므로 바로 이동시켜 브라우저 기본 다운로드 흐름 사용
+      alert('')
       window.location.href = `/meetings/${meetingId}/audio/download/`;
     });
   }
