@@ -55,7 +55,8 @@
         <div class="section-label">발화자 지정</div>
 
         <div class="speaker-assign-grid">
-          <div class="speaker-assign-column" id="speakerAssignColumn"></div>
+          <div class="speaker-assign-column" id="speakerAssignColumn1"></div>
+          <div class="speaker-assign-column" id="speakerAssignColumn2"></div>
           <p class="speaker-empty-text" id="speakerAssignEmpty" style="display: none;">
             발화자 매핑이 필요한 데이터가 없습니다.
           </p>
@@ -75,7 +76,8 @@
     const meetingId = "{{ meeting_id }}";
     const recordTitle = document.getElementById("recordTitle");
     const transcriptBox = document.getElementById("assign-transcript-scroll");
-    const container = document.getElementById("speakerAssignColumn");
+    const container1 = document.getElementById("speakerAssignColumn1");
+    const container2 = document.getElementById("speakerAssignColumn2");
     const containerEmpty = document.getElementById("speakerAssignEmpty");
     const saveButton = document.getElementById("btn-transcript-save");
     const csrfInput = document.getElementById("csrf-token");
@@ -168,8 +170,9 @@
     }
 
     function buildSpeakerAssignRows(speakers, attendees) {
-      if (!container) return;
-      container.innerHTML = "";
+      if (!container1 || !container2) return;
+      container1.innerHTML = "";
+      container2.innerHTML = "";
       if (!Array.isArray(speakers) || !speakers.length) {
         if (containerEmpty) containerEmpty.style.display = "block";
         hasStructuredTranscript = false;
@@ -178,62 +181,70 @@
       }
       if (containerEmpty) containerEmpty.style.display = "none";
 
-      speakers.forEach((speaker) => {
-        currentSpeakerMap[speaker] = currentSpeakerMap[speaker] || speaker;
-        const row = document.createElement("div");
-        row.className = "speaker-row";
+      const firstColumnSpeakers = speakers.slice(0, 5);
+      const secondColumnSpeakers = speakers.slice(5);
 
-        const label = document.createElement("span");
-        label.className = "speaker-label";
-        label.textContent = speaker;
+      function addRows(container, speakerList) {
+        speakerList.forEach((speaker) => {
+          currentSpeakerMap[speaker] = currentSpeakerMap[speaker] || speaker;
+          const row = document.createElement("div");
+          row.className = "speaker-row";
 
-        const select = document.createElement("select");
-        select.className = "speaker-select";
-        select.name = speaker;
-        select.dataset.speakerKey = speaker;
+          const label = document.createElement("span");
+          label.className = "speaker-label";
+          label.textContent = speaker;
 
-        const emptyOption = document.createElement("option");
-        emptyOption.value = "";
-        emptyOption.textContent = speaker;
-        select.appendChild(emptyOption);
+          const select = document.createElement("select");
+          select.className = "speaker-select";
+          select.name = speaker;
+          select.dataset.speakerKey = speaker;
 
-        (attendees || []).forEach((att) => {
-          const labelText = att.dept_name
-            ? `${att.name} (${att.dept_name})`
-            : att.name;
-          if (labelText === speaker) {
-            return;
+          const emptyOption = document.createElement("option");
+          emptyOption.value = "";
+          emptyOption.textContent = speaker;
+          select.appendChild(emptyOption);
+
+          (attendees || []).forEach((att) => {
+            const labelText = att.dept_name
+              ? `${att.name} (${att.dept_name})`
+              : att.name;
+            if (labelText === speaker) {
+              return;
+            }
+            const option = document.createElement("option");
+            option.value = att.user_id;
+            option.textContent = labelText;
+            select.appendChild(option);
+          });
+
+          const currentLabel = currentSpeakerMap[speaker];
+          if (currentLabel && currentLabel !== speaker) {
+            const match = Array.from(select.options).find(
+              (opt) =>
+                opt.textContent === currentLabel || opt.value === currentLabel
+            );
+            if (match) {
+              match.selected = true;
+            }
           }
-          const option = document.createElement("option");
-          option.value = att.user_id;
-          option.textContent = labelText;
-          select.appendChild(option);
+
+          select.addEventListener("change", (e) => {
+            const key = e.target.dataset.speakerKey;
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            currentSpeakerMap[key] = e.target.value
+              ? selectedOption.textContent
+              : key;
+            renderTranscriptText();
+          });
+
+          row.appendChild(label);
+          row.appendChild(select);
+          container.appendChild(row);
         });
+      }
 
-        const currentLabel = currentSpeakerMap[speaker];
-        if (currentLabel && currentLabel !== speaker) {
-          const match = Array.from(select.options).find(
-            (opt) =>
-              opt.textContent === currentLabel || opt.value === currentLabel
-          );
-          if (match) {
-            match.selected = true;
-          }
-        }
-
-        select.addEventListener("change", (e) => {
-          const key = e.target.dataset.speakerKey;
-          const selectedOption = e.target.options[e.target.selectedIndex];
-          currentSpeakerMap[key] = e.target.value
-            ? selectedOption.textContent
-            : key;
-          renderTranscriptText();
-        });
-
-        row.appendChild(label);
-        row.appendChild(select);
-        container.appendChild(row);
-      });
+      addRows(container1, firstColumnSpeakers);
+      addRows(container2, secondColumnSpeakers);
     }
 
     function hydrateTranscript(structured, plainText, attendees, speakersFromApi) {

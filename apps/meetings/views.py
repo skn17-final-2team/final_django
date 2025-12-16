@@ -246,16 +246,66 @@ def _normalize_summary_text(full_summary):
     return str(full_summary)
 
 
+def _stringify_agenda_summary(summary_val):
+    """
+    Agenda summary가 dict로 내려올 때 보기 좋은 문자열로 변환한다.
+    - agenda_summary 필드를 우선 사용
+    - 그 외 주요 필드(who/what/when/where/why/how/how_much/how_many)를 라벨과 함께 표시
+    """
+    if summary_val is None:
+        return ""
+    if isinstance(summary_val, str):
+        return summary_val.strip()
+    if isinstance(summary_val, dict):
+        agenda_summary = summary_val.get("agenda_summary")
+        if agenda_summary:
+            return str(agenda_summary).strip()
+        parts = []
+        label_map = {
+            "who": "who",
+            "what": "what",
+            "when": "when",
+            "where": "where",
+            "why": "why",
+            "how": "how",
+            "how_much": "how_much",
+            "how_many": "how_many",
+        }
+        for key in ["who", "what", "when", "where", "why", "how", "how_much", "how_many"]:
+            val = summary_val.get(key)
+            if val:
+                parts.append(f"{label_map[key]}: {val}")
+        if parts:
+            return " | ".join(parts)
+        try:
+            return json.dumps(summary_val, ensure_ascii=False)
+        except Exception:
+            return str(summary_val)
+    try:
+        return json.dumps(summary_val, ensure_ascii=False)
+    except Exception:
+        return str(summary_val)
+
+
 def _parse_summary_agendas(summary_text):
     """
     저장된 summary_text(JSON 문자열 예상)에서 agendas 배열을 파싱해 리스트 반환.
     """
     if not summary_text:
         return []
+    parsed = None
     try:
-        parsed = json.loads(summary_text)
+        text = summary_text
+        if isinstance(summary_text, str):
+            text = summary_text.strip()
+            # 코드펜스 제거
+            if text.startswith("```") and text.endswith("```"):
+                text = re.sub(r"^```[a-zA-Z0-9]*\s*", "", text)
+                text = re.sub(r"\s*```$", "", text)
+        parsed = json.loads(text)
     except Exception:
-        return []
+        # dict 자체로 저장되었거나, 문자열 파싱이 실패한 경우 원본을 그대로 사용
+        parsed = summary_text if isinstance(summary_text, dict) else None
     if not isinstance(parsed, dict):
         return []
     agendas = parsed.get("agendas")
@@ -269,7 +319,7 @@ def _parse_summary_agendas(summary_text):
             {
                 "agenda": (item.get("agenda") or "").strip(),
                 "agenda_description": (item.get("agenda_description") or "").strip(),
-                "summary": (item.get("summary") or "").strip(),
+                "summary": _stringify_agenda_summary(item.get("summary")),
             }
         )
     return result
@@ -285,7 +335,7 @@ def _format_agendas_for_minutes(agendas):
     for idx, ag in enumerate(agendas, 1):
         title = ag.get("agenda") or ""
         desc = ag.get("agenda_description") or ""
-        summ = ag.get("summary") or ""
+        summ = _stringify_agenda_summary(ag.get("summary"))
         parts = [p for p in [title, desc, summ] if p]
         if parts:
             lines.append(f"{idx}. " + " | ".join(parts))
@@ -1257,7 +1307,7 @@ def meeting_sllm_prepare(request, meeting_id):
     domain_payload = [domain_for_api] if domain_for_api else []
 
     try:
-        res = get_sllm(meeting.transcript, domain=domain_payload)
+        res = get_sllm(transcript_plain, domain=domain_payload)
     except requests.RequestException as e:
         return JsonResponse(
             {"status": "error", "message": f"SLLM 호출 중 통신 오류가 발생했습니다: {e}"},
@@ -1309,6 +1359,9 @@ def meeting_sllm_prepare(request, meeting_id):
         )
 
     full_summary_raw = payload.get("full_summary") or payload.get("summary") or ""
+    # SLLM 응답이 agendas만 줄 때도 summary에 저장되도록 보완
+    if not full_summary_raw and payload.get("agendas"):
+        full_summary_raw = {"agendas": payload.get("agendas")}
     full_summary = _normalize_summary_text(full_summary_raw)
     full_tasks = payload.get("full_tasks") or payload.get("tasks") or []
     tasks_structured = _extract_structured_tasks(full_tasks)
@@ -1839,19 +1892,48 @@ def minutes_download(request, meeting_id, fmt):
 
         p.setFont(font, 10)
 
+        def wrap_line_by_width(line: str, max_width: float):
+            """
+            주어진 폭 안에 단어 단위로 줄바꿈.
+            너무 긴 단어는 폭에 맞게 잘라서라도 넣는다.
+            """
+            words = line.split()
+            if not words:
+                return [""]
+            lines = []
+            current = words[0]
+            for word in words[1:]:
+                candidate = f"{current} {word}"
+                if pdfmetrics.stringWidth(candidate, font, 10) <= max_width:
+                    current = candidate
+                else:
+                    lines.append(current)
+                    current = word
+            # 단일 단어가 너무 길다면 강제로 잘라 넣는다.
+            if pdfmetrics.stringWidth(current, font, 10) > max_width:
+                tmp = current
+                while pdfmetrics.stringWidth(tmp, font, 10) > max_width:
+                    cut = len(tmp)
+                    while cut > 0 and pdfmetrics.stringWidth(tmp[:cut], font, 10) > max_width:
+                        cut -= 1
+                    if cut <= 0:
+                        break
+                    lines.append(tmp[:cut])
+                    tmp = tmp[cut:]
+                if tmp:
+                    lines.append(tmp)
+            else:
+                lines.append(current)
+            return lines
+
         def draw_multiline_in_box(text, x_left_box, x_right_box, top_y, bottom_y):
-            max_chars = 80
+            usable_width = (x_right_box - x_left_box) - 10  # 좌우 여백 5씩 확보
             y_pos = top_y - 14
             for raw_line in (text or "").splitlines():
-                line = raw_line
-                while len(line) > max_chars:
-                    chunk = line[:max_chars]
-                    line = line[max_chars:]
-                    if y_pos < bottom_y + line_height:
-                        return
-                    p.drawString(x_left_box + 5, y_pos, chunk)
-                    y_pos -= line_height
-                if line:
+                wrapped = wrap_line_by_width(raw_line, usable_width)
+                for line in wrapped:
+                    if not line and len(wrapped) == 1:
+                        continue
                     if y_pos < bottom_y + line_height:
                         return
                     p.drawString(x_left_box + 5, y_pos, line)
