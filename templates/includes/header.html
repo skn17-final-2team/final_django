@@ -11,7 +11,9 @@
             새 회의
         {% elif request.resolver_match.url_name == "meeting_transcript" %}
             새 회의
-        {% elif request.resolver_match.url_name == "rendering" %}
+        {% elif request.resolver_match.url_name == "rendering_stt" %}
+            새 회의
+        {% elif request.resolver_match.url_name == "rendering_sllm" %}
             새 회의
         {% elif request.resolver_match.url_name == "meeting_detail" %}
             회의 상세 조회
