@@ -170,35 +170,35 @@ if (btnRecord) {
     // 일시정지/재개
     if (btnPause) {
         btnPause.addEventListener('click', () => {
-                        if (mediaRecorder && mediaRecorder.state === 'recording') {
-                                // pause: stop timer and record pause start
-                                mediaRecorder.pause();
-                                clearInterval(timerInterval);
-                                pauseStartTime = Date.now();
-                                if (recordingStatus) recordingStatus.textContent = '일시정지됨';
-                                // UI: show paused state
-                                if (btnRecord) {
-                                    btnRecord.classList.remove('recording');
-                                    btnRecord.classList.add('paused');
-                                }
-                                isPaused = true;
-                        } else if (mediaRecorder && mediaRecorder.state === 'paused') {
-                                // resume: accumulate paused duration and restart timer
-                                mediaRecorder.resume();
-                                if (pauseStartTime) {
-                                    pausedDuration += Date.now() - pauseStartTime;
-                                    pauseStartTime = 0;
-                                }
-                                if (timerInterval) clearInterval(timerInterval);
-                                timerInterval = setInterval(updateTimer, 100);
-                                if (recordingStatus) recordingStatus.textContent = '녹음 중...';
-                                // UI: restore recording state
-                                if (btnRecord) {
-                                    btnRecord.classList.add('recording');
-                                    btnRecord.classList.remove('paused');
-                                }
-                                isPaused = false;
-                        }
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                // pause: stop timer and record pause start
+                mediaRecorder.pause();
+                clearInterval(timerInterval);
+                pauseStartTime = Date.now();
+                if (recordingStatus) recordingStatus.textContent = '일시정지됨';
+                // UI: show paused state
+                if (btnRecord) {
+                    btnRecord.classList.remove('recording');
+                    btnRecord.classList.add('paused');
+                }
+                isPaused = true;
+            } else if (mediaRecorder && mediaRecorder.state === 'paused') {
+                // resume: accumulate paused duration and restart timer
+                mediaRecorder.resume();
+                if (pauseStartTime) {
+                    pausedDuration += Date.now() - pauseStartTime;
+                    pauseStartTime = 0;
+                }
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(updateTimer, 100);
+                if (recordingStatus) recordingStatus.textContent = '녹음 중...';
+                // UI: restore recording state
+                if (btnRecord) {
+                    btnRecord.classList.add('recording');
+                    btnRecord.classList.remove('paused');
+                }
+                isPaused = false;
+            }
         });
     }
 

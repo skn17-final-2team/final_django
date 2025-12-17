@@ -1302,8 +1302,8 @@ def meeting_record_upload(request, meeting_id):
         record_url = upload_raw_file_bytes(
             file_bytes=file_bytes,
             original_filename=filename,
-            # delete_after_seconds=172800, # 48시간 뒤 삭제
-            delete_after_seconds=3600, # 테스트용 1시간 뒤 삭제
+            delete_after_seconds=172800, # 48시간 뒤 삭제
+            # delete_after_seconds=3600, # 테스트용 1시간 뒤 삭제
         )
     except Exception as e:
         # 유틸 호출 중 에러가 나도 반드시 응답을 반환
