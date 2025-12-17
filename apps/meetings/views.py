@@ -2035,6 +2035,38 @@ def minutes_download(request, meeting_id, fmt):
 
         font = KOREAN_FONT_NAME
 
+        def wrap_line_by_width(line: str, max_width: float, font_size: int = 10):
+            """
+            주어진 폭 안에 단어 단위로 줄바꿈. 너무 긴 단어는 폭에 맞게 강제 분리.
+            """
+            words = line.split()
+            if not words:
+                return [""]
+            lines_local = []
+            current = words[0]
+            for word in words[1:]:
+                candidate = f"{current} {word}"
+                if pdfmetrics.stringWidth(candidate, font, font_size) <= max_width:
+                    current = candidate
+                else:
+                    lines_local.append(current)
+                    current = word
+            if pdfmetrics.stringWidth(current, font, font_size) > max_width:
+                tmp = current
+                while pdfmetrics.stringWidth(tmp, font, font_size) > max_width:
+                    cut = len(tmp)
+                    while cut > 0 and pdfmetrics.stringWidth(tmp[:cut], font, font_size) > max_width:
+                        cut -= 1
+                    if cut <= 0:
+                        break
+                    lines_local.append(tmp[:cut])
+                    tmp = tmp[cut:]
+                if tmp:
+                    lines_local.append(tmp)
+            else:
+                lines_local.append(current)
+            return lines_local
+
         def draw_page_border(top_y, bottom_y):
             p.line(x_left, top_y, x_left, bottom_y)
             p.line(x_right, top_y, x_right, bottom_y)
@@ -2099,7 +2131,7 @@ def minutes_download(request, meeting_id, fmt):
                 return header_top - header_row_h * row_idx - header_row_h + 8
 
             y_row1 = header_text_y(0)
-            p.drawString(x_left + 5, y_row1, "안 건")
+            p.drawString(x_left + 5, y_row1, "제 목")
             p.drawString(x_left + 5 + 80, y_row1, agenda)
 
             y_row2 = header_text_y(1)
@@ -2118,8 +2150,12 @@ def minutes_download(request, meeting_id, fmt):
             y_row4 = header_text_y(3)
             p.drawString(x_left + 5, y_row4, "주요안건")
             if main_agenda:
-                short_agenda = (main_agenda[:50] + "…") if len(main_agenda) > 50 else main_agenda
-                p.drawString(x_left + 5 + 80, y_row4, short_agenda)
+                agenda_box_width = x_right - (x_left + 80) - 10
+                agenda_lines = wrap_line_by_width(main_agenda, agenda_box_width, font_size=11)
+                agenda_y = y_row4
+                for line in agenda_lines:
+                    p.drawString(x_left + 5 + 80, agenda_y, line)
+                    agenda_y -= line_height
 
             current_top = header_top - 4 * header_row_h
         else:
@@ -2168,40 +2204,6 @@ def minutes_download(request, meeting_id, fmt):
             todos_box_top = todos_box_bottom = None
 
         p.setFont(font, 10)
-
-        def wrap_line_by_width(line: str, max_width: float):
-            """
-            주어진 폭 안에 단어 단위로 줄바꿈.
-            너무 긴 단어는 폭에 맞게 잘라서라도 넣는다.
-            """
-            words = line.split()
-            if not words:
-                return [""]
-            lines = []
-            current = words[0]
-            for word in words[1:]:
-                candidate = f"{current} {word}"
-                if pdfmetrics.stringWidth(candidate, font, 10) <= max_width:
-                    current = candidate
-                else:
-                    lines.append(current)
-                    current = word
-            # 단일 단어가 너무 길다면 강제로 잘라 넣는다.
-            if pdfmetrics.stringWidth(current, font, 10) > max_width:
-                tmp = current
-                while pdfmetrics.stringWidth(tmp, font, 10) > max_width:
-                    cut = len(tmp)
-                    while cut > 0 and pdfmetrics.stringWidth(tmp[:cut], font, 10) > max_width:
-                        cut -= 1
-                    if cut <= 0:
-                        break
-                    lines.append(tmp[:cut])
-                    tmp = tmp[cut:]
-                if tmp:
-                    lines.append(tmp)
-            else:
-                lines.append(current)
-            return lines
 
         def draw_multiline_in_box(text, x_left_box, x_right_box, top_y, bottom_y):
             usable_width = (x_right_box - x_left_box) - 10  # 좌우 여백 5씩 확보
@@ -2333,7 +2335,7 @@ def minutes_download(request, meeting_id, fmt):
         doc.add_heading(meeting.title or "회의록", level=1)
 
         info_rows = [
-            ("안건", agenda or "-"),
+            ("제목", agenda or "-"),
             ("일시", meeting_dt_str or "-"),
             ("장소", place or "-"),
             ("주최자", host_name or "-"),
