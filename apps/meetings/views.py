@@ -37,6 +37,8 @@ from urllib.parse import quote
 
 from django.conf import settings
 from pathlib import Path
+import boto3
+from botocore.config import Config
 
 # 한글 폰트 등록 (맑은 고딕 사용)
 KOREAN_FONT_NAME = settings.KOREAN_FONT_NAME
@@ -55,6 +57,44 @@ def _register_korean_font():
 
 # 모듈 import 시 한 번 호출
 _register_korean_font()
+
+def _resolve_s3_file(meeting: Meeting):
+    """
+    meeting.record_url_id에는 presigned URL 또는 s3_key가 들어올 수 있다.
+    두 경우 모두 S3File을 찾아 반환한다.
+    """
+    if getattr(meeting, "record_url", None):
+        try:
+            return meeting.record_url
+        except Exception:
+            pass
+
+    record_url_val = getattr(meeting, "record_url_id", None)
+    if not record_url_val:
+        return None
+
+    s3_obj = S3File.objects.filter(record_url=record_url_val).first()
+    if s3_obj:
+        return s3_obj
+
+    return S3File.objects.filter(s3_key=record_url_val).first()
+
+
+def _generate_presigned_url(s3_key: str, expires_seconds: int = 60 * 60 * 48) -> str:
+    """
+    s3_key 기반으로 매번 새 presigned URL을 생성해 만료/시계 문제를 회피한다.
+    """
+    s3 = boto3.client(
+        "s3",
+        region_name=settings.AWS_S3_REGION_NAME,
+        endpoint_url=f"https://s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com",
+        config=Config(signature_version="s3v4"),
+    )
+    return s3.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": settings.AWS_STORAGE_BUCKET_NAME, "Key": s3_key},
+        ExpiresIn=expires_seconds,
+    )
 
 
 def _transcript_to_plain_text(raw_transcript: str) -> str:
@@ -831,8 +871,8 @@ class MeetingRecordView(LoginRequiredSessionMixin, TemplateView):
         )
 
         # 녹음 허용 여부: 회의 시작 시간이 현재 시점보다 과거여도
-        # 허용 여유(grace) 내(예: 5분 이내)라면 녹음 UI를 노출합니다.
-        grace = timedelta(minutes=5)
+        # 허용 여유(grace) 내라면 녹음 UI를 노출합니다.
+        grace = timedelta(minutes=10)
         now = timezone.now()
         allow_recording = False
         try:
@@ -1233,7 +1273,20 @@ def meeting_audio_download(request, meeting_id):
             status=404,
         )
 
-    presigned_url = meeting.record_url_id
+    s3_obj = _resolve_s3_file(meeting)
+    if not s3_obj:
+        return JsonResponse(
+            {"ok": False, "error": "등록된 음성 파일이 없습니다."},
+            status=404,
+        )
+
+    try:
+        presigned_url = _generate_presigned_url(s3_obj.s3_key)
+    except Exception:
+        return JsonResponse(
+            {"ok": False, "error": "음성 파일 URL을 생성하는 중 오류가 발생했습니다."},
+            status=500,
+        )
     try:
         s3_response = requests.get(presigned_url, stream=True, timeout=30)
     except requests.RequestException:
@@ -1257,10 +1310,7 @@ def meeting_audio_download(request, meeting_id):
         finally:
             s3_response.close()
 
-    filename = (
-        getattr(meeting.record_url_id, "original_name", None)
-        or f"meeting_{meeting_id}.wav"
-    )
+    filename = getattr(s3_obj, "original_name", None) or f"meeting_{meeting_id}.wav"
     fallback_filename = "meeting_audio.wav"
     quoted_filename = quote(filename)
     content_type = s3_response.headers.get("Content-Type") or "audio/wav"
@@ -1439,15 +1489,61 @@ def meeting_transcript_prepare(request, meeting_id):
 
     if not transcript_html:
         # STT 호출
-        print(str(meeting.record_url_id))
-        res = get_stt(str(meeting.record_url_id))
+        s3_obj = _resolve_s3_file(meeting)
+        if not s3_obj:
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": "등록된 음성 파일이 없습니다.",
+                },
+                status=404,
+            )
+        try:
+            presigned_url = _generate_presigned_url(s3_obj.s3_key)
+        except Exception as e:
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": f"음성 URL 생성 중 오류가 발생했습니다: {e}",
+                },
+                status=500,
+            )
+
+        print(f"[STT] meeting_id={meeting_id} s3_key={s3_obj.s3_key} presigned_url_generated")
+        try:
+            res = get_stt(presigned_url)
+        except requests.RequestException as e:
+            return JsonResponse(
+                {
+                    "status": "error",
+                    "message": f"STT 호출 중 통신 오류가 발생했습니다: {e}",
+                },
+                status=502,
+            )
+        req_url = getattr(getattr(res, "request", None), "url", "")
+        print(f"[STT][response] status={res.status_code} req_url={req_url} body_preview={getattr(res, 'text', '')[:300]}")
 
         if res.status_code != 200 or not res.json().get("success"):
+            body_preview = ""
+            try:
+                body_preview = res.text[:300]
+            except Exception:
+                body_preview = ""
+
+            message = None
+            try:
+                res_json = res.json()
+                if isinstance(res_json, dict):
+                    message = res_json.get("message") or res_json.get("error")
+            except Exception:
+                res_json = {}
+
             # 실패 시 프론트에서 메시지 보여줄 수 있도록 에러 내려줌
             return JsonResponse(
                 {
                     "status": "error",
-                    "message": "전사 처리 중 오류가 발생했습니다.",
+                    "message": message or "전사 처리 중 오류가 발생했습니다.",
+                    "detail": body_preview,
                 },
                 status=500,
             )
@@ -1485,6 +1581,7 @@ def meeting_sllm_prepare(request, meeting_id):
     }
     domain_for_api = domain_map.get(domain_raw, domain_raw)
     domain_payload = [domain_for_api] if domain_for_api else []
+    print(f"[SLLM] meeting_id={meeting_id} domain_raw='{domain_raw}' domain_for_api='{domain_for_api}' domain_payload={domain_payload}")
 
     try:
         res = get_sllm(transcript_plain, domain=domain_payload)

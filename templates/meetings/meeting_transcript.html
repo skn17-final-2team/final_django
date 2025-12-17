@@ -80,6 +80,7 @@
     const container2 = document.getElementById("speakerAssignColumn2");
     const containerEmpty = document.getElementById("speakerAssignEmpty");
     const saveButton = document.getElementById("btn-transcript-save");
+    const btnAudioDownload = document.getElementById("btn-audio-download");
     const csrfInput = document.getElementById("csrf-token");
     const csrftoken = csrfInput ? csrfInput.value : "";
 
@@ -269,6 +270,13 @@
           transcriptBox.textContent = normalized;
         }
       }
+    }
+
+    if (btnAudioDownload && meetingId) {
+      btnAudioDownload.addEventListener("click", () => {
+        // 서버에서 Content-Disposition을 내려주므로 바로 이동시켜 브라우저 기본 다운로드 흐름 사용
+        window.location.href = `/meetings/${meetingId}/audio/download/`;
+      });
     }
 
     async function loadTranscript() {
