@@ -6,7 +6,7 @@ from botocore.config import Config
 from django.conf import settings
 from django.utils import timezone
 
-from apps.meetings.models import S3File
+from meetings.models import S3File
 
 CONTENT_TYPE_MAP = {
     "wav": "audio/wav",

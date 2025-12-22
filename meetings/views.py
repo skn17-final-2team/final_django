@@ -1,7 +1,7 @@
 ﻿from django.shortcuts import redirect, render
 from django.views.generic import TemplateView
-from apps.core.views import LoginRequiredSessionMixin
-from apps.accounts.models import Dept, User
+from core.views import LoginRequiredSessionMixin
+from users.models import Dept, User
 from django.db.models import Prefetch, Q
 
 from django.shortcuts import get_object_or_404
@@ -13,8 +13,8 @@ from django.contrib import messages
 from django.db import transaction
 
 
-from apps.meetings.utils.s3_upload import upload_raw_file_bytes
-from apps.meetings.utils.runpod import get_stt, get_sllm
+from meetings.utils.s3_upload import upload_raw_file_bytes
+from meetings.utils.runpod import get_stt, get_sllm
 
 from django.views.decorators.http import require_GET, require_POST
 from datetime import date, datetime, timedelta

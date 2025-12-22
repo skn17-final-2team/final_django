@@ -4,9 +4,9 @@ class Meeting(models.Model):
     # meeting_id INTEGER PK
     meeting_id = models.AutoField(primary_key=True)
 
-    # host_id FK → accounts.User.user_id
+    # host_id FK → users.User.user_id
     host = models.ForeignKey(
-        "accounts.User",
+        "users.User",
         on_delete=models.PROTECT,
         related_name="hosted_meetings",
         null=True,
@@ -43,7 +43,7 @@ class Attendee(models.Model):
         related_name="attendees",
     )
     user = models.ForeignKey(
-        "accounts.User",
+        "users.User",
         on_delete=models.CASCADE,
         related_name="attendances",
     )
@@ -66,7 +66,7 @@ class Task(models.Model):
 
     # assignee_id FK → User (nullable)
     assignee = models.ForeignKey(
-        "accounts.User",
+        "users.User",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
