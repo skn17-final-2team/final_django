@@ -13,7 +13,7 @@ class Meeting(models.Model):
         blank=True,
     )
 
-    transcript = models.TextField()
+    transcript = models.TextField(blank=True, default="")
     title = models.CharField(max_length=90)
     meet_date_time = models.DateTimeField()
     place = models.CharField(max_length=90)
@@ -30,11 +30,26 @@ class Meeting(models.Model):
     )
     domain = models.CharField(max_length=12, null=True, blank=True)
     private_yn = models.BooleanField(default=False)
+
+    TRANSCRIPT_STATUS = [
+        ("pending", "Pending"),        # 아직 안 함
+        ("processing", "Processing"),  # 진행 중
+        ("done", "Done"),              # 완료
+        ("error", "Error"),            # 실패
+    ]
+
+    transcript_status = models.CharField(
+        max_length=20,
+        choices=TRANSCRIPT_STATUS,
+        default="pending",
+    )
+    transcript_error = models.TextField(blank=True, default="")
+
     class Meta:
         db_table = "meeting_tbl"
 
     def __str__(self):
-        return f"[{self.meet_id}] {self.title}"
+        return f"[{self.meeting_id}] {self.title}"
 
 class Attendee(models.Model):
     meeting = models.ForeignKey(
