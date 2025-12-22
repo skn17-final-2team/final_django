@@ -13,7 +13,7 @@ from django.contrib import messages
 from django.db import transaction
 
 
-from meetings.utils.s3_upload import upload_raw_file_bytes
+from meetings.utils.s3_upload import upload_raw_file_bytes, get_presigned_url
 from meetings.utils.runpod import get_stt, get_sllm
 
 from django.views.decorators.http import require_GET, require_POST
@@ -78,24 +78,6 @@ def _resolve_s3_file(meeting: Meeting):
         return s3_obj
 
     return S3File.objects.filter(s3_key=record_url_val).first()
-
-
-def _generate_presigned_url(s3_key: str, expires_seconds: int = 60 * 60 * 48) -> str:
-    """
-    s3_key 기반으로 매번 새 presigned URL을 생성해 만료/시계 문제를 회피한다.
-    """
-    s3 = boto3.client(
-        "s3",
-        region_name=settings.AWS_S3_REGION_NAME,
-        endpoint_url=f"https://s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com",
-        config=Config(signature_version="s3v4"),
-    )
-    return s3.generate_presigned_url(
-        "get_object",
-        Params={"Bucket": settings.AWS_STORAGE_BUCKET_NAME, "Key": s3_key},
-        ExpiresIn=expires_seconds,
-    )
-
 
 def _transcript_to_plain_text(raw_transcript: str) -> str:
     """
@@ -1281,7 +1263,7 @@ def meeting_audio_download(request, meeting_id):
         )
 
     try:
-        presigned_url = _generate_presigned_url(s3_obj.s3_key)
+        presigned_url = get_presigned_url(s3_obj.s3_key)
     except Exception:
         return JsonResponse(
             {"ok": False, "error": "음성 파일 URL을 생성하는 중 오류가 발생했습니다."},
@@ -1499,7 +1481,7 @@ def meeting_transcript_prepare(request, meeting_id):
                 status=404,
             )
         try:
-            presigned_url = _generate_presigned_url(s3_obj.s3_key)
+            presigned_url = get_presigned_url(s3_obj.s3_key)
         except Exception as e:
             return JsonResponse(
                 {
