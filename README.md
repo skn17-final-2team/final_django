@@ -11,6 +11,7 @@
 본 레포지토리는 **Django 기반 웹 애플리케이션**만을 포함합니다.
 
 - 모델 서버 레포지토리: https://github.com/skn17-final-2team/final_runpod_server
+- Django + 모델 서버 및 산출물 레포지토리: https://github.com/SKNETWORKS-FAMILY-AICAMP/SKN17-FINAL-2Team
 
 ## 핵심 기능
 | 구분 | 기능 | 설명 |
