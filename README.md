@@ -34,6 +34,25 @@
 | 서버 실행 | ![Gunicorn](https://img.shields.io/badge/Gunicorn-499848?style=for-the-badge&logo=Gunicorn&logoColor=white) ![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white) |
 | 데이터베이스 | ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white) |
 
+## 프로젝트 구조
+- **final_django/**: 프로젝트의 메인 설정 파일(settings, urls 등)이 위치합니다.
+- **core/**: 다른 앱들에서 공통적으로 사용되는 핵심 기능 또는 모듈을 포함합니다.
+- **users/**: 회원가입, 로그인 등 유저 인증 및 회원 관리를 담당합니다.
+- **meetings/**: 회의 생성, 녹음, STT/SLLM 요청, 요약 등 프로젝트의 핵심 기능을 담당합니다.
+- **google_calendar/**: 구글 캘린더 API 연동 및 관련 기능을 담당합니다.
+- **static/**: CSS, JavaScript, 이미지 등 정적 파일을 관리합니다.
+- **templates/**: HTML 템플릿 파일이 위치합니다.
+
+## Gunicorn 설정 (`gunicorn.conf.py`)
+`gunicorn.conf.py` 파일은 Gunicorn WSGI 서버의 실행 설정을 담고 있습니다. 주요 설정은 다음과 같습니다.
+- **bind**: 서버가 바인딩될 IP 주소와 포트를 지정합니다. (예: `0.0.0.0:8000`)
+- **workers**: 서버 프로세스의 개수를 지정합니다. 일반적으로 `(2 * CPU 코어 수) + 1` 로 설정하는 것을 권장합니다.
+```python
+bind = "0.0.0.0:8000"
+workers = 3
+timeout = 3600
+```
+
 ## .env
 
 프로젝트 루트에 `.env` 파일을 생성하고 아래 값을 설정합니다.
@@ -67,9 +86,8 @@ POD_ID=<모델이 올라간 런팟의 팟 ID>
 git clone https://github.com/skn17-final-2team/final_django.git
 cd final_django
 ```
-## 2. 가상환경 생성 및 활성화
+## 2. 가상환경 생성 및 활성화 (콘다 가상환경으로 대체 가능)
 ```bash
-# Windows
 python -m venv venv
 venv\Scripts\activate
 ```
@@ -78,7 +96,7 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 ## 4. .env 파일 설정
-프로젝트 루트에 `.env` 파일을 생성하고, 상단의 `.env` 섹션을 참고하여 필요한 환경 변수를 입력합니다. 로컬 개발 시에는 최소한 아래 변수들이 필요합니다.
+로컬 개발 시에는 최소한 아래 변수들이 필요합니다.
 ```env
 # Django
 DJANGO_SECRET_KEY=
