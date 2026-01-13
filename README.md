@@ -60,6 +60,50 @@ AWS_S3_REGION_NAME=ap-northeast-2
 POD_ID=<모델이 올라간 런팟의 팟 ID>
 ```
 
+# 로컬 개발 환경 설정
+
+## 1. git clone
+```bash
+git clone https://github.com/skn17-final-2team/final_django.git
+cd final_django
+```
+## 2. 가상환경 생성 및 활성화
+```bash
+# Windows
+python -m venv venv
+venv\Scripts\activate
+```
+## 3. 필수 패키지 설치
+```bash
+pip install -r requirements.txt
+```
+## 4. .env 파일 설정
+프로젝트 루트에 `.env` 파일을 생성하고, 상단의 `.env` 섹션을 참고하여 필요한 환경 변수를 입력합니다. 로컬 개발 시에는 최소한 아래 변수들이 필요합니다.
+```env
+# Django
+DJANGO_SECRET_KEY=
+
+# Database (로컬 DB 정보에 맞게 수정)
+DATABASES_PASSWORD=
+DATABASES_HOST=localhost
+
+# Model Server (RunPod)
+POD_ID=<모델이 올라간 런팟의 팟 ID>
+```
+## 5. 데이터베이스 마이그레이션
+```bash
+python manage.py migrate
+```
+## 6. (선택) 관리자 계정 생성
+```bash
+python manage.py createsuperuser
+```
+## 7. 개발 서버 실행
+```bash
+python manage.py runserver
+```
+
+
 # 배포 가이드
 
 ## 1. EC2 SSH 접속
